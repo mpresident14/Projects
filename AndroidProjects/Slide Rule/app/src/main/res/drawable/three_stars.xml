@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <bitmap android:src="@drawable/level_background"
+            android:gravity="center" />
+    </item>
+    <item
+        android:top="250dp"
+        android:left="15dp"
+        android:id="@+id/star1">
+        <bitmap android:src="@drawable/gold_star"
+            android:gravity="left" />
+    </item>
+    <item
+        android:top="200dp"
+        android:right="5dp"
+        android:id="@+id/star2">
+        <bitmap android:src="@drawable/gold_star"
+            android:gravity="center" />
+    </item>
+    <item
+        android:top="250dp"
+        android:right="25dp"
+        android:id="@+id/star3">
+        <bitmap android:src="@drawable/gold_star"
+            android:gravity="right" />
+    </item>
+</layer-list>
