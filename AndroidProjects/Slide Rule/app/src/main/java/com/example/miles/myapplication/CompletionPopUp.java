@@ -79,7 +79,7 @@ public class CompletionPopUp extends AppCompatActivity {
                 int nextLevel = getIntent().getIntExtra(CURRENT_LEVEL, -1) + 1;
                 Intent intent = new Intent(CompletionPopUp.this, GenericLevel.class);
                 intent.putExtra(ChooseLevel.LEVEL_NUMBER, nextLevel);
-                if (nextLevel < NUM_LEVELS_IMPLEMENTED) {
+                if (nextLevel <= NUM_LEVELS_IMPLEMENTED) {
                     startActivity(intent);
                 }
                 else {
