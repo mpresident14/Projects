@@ -32,7 +32,7 @@ def knnForOne(x_training_data, y_training_data, single_x_test_data, n_neighbors)
             nearest_neighbors[distance] = Y2
         else:                                           # kick out largest distance
 
-            # Assumes no two distances are exactly the same, or will data point will be overwritten in dictionary
+            # Assumes no two distances are exactly the same, or data point will be overwritten in dictionary
             largest_distance = max(nearest_neighbors)
             if distance < largest_distance:
                 del nearest_neighbors[largest_distance]
