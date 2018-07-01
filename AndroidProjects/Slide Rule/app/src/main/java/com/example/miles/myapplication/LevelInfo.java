@@ -81,8 +81,8 @@ class LevelInfo {
                 colSolutions = new int[]{4, EMPTY, 3};
                 nailedRow = new int[] {EMPTY, EMPTY, EMPTY};
                 nailedCol = new int[] {EMPTY, EMPTY, EMPTY};
-                moves2Stars = 37;
-                moves3Stars = 23;
+                moves2Stars = 33;
+                moves3Stars = 21;
                 break;
 
             case 7:

@@ -270,11 +270,12 @@ public class GenericLevel extends AppCompatActivity {
                             completionInfoBundle.putInt(CompletionPopUp.CURRENT_LEVEL, levelNumber);
                             completionPopUp.setArguments(completionInfoBundle);
 
-                            dimmer.setAlpha(0.3f);
+                            dimmer.setAlpha(0.5f);
 
                             getSupportFragmentManager()
                                     .beginTransaction()
                                     .add(R.id.popup_fragment_container, completionPopUp)
+                                    .setCustomAnimations(R.animator.fade_in, R.animator.no_fade)
                                     .commit();
 
                             activityLayout.setOnClickListener(view -> closePopup());

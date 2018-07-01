@@ -2,13 +2,14 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="250dp"
+    android:layout_width="270dp"
     android:layout_height="300dp"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
     tools:context="com.example.miles.myapplication.CompletionPopUp"
     android:id="@+id/main"
     android:background="@drawable/popup_background"
     android:layout_gravity="center">
-
     <LinearLayout
         android:id="@+id/popup_header_ll"
         android:layout_width="wrap_content"
