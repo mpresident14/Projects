@@ -23,11 +23,8 @@
         <activity
             android:name=".ChooseLevel"
             android:screenOrientation="portrait" />
-        <activity
-            android:name=".CompletionPopUp"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.PopUpTheme" />
-        <activity android:name=".GenericLevel"></activity>
+        <activity android:name=".GenericLevel"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>

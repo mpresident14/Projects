@@ -54,12 +54,12 @@ public class UIUtils {
         String stringLevelNumber = Integer.toString(levelNumber);
 
         // Get current number of stars (we don't want update to fewer stars)
-        int currentStars = drawableIdNumStarsToInt(sharedPref.getInt(stringLevelNumber+STARS, R.drawable.no_stars));
+        int currentStars = sharedPref.getInt(stringLevelNumber+STARS, 0);
 
         // Update if the most recent number of stars received is greater than the previous amount
         if (numStars > currentStars){
             SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putInt(stringLevelNumber+STARS, intToDrawableIdNumStars(numStars));
+            editor.putInt(stringLevelNumber+STARS, numStars);
 
             // Possibly update the number of levels completed
             if (sharedPref.getInt(LEVELS_COMPLETED, 0) < levelNumber){
@@ -70,7 +70,7 @@ public class UIUtils {
         }
     }
 
-    private static int intToDrawableIdNumStars(int n){
+    static int intToDrawableIdNumStars(int n){
         switch (n){
             case 1:
                 return R.drawable.one_star;
@@ -83,7 +83,7 @@ public class UIUtils {
         }
     }
 
-    private static int drawableIdNumStarsToInt(int id){
+    static int drawableIdNumStarsToInt(int id){
         switch (id){
             case R.drawable.one_star:
                 return 1;

@@ -3,6 +3,7 @@ package com.example.miles.myapplication;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.provider.Contacts;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -50,9 +51,10 @@ public class ChooseLevel extends AppCompatActivity {
             // Grab ImageView at specified index
             levelIconImageView = (ImageView) level_grid.getChildAt(i);
             // Get the correct stars icon that we stored
-            int id = sharedPref.getInt(currentLevel+UIUtils.STARS, R.drawable.no_stars);
+            int numStars = sharedPref.getInt(currentLevel+UIUtils.STARS, 0);
+            int drawableId = UIUtils.intToDrawableIdNumStars(numStars);
             // Update attributes for completed levels
-            levelIconImageView.setImageResource(id);
+            levelIconImageView.setImageResource(drawableId);
             ((View)levelIconImageView).setAlpha(1);
             levelIconImageView.setClickable(true);
         }

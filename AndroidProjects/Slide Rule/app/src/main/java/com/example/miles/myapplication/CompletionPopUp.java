@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,7 +49,7 @@ public class CompletionPopUp extends Fragment {
 //        int height = dm.heightPixels;
 //        getActivity().getWindow().setLayout((int) (width * 0.8), (int) (height * 0.5));
 
-        return inflater.inflate(R.layout.fragment_completion_pop_up, container, false);
+        return inflater.inflate(R.layout.completion_pop_up, container, false);
     }
 
     @Override

@@ -9,6 +9,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
@@ -37,6 +39,7 @@ public class GenericLevel extends AppCompatActivity {
 
     private GridLayout gridLayout;
     private ConstraintLayout activityLayout;
+    CompletionPopupWindow completionPopupWindow;
 
     // ---------------------------------
 
@@ -58,6 +61,7 @@ public class GenericLevel extends AppCompatActivity {
     int numCellsForTileToTraverseOnSwipe;
     int numMoves = 0;
 
+    ConstraintLayout rootConstraintLayout;
     LinearLayout rowSolutionDisplay;
     LinearLayout columnSolutionDisplay;
     TextView moveDisplay;
@@ -79,6 +83,7 @@ public class GenericLevel extends AppCompatActivity {
         levelNumber = getIntent().getIntExtra(ChooseLevel.LEVEL_NUMBER, -1);
         levelInfo = new LevelInfo(levelNumber);
 
+        rootConstraintLayout = binder.main;
         rowSolutionDisplay = binder.rowSolutions;
         columnSolutionDisplay = binder.columnSolutions;
         gridLayout = binder.grid;
@@ -103,16 +108,8 @@ public class GenericLevel extends AppCompatActivity {
         setSolutionTextViews();
         setLevelNumberAndMovesForStars();
 
-        restartButton.setOnClickListener((view) -> {
-            Intent intent = new Intent(thisContext, GenericLevel.class);
-            intent.putExtra(ChooseLevel.LEVEL_NUMBER, levelNumber);
-            startActivity(intent);
-        });
-
-        backButton.setOnClickListener((view)-> {
-            Intent intent = new Intent(thisContext, ChooseLevel.class);
-            startActivity(intent);
-        });
+        restartButton.setOnClickListener(view -> restartLevel());
+        backButton.setOnClickListener(view -> goBackToChooseLevel());
     }
 
     private void setCellTextViews() {
@@ -262,22 +259,45 @@ public class GenericLevel extends AppCompatActivity {
                             int numStars = UIUtils.getNumStars(numMoves, moves3Stars, moves2Stars);
                             UIUtils.changeStarColor(context, levelNumber, numStars);
 
-                            CompletionPopUp completionPopUp = new CompletionPopUp();
+//                            CompletionPopUp completionPopUp = new CompletionPopUp();
+//
+//                            Bundle completionInfoBundle = new Bundle();
+//                            completionInfoBundle.putInt(CompletionPopUp.NUM_STARS, numStars);
+//                            completionInfoBundle.putInt(CompletionPopUp.NUM_MOVES, numMoves);
+//                            completionInfoBundle.putInt(CompletionPopUp.CURRENT_LEVEL, levelNumber);
+//                            completionPopUp.setArguments(completionInfoBundle);
+//
+//                            dimmer.setAlpha(0.5f);
+//
+//                            getSupportFragmentManager()
+//                                    .beginTransaction()
+//                                    .add(R.id.popup_fragment_container, completionPopUp)
+//                                    .setCustomAnimations(R.animator.fade_in, R.animator.no_fade)
+//                                    .commit();
+//
+//                            activityLayout.setOnClickListener(view -> closePopup());
+                            View popupView = ((LayoutInflater) context.getSystemService(LAYOUT_INFLATER_SERVICE))
+                                    .inflate(R.layout.completion_pop_up, rootConstraintLayout, false);
 
-                            Bundle completionInfoBundle = new Bundle();
-                            completionInfoBundle.putInt(CompletionPopUp.NUM_STARS, numStars);
-                            completionInfoBundle.putInt(CompletionPopUp.NUM_MOVES, numMoves);
-                            completionInfoBundle.putInt(CompletionPopUp.CURRENT_LEVEL, levelNumber);
-                            completionPopUp.setArguments(completionInfoBundle);
+                            completionPopupWindow =
+                                    new CompletionPopupWindow(
+                                            popupView,
+                                            context,
+                                            WindowManager.LayoutParams.WRAP_CONTENT,
+                                            WindowManager.LayoutParams.WRAP_CONTENT,
+                                            numStars,
+                                            numMoves,
+                                            levelNumber);
+
+                            completionPopupWindow.getPopupWindow().showAtLocation(
+                                    rootConstraintLayout,
+                                    Gravity.CENTER,
+                                    0,
+                                    0);
 
                             dimmer.setAlpha(0.5f);
-
-                            getSupportFragmentManager()
-                                    .beginTransaction()
-                                    .add(R.id.popup_fragment_container, completionPopUp)
-                                    .setCustomAnimations(R.animator.fade_in, R.animator.no_fade)
-                                    .commit();
-
+                            restartButton.setOnClickListener(null);
+                            backButton.setOnClickListener(null);
                             activityLayout.setOnClickListener(view -> closePopup());
                         }
                         movingCurrently = null;
@@ -323,16 +343,23 @@ public class GenericLevel extends AppCompatActivity {
         moveAnimation = v.animate().translationYBy(shifts*translateDistance).setDuration(shifts*translateDuration);
     }
 
+    void restartLevel() {
+        Intent intent = new Intent(thisContext, GenericLevel.class);
+        intent.putExtra(ChooseLevel.LEVEL_NUMBER, levelNumber);
+        startActivity(intent);
+    }
+
+    void goBackToChooseLevel() {
+        Intent intent = new Intent(thisContext, ChooseLevel.class);
+        startActivity(intent);
+    }
+
     void closePopup() {
         dimmer.setAlpha(0f);
+        completionPopupWindow.getPopupWindow().dismiss();
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment completionPopUp = fragmentManager.findFragmentById(R.id.popup_fragment_container);
-        fragmentManager
-                .beginTransaction()
-                .remove(completionPopUp)
-                .commit();
-
+        restartButton.setOnClickListener(view -> restartLevel());
+        backButton.setOnClickListener(view -> goBackToChooseLevel());
         activityLayout.setOnClickListener(null);
     }
 }
