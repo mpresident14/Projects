@@ -4,11 +4,16 @@ import android.animation.Animator;
 import android.content.Context;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
+import android.support.constraint.ConstraintLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -22,18 +27,21 @@ public class GenericLevel extends AppCompatActivity {
 
     ActivityGenericLevelBinding binder;
     private static int levelNumber;
+
     private LevelInfo levelInfo;
+    private boolean popupIsOpen = false;
 
     // TODO: Implement onPerformClick for accessibility.
     // See https://stackoverflow.com/questions/47107105/android-button-has-setontouchlistener-called-on-it-but-does-not-override-perform
     private View.OnTouchListener onTouchListener = this::swipe;
 
     private GridLayout gridLayout;
+    private ConstraintLayout activityLayout;
+
     // ---------------------------------
 
     Context context = this;
-    // TODO: Create a separate boolean for this
-    boolean disableTouch = false; // Also represents a completed board b/c we disable touch when the board is correct
+    boolean disableTouch = false;
     boolean boardIsCorrect = false;
     View movingCurrently = null;
 
@@ -55,6 +63,7 @@ public class GenericLevel extends AppCompatActivity {
     TextView moveDisplay;
     ImageView restartButton;
     ImageView backButton;
+    FrameLayout dimmer;
 
     ViewPropertyAnimator moveAnimation;
 
@@ -64,6 +73,8 @@ public class GenericLevel extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+
         binder = DataBindingUtil.setContentView(this, R.layout.activity_generic_level);
         levelNumber = getIntent().getIntExtra(ChooseLevel.LEVEL_NUMBER, -1);
         levelInfo = new LevelInfo(levelNumber);
@@ -71,9 +82,11 @@ public class GenericLevel extends AppCompatActivity {
         rowSolutionDisplay = binder.rowSolutions;
         columnSolutionDisplay = binder.columnSolutions;
         gridLayout = binder.grid;
+        activityLayout = binder.main;
         restartButton = binder.restart;
         backButton = binder.back;
         moveDisplay = binder.numMoves;
+        dimmer = findViewById(R.id.dimmer);
 
         board = new Board(
                 levelInfo.grid,
@@ -179,7 +192,7 @@ public class GenericLevel extends AppCompatActivity {
         binder.levelNumberTv.setText(String.valueOf(levelNumber));
     }
 
-    public boolean swipe(View v, MotionEvent event){
+    boolean swipe(View v, MotionEvent event){
         // Don't allow a swipe if we are currently moving a tile or if the level has been completed
         if (disableTouch){
             return false;
@@ -228,9 +241,6 @@ public class GenericLevel extends AppCompatActivity {
                     }
                 }
 
-                // Check the board to see if it is correct (if board is correct, we also disable touch)
-                disableTouch = boardIsCorrect = board.checkEquations(rowSolutionDisplay, columnSolutionDisplay);
-
                 // Check the board and change colors when the animation finishes
                 moveAnimation.setListener(new Animator.AnimatorListener() {
                     @Override
@@ -240,18 +250,34 @@ public class GenericLevel extends AppCompatActivity {
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
+                        // Check the board to see if it is correct (if board is correct, we also disable touch)
+                        disableTouch = boardIsCorrect = board.checkEquations(rowSolutionDisplay, columnSolutionDisplay);
+
                         // Update the number of moves
                         numMoves++;
-                        moveDisplay.setText(String.format(Locale.getDefault(),"%d",numMoves));
+                        moveDisplay.setText(String.format(Locale.getDefault(),"%d", numMoves));
 
                         // Initiate CompletionPopUp if level is correct
                         if (boardIsCorrect){
                             int numStars = UIUtils.getNumStars(numMoves, moves3Stars, moves2Stars);
                             UIUtils.changeStarColor(context, levelNumber, numStars);
-                            Intent intent = new Intent(thisContext, CompletionPopUp.class);
-                            intent.putExtra(CompletionPopUp.NUM_STARS, numStars);
-                            intent.putExtra(CompletionPopUp.CURRENT_LEVEL, levelNumber);
-                            startActivity(intent);
+
+                            CompletionPopUp completionPopUp = new CompletionPopUp();
+
+                            Bundle completionInfoBundle = new Bundle();
+                            completionInfoBundle.putInt(CompletionPopUp.NUM_STARS, numStars);
+                            completionInfoBundle.putInt(CompletionPopUp.NUM_MOVES, numMoves);
+                            completionInfoBundle.putInt(CompletionPopUp.CURRENT_LEVEL, levelNumber);
+                            completionPopUp.setArguments(completionInfoBundle);
+
+                            dimmer.setAlpha(0.3f);
+
+                            getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .add(R.id.popup_fragment_container, completionPopUp)
+                                    .commit();
+
+                            activityLayout.setOnClickListener(view -> closePopup());
                         }
                         movingCurrently = null;
                     }
@@ -279,21 +305,34 @@ public class GenericLevel extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void moveRight(View v, int shifts){
+    void moveRight(View v, int shifts){
         movingCurrently = v;
         moveAnimation = v.animate().translationXBy(shifts*translateDistance).setDuration(shifts*translateDuration);
     }
-    public void moveLeft(View v, int shifts){
+    void moveLeft(View v, int shifts){
         movingCurrently = v;
         moveAnimation = v.animate().translationXBy(-shifts*translateDistance).setDuration(shifts*translateDuration);
     }
-    public void moveUp(View v, int shifts){
+    void moveUp(View v, int shifts){
         movingCurrently = v;
         moveAnimation = v.animate().translationYBy(-shifts*translateDistance).setDuration(shifts*translateDuration);
     }
-    public void moveDown(View v, int shifts){
+    void moveDown(View v, int shifts){
         movingCurrently = v;
         moveAnimation = v.animate().translationYBy(shifts*translateDistance).setDuration(shifts*translateDuration);
+    }
+
+    void closePopup() {
+        dimmer.setAlpha(0f);
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment completionPopUp = fragmentManager.findFragmentById(R.id.popup_fragment_container);
+        fragmentManager
+                .beginTransaction()
+                .remove(completionPopUp)
+                .commit();
+
+        activityLayout.setOnClickListener(null);
     }
 }
 

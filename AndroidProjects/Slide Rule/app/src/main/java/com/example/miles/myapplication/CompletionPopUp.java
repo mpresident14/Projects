@@ -1,53 +1,70 @@
 package com.example.miles.myapplication;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.provider.ContactsContract;
-import android.support.constraint.ConstraintLayout;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Locale;
 
 import static com.example.miles.myapplication.LevelInfo.NUM_LEVELS_IMPLEMENTED;
 
-public class CompletionPopUp extends AppCompatActivity {
+public class CompletionPopUp extends Fragment {
 
-    Context context = this;
+    Context context;
 
-    ImageView star2;
-    ImageView star3;
-    ImageView restart;
-    ImageView back;
-    ImageView next;
+    private ImageView star2;
+    private ImageView star3;
+    private TextView numMovesTextView;
+    private ImageView restart;
+    private ImageView back;
+    private ImageView next;
+    private View.OnClickListener outOfPopUpClickListener;
 
     final static String NUM_STARS = "num_stars";
     final static String CURRENT_LEVEL = "current_level";
+    final static String NUM_MOVES = "num_moves";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_completion_pop_up);
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        this.context = context;
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         // Set popup window size based on a percentage of phone screen size
-        DisplayMetrics dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int width = dm.widthPixels;
-        int height = dm.heightPixels;
-        getWindow().setLayout((int) (width * 0.8), (int) (height * 0.5));
+//        DisplayMetrics dm = new DisplayMetrics();
+//        getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+//        int width = dm.widthPixels;
+//        int height = dm.heightPixels;
+//        getActivity().getWindow().setLayout((int) (width * 0.8), (int) (height * 0.5));
 
-        star2 = findViewById(R.id.star2);
-        star3 = findViewById(R.id.star3);
-        restart = findViewById(R.id.restart);
-        back = findViewById(R.id.back);
-        next = findViewById(R.id.next);
+        return inflater.inflate(R.layout.fragment_completion_pop_up, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        star2 = view.findViewById(R.id.star2);
+        star3 = view.findViewById(R.id.star3);
+        numMovesTextView = view.findViewById(R.id.popup_num_moves_number_tv);
+        restart = view.findViewById(R.id.restart);
+        back = view.findViewById(R.id.back);
+        next = view.findViewById(R.id.next);
 
         // Change the correct number of stars to gold
-        int numStars = getIntent().getIntExtra(NUM_STARS,1);
+        Bundle completionInfoBundle = getArguments();
+        int numStars = completionInfoBundle.getInt(NUM_STARS,1);
         if (numStars >= 2){
             star2.setImageResource(R.drawable.gold_star);
             if (numStars == 3){
@@ -55,11 +72,14 @@ public class CompletionPopUp extends AppCompatActivity {
             }
         }
 
+        int numMoves = completionInfoBundle.getInt(NUM_MOVES, -1);
+        numMovesTextView.setText(String.format(Locale.getDefault(), "%d", numMoves));
+
         restart.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                int currentLevel = getIntent().getIntExtra(CURRENT_LEVEL, -1);
-                Intent intent = new Intent(CompletionPopUp.this, GenericLevel.class);
+                int currentLevel = completionInfoBundle.getInt(CURRENT_LEVEL, -1);
+                Intent intent = new Intent(context, GenericLevel.class);
                 intent.putExtra(ChooseLevel.LEVEL_NUMBER, currentLevel);
                 startActivity(intent);
             }
@@ -68,7 +88,7 @@ public class CompletionPopUp extends AppCompatActivity {
         back.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                Intent intent = new Intent(CompletionPopUp.this, ChooseLevel.class);
+                Intent intent = new Intent(context, ChooseLevel.class);
                 startActivity(intent);
             }
         });
@@ -76,8 +96,8 @@ public class CompletionPopUp extends AppCompatActivity {
         next.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                int nextLevel = getIntent().getIntExtra(CURRENT_LEVEL, -1) + 1;
-                Intent intent = new Intent(CompletionPopUp.this, GenericLevel.class);
+                int nextLevel = completionInfoBundle.getInt(CURRENT_LEVEL, -1) + 1;
+                Intent intent = new Intent(context, GenericLevel.class);
                 intent.putExtra(ChooseLevel.LEVEL_NUMBER, nextLevel);
                 if (nextLevel <= NUM_LEVELS_IMPLEMENTED) {
                     startActivity(intent);
@@ -88,10 +108,11 @@ public class CompletionPopUp extends AppCompatActivity {
             }
         });
     }
-    @Override
-    public void onBackPressed(){
-        super.onBackPressed();
-        Intent intent = new Intent(CompletionPopUp.this, ChooseLevel.class);
-        startActivity(intent);
-    }
+
+//    @Override
+//    public void onBackPressed(){
+//        super.onBackPressed();
+//        Intent intent = new Intent(CompletionPopUp.this, ChooseLevel.class);
+//        startActivity(intent);
+//    }
 }
