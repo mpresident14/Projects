@@ -9,16 +9,6 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!--PopUp-->
-    <style name="AppTheme.PopUpTheme">
-        <item name="android:backgroundDimEnabled">true</item>
-        <item name="android:backgroundDimAmount">0.5</item>
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowCloseOnTouchOutside">false</item>
-        <item name="android:windowAnimationStyle">@style/Animation.AppCompat.Dialog</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-
     <!--Choose Level-->
     <style name="LevelNumber">
         <item name="android:layout_width">0dp</item>
@@ -174,12 +164,9 @@
         <item name="android:src">@drawable/gold_star</item>
     </style>
 
-    <!--<style name="PopupAnimation">-->
-        <!--<item name="popup_enter">android:anim/fade_in</item>-->
-        <!--<item name="popup_exit">>android:anim/fade_out</item>-->
-    <!--</style>-->
-
-
-
+    <style name="Animation">
+        <item name="android:windowEnterAnimation">@anim/popup_enter</item>
+        <item name="android:windowExitAnimation">@anim/popup_exit</item>
+    </style>
 
 </resources>

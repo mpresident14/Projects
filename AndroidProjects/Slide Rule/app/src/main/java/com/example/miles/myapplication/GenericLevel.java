@@ -19,6 +19,7 @@ import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import com.example.miles.myapplication.databinding.ActivityGenericLevelBinding;
@@ -259,25 +260,8 @@ public class GenericLevel extends AppCompatActivity {
                             int numStars = UIUtils.getNumStars(numMoves, moves3Stars, moves2Stars);
                             UIUtils.changeStarColor(context, levelNumber, numStars);
 
-//                            CompletionPopUp completionPopUp = new CompletionPopUp();
-//
-//                            Bundle completionInfoBundle = new Bundle();
-//                            completionInfoBundle.putInt(CompletionPopUp.NUM_STARS, numStars);
-//                            completionInfoBundle.putInt(CompletionPopUp.NUM_MOVES, numMoves);
-//                            completionInfoBundle.putInt(CompletionPopUp.CURRENT_LEVEL, levelNumber);
-//                            completionPopUp.setArguments(completionInfoBundle);
-//
-//                            dimmer.setAlpha(0.5f);
-//
-//                            getSupportFragmentManager()
-//                                    .beginTransaction()
-//                                    .add(R.id.popup_fragment_container, completionPopUp)
-//                                    .setCustomAnimations(R.animator.fade_in, R.animator.no_fade)
-//                                    .commit();
-//
-//                            activityLayout.setOnClickListener(view -> closePopup());
-                            View popupView = ((LayoutInflater) context.getSystemService(LAYOUT_INFLATER_SERVICE))
-                                    .inflate(R.layout.completion_pop_up, rootConstraintLayout, false);
+                            View popupView = LayoutInflater.from(context).inflate(
+                                    R.layout.completion_pop_up, rootConstraintLayout, false);
 
                             completionPopupWindow =
                                     new CompletionPopupWindow(
@@ -355,7 +339,7 @@ public class GenericLevel extends AppCompatActivity {
     }
 
     void closePopup() {
-        dimmer.setAlpha(0f);
+         dimmer.setAlpha(0f);
         completionPopupWindow.getPopupWindow().dismiss();
 
         restartButton.setOnClickListener(view -> restartLevel());

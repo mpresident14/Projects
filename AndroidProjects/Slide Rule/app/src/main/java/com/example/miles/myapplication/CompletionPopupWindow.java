@@ -23,7 +23,7 @@ final class CompletionPopupWindow {
                           int numMoves,
                           int levelNumber) {
         popupWindow = new PopupWindow(contentView, width, height);
-//        popupWindow.setAnimationStyle(R.style.PopupAnimation);
+        popupWindow.setAnimationStyle(R.style.Animation);
 
         ImageView star2 = contentView.findViewById(R.id.star2);
         ImageView star3 = contentView.findViewById(R.id.star3);
