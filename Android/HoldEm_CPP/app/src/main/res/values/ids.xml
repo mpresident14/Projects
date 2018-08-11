@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="player3_card1" type="id"></item>
+    <item name="player3_card2" type="id"></item>
+    <item name="player4_card1" type="id"></item>
+    <item name="player4_card2" type="id"></item>
+    <item name="player5_card1" type="id"></item>
+    <item name="player5_card2" type="id"></item>
+    <item name="player6_card1" type="id"></item>
+    <item name="player6_card2" type="id"></item>
+    <item name="player7_card1" type="id"></item>
+    <item name="player7_card2" type="id"></item>
+    <item name="player8_card1" type="id"></item>
+    <item name="player8_card2" type="id"></item>
+    <item name="player9_card1" type="id"></item>
+    <item name="player9_card2" type="id"></item>
+
+    <item name="win3" type="id"></item>
+    <item name="win4" type="id"></item>
+    <item name="win5" type="id"></item>
+    <item name="win6" type="id"></item>
+    <item name="win7" type="id"></item>
+    <item name="win8" type="id"></item>
+    <item name="win9" type="id"></item>
+    <item name="tie3" type="id"></item>
+    <item name="tie4" type="id"></item>
+    <item name="tie5" type="id"></item>
+    <item name="tie6" type="id"></item>
+    <item name="tie7" type="id"></item>
+    <item name="tie8" type="id"></item>
+    <item name="tie9" type="id"></item>
+
+
+
+</resources>

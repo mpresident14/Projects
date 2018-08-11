@@ -1,0 +1,172 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <!--Choose Level-->
+    <style name="LevelNumber">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_rowWeight">0.25</item>
+        <item name="android:layout_columnWeight">0.2</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:fontFamily">@font/cooper_black_ff</item>
+        <item name="android:paddingBottom">30dp</item>
+    </style>
+
+    <style name="LevelIcon">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_rowWeight">0.25</item>
+        <item name="android:layout_columnWeight">0.2</item>
+        <item name="android:src">@drawable/no_stars</item>
+        <item name="android:alpha">0.3</item>
+    </style>
+
+    <!--Levels-->
+    <style name="MainBackground">
+        <item name="android:background">@color/light_blue</item>
+    </style>
+
+    <style name="LevelHeader">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">50sp</item>
+        <item name="android:fontFamily">casual</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+    </style>
+
+    <style name="ThreeByThreeGrid">
+        <item name="android:layout_width">190dp</item>
+        <item name="android:layout_height">190dp</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:background">@drawable/grid_background</item>
+        <item name="android:rowCount">3</item>
+        <item name="android:columnCount">3</item>
+    </style>
+
+    <style name="RowSolutions">
+        <item name="android:background">@drawable/solution_background</item>
+        <item name="android:padding">3dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_marginStart">2dp</item>
+        <item name="android:layout_marginEnd">0dp</item>
+    </style>
+
+    <style name="ColSolutions">
+        <item name="android:background">@drawable/solution_background</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:padding">3dp</item>
+    </style>
+
+    <style name="NailedRow">
+        <!--<item name="android:background">@color/gray</item>-->
+    </style>
+
+    <style name="NailedCol">
+        <!--<item name="android:background">@color/gray</item>-->
+    </style>
+
+    <style name="MovableTile">
+        <item name="android:layout_width">60dp</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="NailedTile">
+        <item name="android:layout_width">60dp</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="SolutionWrongTile">
+        <item name="android:layout_width">60dp</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="BlankTile">
+        <item name="android:layout_width">60dp</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="Moves">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">casual</item>
+        <item name="android:text">@string/moves</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+    </style>
+
+    <style name="NumMoves">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:text">@string/zero</item>
+        <item name="android:fontFamily">casual</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">0dp</item>
+    </style>
+
+    <style name="NumStarsNeeded">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">casual</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+        <item name="android:layout_marginBottom">1dp</item>
+        <item name="android:paddingStart">2dp</item>
+        <item name="android:paddingEnd">0dp</item>
+    </style>
+
+    <style name="RestartButton">
+        <item name="android:layout_width">50dp</item>
+        <item name="android:layout_height">50dp</item>
+        <item name="android:contentDescription">Restart</item>
+        <item name="android:rotation">165</item>
+        <item name="android:src">@drawable/restart_button</item>
+    </style>
+
+    <style name="BackButton">
+        <item name="android:layout_width">50dp</item>
+        <item name="android:layout_height">50dp</item>
+        <item name="android:contentDescription">Back</item>
+        <item name="android:src">@drawable/back_button</item>
+        <item name="android:layout_marginStart">40dp</item>
+        <item name="android:layout_marginEnd">0dp</item>
+    </style>
+
+    <style name="GoldStar">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:src">@drawable/gold_star</item>
+    </style>
+
+    <style name="Animation">
+        <item name="android:windowEnterAnimation">@anim/popup_enter</item>
+        <item name="android:windowExitAnimation">@anim/popup_exit</item>
+    </style>
+
+</resources>
