@@ -9,6 +9,7 @@
 #include <stack>
 #include <random>
 #include <time.h>
+#include <limits.h>
 
 class RSADecrypter {    
 
@@ -17,12 +18,12 @@ class RSADecrypter {
         ~RSADecrypter() = default;
         RSADecrypter(const RSADecrypter& other) = default;
         RSADecrypter& operator=(const RSADecrypter& other) = default;
-        char* decryptMessage(ushort* encryptedMsg); 
+        char* decryptMessage(ushort* encryptedMsg, size_t msgArrLen); 
         RSAEncrypter& getEncrypter();
 
     // private:
-        ushort* decodeMsgArr(ushort* codedMsgArr);
-        char* arrayToMsg(ushort* msgArr);
+        ushort* decodeMsgArr(ushort* codedMsgArr, size_t msgArrLen);
+        char* arrayToMsg(ushort* msgArr, size_t msgArrLen);
         int* findEAndF(size_t a, size_t b);
         void findDAndE();
         
@@ -32,7 +33,6 @@ class RSADecrypter {
         ushort d_; /// private key
         ushort e_; /// public key      
         int f_; // for debugging
-        size_t msgArrLen_;
         RSAEncrypter encrypter_;
 };
 

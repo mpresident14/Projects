@@ -8,11 +8,11 @@ class User {
         User(Server& server);
         ~User() = default;
         User(const User& other) = default;
-        void sendMessage(char* msg);
+        void sendMessage(const char* msg);
 
     private:
         RSAEncrypter& requestEncrypterFromServer();
-        void sendToServer(ushort* encryptedMsg);
+        void sendToServer(ushort* encryptedMsg, size_t msgArrLen);
 
         Server& server_;
 };

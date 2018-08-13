@@ -8,11 +8,12 @@ User::User(Server& server)
     // Nothing to do
 }
 
-void User::sendMessage(char* msg)
+void User::sendMessage(const char* msg)
 {
     RSAEncrypter& encrypter = requestEncrypterFromServer();
-    ushort* encryptedMsg = encrypter.encryptMessage(msg);
-    sendToServer(encryptedMsg);
+    size_t msgArrLen = encrypter.calculateMsgArrLen(msg);
+    ushort* encryptedMsg = encrypter.encryptMessage(msg, msgArrLen);
+    sendToServer(encryptedMsg, msgArrLen);
 }
 
 RSAEncrypter& User::requestEncrypterFromServer()
@@ -20,7 +21,7 @@ RSAEncrypter& User::requestEncrypterFromServer()
     return server_.sendEncrypter();
 }
 
-void User::sendToServer(ushort* encryptedMsg)
+void User::sendToServer(ushort* encryptedMsg, size_t msgArrLen)
 {
-    server_.receiveMessage(encryptedMsg);
+    server_.receiveMessage(encryptedMsg, msgArrLen);
 }

@@ -3,7 +3,7 @@
 using namespace std;
 
 RSADecrypter::RSADecrypter() 
-    : d_{0}, e_{0}, f_{0}, msgArrLen_{0}
+    : d_{0}, e_{0}, f_{0}
 {
     findDAndE();
     encrypter_ = {N, e_};
@@ -14,33 +14,36 @@ RSAEncrypter& RSADecrypter::getEncrypter()
     return encrypter_;
 }
 
-char* RSADecrypter::decryptMessage(ushort* encryptedMsg)
+char* RSADecrypter::decryptMessage(ushort* encryptedMsg, size_t msgArrLen)
 {
-    msgArrLen_ = encrypter_.getMsgArrLen();
-    ushort* origMsgArr = decodeMsgArr(encryptedMsg);
-    return arrayToMsg(origMsgArr);
+    ushort* origMsgArr = decodeMsgArr(encryptedMsg, msgArrLen);
+    char* msg = arrayToMsg(origMsgArr, msgArrLen);
+    delete[] encryptedMsg;
+    delete[] origMsgArr;
+    return msg;
 }
 
-ushort* RSADecrypter::decodeMsgArr(ushort* codedMsgArr)
+ushort* RSADecrypter::decodeMsgArr(ushort* codedMsgArr, size_t msgArrLen)
 {
-    ushort* msgArr = new ushort[msgArrLen_];
-    for (size_t i = 0; i < msgArrLen_; ++i){
+    ushort* msgArr = new ushort[msgArrLen];
+    for (size_t i = 0; i < msgArrLen; ++i){
         msgArr[i] = computePowerModM(codedMsgArr[i], d_, N);
     }
+
     return msgArr;
 }
 
 /* Convert M to string */
-char* RSADecrypter::arrayToMsg(ushort* msgArr)
+char* RSADecrypter::arrayToMsg(ushort* msgArr, size_t msgArrLen)
 {
     size_t typeSize = sizeof(ushort);
-    size_t msgLen = msgArrLen_ * typeSize + 1;
+    size_t msgLen = msgArrLen * typeSize + 1;
     char* msg = new char[msgLen];
     msg[msgLen-1] = '\0';
 
     // Copy each long into 4 chars, 00 bytes will be null chars
     size_t j = 0;
-    for (size_t i = 0; i < msgArrLen_; ++i){
+    for (size_t i = 0; i < msgArrLen; ++i){
         memcpy(msg+j, msgArr+i, typeSize);
         j += typeSize;
     }
@@ -112,11 +115,17 @@ void RSADecrypter::findDAndE()
             // Find E and F s.t. DE - phi(N)F = 1
             if (d > PHI){
                 xAndY = findEAndF(d, PHI);
+                if (xAndY == nullptr) {
+                    continue;
+                }
                 e = xAndY[0];
                 f = xAndY[1];
             }
             else{
                 xAndY = findEAndF(PHI, d);
+                if (xAndY == nullptr) {
+                    continue;
+                }
                 e = xAndY[1];
                 f = xAndY[0];
             }            
@@ -132,4 +141,5 @@ void RSADecrypter::findDAndE()
     d_ = d;
     e_ = ushort(e);
     f_ = f;
+    delete[] xAndY;
 }

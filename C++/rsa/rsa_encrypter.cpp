@@ -3,36 +3,27 @@
 using namespace std;
 
 RSAEncrypter::RSAEncrypter(ushort n, ushort e)
-    : n_{n}, e_{e}, msgArrLen_{0}
+    : n_{n}, e_{e}
 {
     // Nothing to do
 }
 
-ushort* RSAEncrypter::encryptMessage(char* msg)
+ushort* RSAEncrypter::encryptMessage(const char* msg, size_t msgArrLen)
 {
-    ushort* msgArr = msgToArray(msg);
-    ushort* encryptedMsg = encodeMsgArr(msgArr);
+    ushort* msgArr = msgToArray(msg, msgArrLen);
+    ushort* encryptedMsg = encodeMsgArr(msgArr, msgArrLen);
+    delete[] msgArr;
 
-    printf("M: ");
-    for (size_t i = 0; i < msgArrLen_; ++i){
-        printf("%u ", encryptedMsg[i]);
-    }
-    cout << endl;
+    // printf("M: ");
+    // for (size_t i = 0; i < msgArrLen; ++i){
+    //     printf("%u ", encryptedMsg[i]);
+    // }
+    // cout << endl;
 
     return encryptedMsg;
 }
 
-ushort* RSAEncrypter::encodeMsgArr(ushort* msgArr)
-{  
-    ushort* codedMsgArr = new ushort[msgArrLen_];
-    for (size_t i = 0; i < msgArrLen_; ++i){
-        codedMsgArr[i] = computePowerModM(msgArr[i], e_, n_);
-    }
-    return codedMsgArr;
-}
-
-ushort* RSAEncrypter::msgToArray(char* msg)
-{
+size_t RSAEncrypter::calculateMsgArrLen(const char* msg) {
     size_t typeSize = sizeof(ushort);
     size_t msgLength = strlen(msg);
     if (msgLength == 0){
@@ -40,13 +31,19 @@ ushort* RSAEncrypter::msgToArray(char* msg)
         exit(EXIT_FAILURE);
     }
 
-    msgArrLen_ = (msgLength - 1) / typeSize + 1; // Each int_type takes up typeSize chars
-    ushort* msgArr = new ushort[msgArrLen_];
+    return (msgLength - 1) / typeSize + 1; // Each int_type takes up typeSize chars
+}
+
+ushort* RSAEncrypter::msgToArray(const char* msg, size_t msgArrLen)
+{
+    size_t msgLength = strlen(msg);
+    size_t typeSize = sizeof(ushort);
+    ushort* msgArr = new ushort[msgArrLen];
 
     // Copy typeSize chars into every int_type
     size_t i; // msgArr index
     size_t j = 0; // msg index
-    for (i = 0; i < msgArrLen_ - 1; ++i){
+    for (i = 0; i < msgArrLen - 1; ++i){
         memcpy(msgArr + i, msg + j, typeSize);
         j += typeSize;
     }
@@ -67,7 +64,12 @@ ushort* RSAEncrypter::msgToArray(char* msg)
     return msgArr;
 }
 
-size_t RSAEncrypter::getMsgArrLen()
-{
-    return msgArrLen_;
+ushort* RSAEncrypter::encodeMsgArr(ushort* msgArr, size_t msgArrLen)
+{  
+    ushort* encryptedMsg = new ushort[msgArrLen];
+    for (size_t i = 0; i < msgArrLen; ++i){
+        encryptedMsg[i] = computePowerModM(msgArr[i], e_, n_);
+    }
+
+    return encryptedMsg;
 }

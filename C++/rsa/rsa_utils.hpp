@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <math.h>
 
 typedef unsigned short ushort;
 

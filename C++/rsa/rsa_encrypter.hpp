@@ -2,6 +2,8 @@
 #define RSA_ENCRYPTER_HPP_INCLUDED 1
 
 #include "rsa_utils.hpp"
+#include <string.h>
+#include <cstring>
 
 class RSAEncrypter {
     public:
@@ -9,16 +11,15 @@ class RSAEncrypter {
         RSAEncrypter(ushort n, ushort e);
         ~RSAEncrypter() = default;
         RSAEncrypter(const RSAEncrypter& other) = default;
-        ushort* encryptMessage(char* msg);
-        size_t getMsgArrLen();
+        ushort* encryptMessage(const char* msg, size_t msgArrLen);
+        size_t calculateMsgArrLen(const char* msg);
 
     // private:
-        ushort* encodeMsgArr(ushort* msgArr);
-        ushort* msgToArray(char* msg);
+        ushort* encodeMsgArr(ushort* msgArr, size_t msgArrLen);
+        ushort* msgToArray(const char* msg, size_t msgArrLen);
 
         ushort n_;
         ushort e_;
-        size_t msgArrLen_;
 };
 
 #endif
