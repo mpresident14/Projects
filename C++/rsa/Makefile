@@ -1,4 +1,4 @@
-CXX = clang++
+CXX = g++
 CXXFLAGS = -g -std=c++11 -Wall -Wextra -pedantic 
 
 all: main
@@ -26,4 +26,4 @@ main.o: main.cpp user.hpp
 	$(CXX) $(CXXFLAGS) -c main.cpp
 
 main: main.o rsa_encrypter.o rsa_decrypter.o rsa_utils.o server.o user.o
-	$(CXX) $(CXXFLAGS) -pthread -o main $^
+	$(CXX) $(CXXFLAGS) -lpthread -o main $^
