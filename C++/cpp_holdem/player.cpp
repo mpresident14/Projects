@@ -102,7 +102,7 @@ HandType Player::isStraight() const
             consecutive = 0;
             // If we reached the 10 slot, then no chance of straight.
             if (i >= 8){
-                break;
+                return HIGH_CARD;
             }
         }
     }
@@ -128,36 +128,31 @@ HandType Player::isFlush() const
     // Search for straight among cards with best_suit
     uchar consecutive = 0;
     uchar suit_bit = 1 << (best_suit + 3); // Because 3 bits for the count
-    // Save straight flush if we find it
-    bool is_sf = false;
-    // Catches wrap around A2345 straight
-    if (value_arr_[NUMVALUES-1] & suit_bit){
-        ++consecutive;
-    }
 
     // Search for 5 consecutive 1s
-    for (uchar i = 0; i < NUMVALUES; ++i){
+    for (int i = NUMVALUES - 1; i >= 0; --i){
         if (value_arr_[i] & suit_bit){
             ++consecutive;
             if (consecutive == 5){
-                is_sf = true;
+                return i == 8 ? ROYAL_FLUSH : STRAIGHT_FLUSH;
             }
         }
         else{
             consecutive = 0;
-            // If we reached the 10 slot, then no chance of straight
-            if (i >= 8){ // 8 == NUMVALUES - 4
-                break;
+            // If we reached the 5 slot, then no chance of straight
+            if (i <= 3){
+                return FLUSH;
             }
         }
     }
-    if (is_sf){
-        // If consecutive is >=5 after loop, then last card of straight flush was an ace
-        if (consecutive >= 5){
-            return ROYAL_FLUSH;
+    
+    // Catches wrap around A2345 straight
+    if (value_arr_[NUMVALUES-1] & suit_bit){
+        if (consecutive == 4){
+            return STRAIGHT_FLUSH;
         }
-        return STRAIGHT_FLUSH;
     }
+
     return FLUSH;
 }
 
