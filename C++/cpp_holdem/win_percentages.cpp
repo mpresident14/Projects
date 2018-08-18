@@ -188,13 +188,13 @@ double** WinPercentages::avgEmptyHands(double* winPercentages, double* tiePercen
 void WinPercentages::dealRandomCard(short pos)
 {
     // Get random card
-    Card card;
+    Card* cardPtr;
     bool isInDeck = false;
     while (!isInDeck) {
         int n = rand() % deck_.size();
         Card& deckCard = deck_[n];
         if (!deckCard.isDealt_) {
-            card = deckCard;
+            cardPtr = &deckCard;
             deckCard.isDealt_ = true; // Mark the card as used (but don't remove it)
             isInDeck = true;
         }
@@ -203,13 +203,13 @@ void WinPercentages::dealRandomCard(short pos)
     // Add to all players (board)
     if (pos == BOARD){
         for (uchar i = 0; i < num_players_; ++i){
-            players_[i].addSingleCard(card); // Give card to each player            
+            players_[i].addSingleCard(*cardPtr); // Give card to each player            
         }    
         
     }
     // Add to single player
     else{
-         players_[pos].addSingleCard(card); // Give card to player
+         players_[pos].addSingleCard(*cardPtr); // Give card to player
     }  
 }
 
