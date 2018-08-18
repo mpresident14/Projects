@@ -3,7 +3,7 @@
 using namespace std;
 
 WinPercentages::WinPercentages(int* info)
-    : players_ {new Player[9]}, num_players_{0}, board_size_{0}, orig_deck_{nullptr}, orig_deck_size_{0}
+    : players_ {new Player[9]}, num_players_{0}, board_size_{0}
 {    
     deck_.reserve(52);
 
@@ -14,7 +14,7 @@ WinPercentages::WinPercentages(int* info)
     // Populate the deck
     // TODO: emplace_back ???
     for (i = 0; i < 52; ++i){
-        deck_.push_back(new Card{i});
+        deck_.push_back(Card{i});
     }
 
     // Add Players
@@ -36,23 +36,11 @@ WinPercentages::WinPercentages(int* info)
             addUserSelected(uchar(info[i]), (i-6)/2); // Convert index to player position
         }
     }
-
-    // Initialize original deck (for resetting) with copy of deck
-    // after user selections have been removed
-    orig_deck_size_ = deck_.size();
-    orig_deck_ = new Card*[orig_deck_size_];
-    memcpy(orig_deck_, &deck_[0], orig_deck_size_ * sizeof(Card*));
 }
 
 WinPercentages::~WinPercentages()
 {
     delete[] players_;
-
-    for (size_t i = 0; i < deck_.size(); ++i){
-        delete deck_[i];
-    }
-
-    delete[] orig_deck_;
 }
 
 void WinPercentages::addPlayer()
@@ -110,17 +98,16 @@ void WinPercentages::addUserSelected(uchar cardNum, short pos)
 
 size_t WinPercentages::dealRandomCard(short pos)
 {
-    // Faster to check if card has been used vs erasing from deck ???
-    // If so, add isDealt field to Card and change assignment operator to not worry about this field.
-
     // Get random card
-    Card* card = nullptr;
-    while (card == nullptr) {
+    Card card;
+    bool isInDeck = false;
+    while (!isInDeck) {
         int n = rand() % deck_.size();
-        Card* deckCard = deck_[n];
-        if (!deckCard->isDealt_) {
+        Card& deckCard = deck_[n];
+        if (!deckCard.isDealt_) {
             card = deckCard;
-            deckCard->isDealt_ = true;
+            deckCard.isDealt_ = true;
+            isInDeck = true;
         }
     }
 
@@ -128,26 +115,23 @@ size_t WinPercentages::dealRandomCard(short pos)
     if (pos == BOARD){
         ++board_size_;
         for (uchar i = 0; i < num_players_; ++i){
-            players_[i].addSingleCard(*card); // Give card to each player            
+            players_[i].addSingleCard(card); // Give card to each player            
         }    
         
     }
     // Add to single player
     else{
-         players_[pos].addSingleCard(*card); // Give card to player
+         players_[pos].addSingleCard(card); // Give card to player
     }  
 
-    return 13*card->suit_ + card->value_;
-
+    return 13*card.suit_ + card.value_;
 }
 
 void WinPercentages::reset()
 {
-    // // Reset deck to original and clear the used cards
-    // deck_.resize(orig_deck_size_);
-    // memcpy(&deck_[0], orig_deck_, orig_deck_size_ * sizeof(Card*) );
-    for (Card* c : deck_) {
-        c->isDealt_ = false;
+    // Reset deck
+    for (Card& c : deck_) {
+        c.isDealt_ = false;
     }
 
     // Reset players
@@ -165,7 +149,7 @@ void WinPercentages::printDeck()
     cout << "Deck:";
     cout << "[";
     for (size_t i = 0; i < length; ++i){
-        cout << (*deck_[i]);        
+        cout << (deck_[i]);        
         if (i != length-1){
             cout << ", ";
         }

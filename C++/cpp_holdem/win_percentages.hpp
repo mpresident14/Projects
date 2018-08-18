@@ -32,18 +32,12 @@ class WinPercentages{
 
         friend inline std::ostream& operator<<(std::ostream& out, const WinPercentages& h);
 
-
-
     private:
         Player* players_;
         uchar num_players_;
         uchar board_size_;
 
-        std::vector<Card*> deck_;
-
-        //  Reset Variables
-        Card** orig_deck_; // Shows initial state (what cards are left after the user initially selected)
-        size_t orig_deck_size_; // How many cards are left after initial user deal?
+        std::vector<Card> deck_;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const WinPercentages& wp)
@@ -69,17 +63,14 @@ inline std::ostream& operator<<(std::ostream& out, const WinPercentages& wp)
 }
 
 // Remove and return card from vector
-inline Card* removeFromVector(Card c, std::vector<Card*>& vec)
+inline void removeFromVector(Card c, std::vector<Card>& vec)
 {
-    Card* erased;
     for (auto iter = vec.begin(); iter != vec.end(); ++iter){
-        if (c == **iter){
-            erased = *iter;
+        if (c == *iter){
             vec.erase(iter);
-            return erased;
+            return;
         }
     }
-    return nullptr;
 }
 
 #endif
