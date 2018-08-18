@@ -57,19 +57,84 @@ void WinPercentages::addUserSelected(uchar cardNum, short pos)
     if (pos == BOARD){
         ++board_size_;
         for (uchar i = 0; i < num_players_; ++i){
-            players_[i].addOriginalCard(c); // Give card to player            
+            players_[i].addOriginalBoardCard(c); // Give card to player            
         }
     }
     // Add to single player
     else{
-        players_[pos].addOriginalCard(c); // Give card to each player
+        players_[pos].addOriginalHoleCard(c); // Give card to each player
     }
 
     // Remove card from deck
     removeFromVector(c, deck_);
 }
 
-size_t WinPercentages::dealRandomCard(short pos)
+size_t** WinPercentages::getWinAndTieCounts()
+{
+    size_t* winCounts = new size_t[num_players_];
+    size_t* tieCounts = new size_t[num_players_];
+
+    for (size_t iters = 0; iters < NUM_ITERS; ++iters) {
+        // Finish the board
+        for (uchar i = board_size_; i < 5; ++i) {
+            dealRandomCard(BOARD);
+        }
+
+        // Init comparison vars
+        Hand bestHand{HIGH_CARD, 0, 0};
+        uchar bestPlayerPos = 0;
+        uchar numPlayersTied = 1;
+        uchar* tiedPositions = new uchar[num_players_];
+        // TODO: Use std::fill here ???
+        for (uchar i = 0; i < num_players_; ++i) {
+            tiedPositions[i] = 0;
+        }
+
+        for (uchar pos = 0; pos < num_players_; ++pos) {
+            Player& player = players_[pos];
+            // Finish hole cards
+            for (uchar i = player.num_cards_; i < 2; ++i) {
+                dealRandomCard(pos);
+            }
+
+            Hand myHand = player.getBestHand();
+            int comparison = myHand.compareTo(bestHand);
+
+            if (comparison > 0) {
+                bestHand = myHand;
+                bestPlayerPos = pos;
+
+                tiedPositions[0] = pos;
+                numPlayersTied = 1;
+            }
+            else if (comparison == 0) {
+                tiedPositions[numPlayersTied] = pos;
+                ++numPlayersTied;
+            }
+        }
+
+        if (numPlayersTied != 1) {
+            for (uchar i = 0; i < numPlayersTied; ++i) {
+                ++tieCounts[tiedPositions[i]];
+            }
+        }
+        else {
+            ++winCounts[bestPlayerPos];
+        }
+
+        // TODO: memcpy 0s here instead of continuously allocating and deallocating
+        delete[] tiedPositions;
+        // TODO: reset players within loop
+        reset();
+    }
+
+    size_t** result = new size_t*[2];
+    result[0] = winCounts;
+    result[1] = tieCounts;
+    return result;
+}
+
+void WinPercentages::dealRandomCard(short pos)
 {
     // Get random card
     Card card;
@@ -86,7 +151,6 @@ size_t WinPercentages::dealRandomCard(short pos)
 
     // Add to all players (board)
     if (pos == BOARD){
-        ++board_size_;
         for (uchar i = 0; i < num_players_; ++i){
             players_[i].addSingleCard(card); // Give card to each player            
         }    
@@ -96,8 +160,6 @@ size_t WinPercentages::dealRandomCard(short pos)
     else{
          players_[pos].addSingleCard(card); // Give card to player
     }  
-
-    return 13*card.suit_ + card.value_;
 }
 
 void WinPercentages::reset()
@@ -108,10 +170,9 @@ void WinPercentages::reset()
     }
 
     // Reset players
-    size_t copySize = NUMVALUES * sizeof(uchar);
     for (uchar i = 0; i < num_players_; ++i) {
-        Player p = players_[i];
-        memcpy(p.value_arr_, p.orig_value_arr_, copySize);
+        Player& p = players_[i];
+        memcpy(p.value_arr_, p.orig_value_arr_, NUMVALUES);
         p.suit_counts_ = p.orig_suit_counts_;
     }
 }
@@ -130,14 +191,43 @@ void WinPercentages::printDeck()
     cout << "]" << endl;
 }
 
+void WinPercentages::printWinAndTieCounts(size_t** result)
+{
+    size_t* winCounts = result[0];
+    size_t* tieCounts = result[1];
+
+    cout << "Win Counts:";
+    cout << "[";
+    for (size_t i = 0; i < num_players_; ++i){
+        cout << winCounts[i];        
+        if (i != size_t(num_players_ - 1)){
+            cout << ", ";
+        }
+    }
+    cout << "]" << endl;
+
+    cout << "Tie Counts:";
+    cout << "[";
+    for (size_t i = 0; i < num_players_; ++i){
+        cout << tieCounts[i];        
+        if (i != size_t(num_players_ - 1)){
+            cout << ", ";
+        }
+    }
+    cout << "]" << endl;
+}
+
 int main()
 {
-    int* info = new int[24]{1, 10,11,12,13,37, 9,8, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1,};
+    int* info = new int[24]{2, 10,11,51,-1,-1, 25,26, 0,4, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1,};
     WinPercentages wp{info};
 
-    // cout << wp.players_[0] << endl;
-    cout << wp.players_[0].getBestHand() << endl;
+    size_t** result = wp.getWinAndTieCounts();
+    wp.printWinAndTieCounts(result);
 
+    delete[] result[0];
+    delete[] result[1];
+    delete[] result;
     delete[] info;
 }
 

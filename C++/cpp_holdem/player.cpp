@@ -21,24 +21,26 @@ void Player::addSingleCard(const Card& card)
 {   
     value_arr_[card.value_] += card.encoding_;
     suit_counts_ += 1 << (card.suit_ << 2);
-    // ++suit_arr_[card.suit_];
-    // ++num_cards_; (Now updated in addUserSelected)  
 }
 
 void Player::removeSingleCard(const Card& card)
 {  
     value_arr_[card.value_] -= card.encoding_;
     suit_counts_ -= 1 << (card.suit_ << 2);
-    // --suit_arr_[card.suit_];
-    // ++num_cards_; (Now updated in addUserSelected)  
 }
 
-void Player::addOriginalCard(const Card& card)
+void Player::addOriginalHoleCard(const Card& card)
+{   
+    addOriginalBoardCard(card);
+    ++num_cards_;
+}
+
+void Player::addOriginalBoardCard(const Card& card)
 {   
     value_arr_[card.value_] += card.encoding_;
     suit_counts_ += 1 << (card.suit_ << 2);
-    // ++suit_arr_[card->suit_];
-    ++num_cards_;
+    orig_value_arr_[card.value_] += card.encoding_;
+    orig_suit_counts_ += 1 << (card.suit_ << 2);
 }
 
 HandType Player::isCounterHand() const

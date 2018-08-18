@@ -23,7 +23,8 @@ class Player{
         ~Player() = default;
         void addSingleCard(const Card& card);
         void removeSingleCard(const Card& card);
-        void addOriginalCard(const Card& card);
+        void addOriginalHoleCard(const Card& card);
+        void addOriginalBoardCard(const Card& card);
 
         /* Hand Type */
         HandType isCounterHand() const;
@@ -85,7 +86,7 @@ inline std::ostream& operator<<(std::ostream& out, const Player& p)
         if (i != 0){
             out << ", ";
         }
-        out << dec_to_bin_nbit(p.value_arr_[i], 7); 
+        out << std::dec << int(i) << ": " << dec_to_bin_nbit(p.value_arr_[i], 7); 
     }
     out << "]";
 

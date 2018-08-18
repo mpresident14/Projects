@@ -26,10 +26,12 @@ class WinPercentages{
         void removeUserSelected(uchar cardNum, short pos);
         
         /*** Iterations ***/
-        size_t dealRandomCard(short pos);
+        size_t** getWinAndTieCounts();
+        void dealRandomCard(short pos);
         void reset();
 
         void printDeck();
+        void printWinAndTieCounts(size_t** result);
 
         friend inline std::ostream& operator<<(std::ostream& out, const WinPercentages& h);
 
@@ -39,6 +41,7 @@ class WinPercentages{
         uchar board_size_;
 
         std::vector<Card> deck_;
+        static const size_t NUM_ITERS = 200000;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const WinPercentages& wp)

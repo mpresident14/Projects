@@ -37,8 +37,6 @@ class Card{
 
 inline std::ostream& operator<<(std::ostream& out, const Card& card)
 {
-    // Restore rank from Player value_arr index
-    size_t rank = card.value_ == 12 ? 1 : card.value_ + 2;
     std::string s;
     switch(card.suit_){
         case 0:
@@ -53,7 +51,7 @@ inline std::ostream& operator<<(std::ostream& out, const Card& card)
         default:
             s = "SPADES";
     }
-    out << rank << " " << s;
+    out << (unsigned int) card.value_ << " " << s;
     return out;
 }
 
