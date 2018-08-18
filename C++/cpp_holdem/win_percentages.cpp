@@ -132,11 +132,11 @@ void WinPercentages::printDeck()
 
 int main()
 {
-    int* info = new int[24]{1, 1,2,3,4,19, 20,22, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1,};
+    int* info = new int[24]{1, 10,11,12,13,37, 9,8, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1,};
     WinPercentages wp{info};
 
     // cout << wp.players_[0] << endl;
-    cout << wp.players_[0].getCounterHand() << endl;
+    cout << wp.players_[0].getBestHand() << endl;
 
     delete[] info;
 }

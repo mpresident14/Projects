@@ -24,7 +24,7 @@ class Hand {
 
     friend inline std::ostream& operator<<(std::ostream& out, const Hand& hand);
 
-  private:
+  // private:
     HandType handType_;
     unsigned long rank_;        // 20 bits: 4 bits per value, highest number at msb
     unsigned long otherCards_;  // 20 bits: 4 bits per value, highest number at msb

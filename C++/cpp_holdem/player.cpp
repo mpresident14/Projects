@@ -311,6 +311,118 @@ Hand Player::getCounterHand() const
     return Hand{HIGH_CARD, /* unused rank = */ 1, otherCards};
 }
 
+Hand Player::getStraight() const
+{
+    uchar consecutive = 0;
+
+    // Search for 5 consecutive 1s
+    for (int i = NUMVALUES - 1; i >= 0; --i){
+        if (value_arr_[i] != 0){
+            ++consecutive;
+            if (consecutive == 5){
+                return Hand{STRAIGHT, uchar(i + 4), 0};
+            }
+        }
+        else{
+            consecutive = 0;
+            // If we reached the 5 slot, then no chance of straight.
+            if (i <= 3){
+                // No need to keep track of otherCards because getCounterHand already does this
+                return Hand{HIGH_CARD, 0, 0};
+            }
+        }
+    }
+
+    // Catches wrap around A2345 straight
+    if (value_arr_[NUMVALUES-1] != 0){
+        if (consecutive == 4){
+            return Hand{STRAIGHT, 3u, 0};
+        }
+    }
+
+    return Hand{HIGH_CARD, 0, 0};
+}
+
+Hand Player::getFlush() const
+{
+    // If there is more than 5 of a suit, get that suit.
+    uchar best_suit = 5u;
+    for (uchar i = 0; i < NUMSUITS; ++i){
+        // Bit mask for the count of each suit
+        if ((suit_counts_ & (15u << (i << 2))) >= (5u << (i << 2))){
+            best_suit = i;
+            break;
+        }
+    }
+    // We did not find a flush
+    if (best_suit == 5){
+        return Hand{HIGH_CARD, 0, 0};
+    }
+
+    // Search for straight among cards with best_suit
+    uchar consecutive = 0;
+    uchar suit_bit = 1 << (best_suit + 3); // Because 3 bits for the count
+
+    unsigned int flushRank = 0;
+
+    // Search for 5 consecutive 1s
+    for (int i = NUMVALUES - 1; i >= 0; --i){
+        if (value_arr_[i] & suit_bit){
+            ++consecutive;
+            flushRank <<= 4;
+            flushRank += i;
+            if (consecutive == 5){
+                return Hand{STRAIGHT_FLUSH, uchar(i + 4), 0};
+            }
+        }
+        else{
+            consecutive = 0;
+        }
+    }
+
+    // Catches wrap around A2345 straight
+    if (value_arr_[NUMVALUES-1] & suit_bit){
+        if (consecutive == 4){
+            return Hand{STRAIGHT_FLUSH, 3, 0};
+        }
+    }
+
+    // If more than 5 cards in flush, only the top 5 count.
+    uchar best_suit_count = suit_counts_ & (15u << (best_suit << 2));
+    flushRank >>= (best_suit_count - 5u) << 2;
+    return Hand{FLUSH, flushRank, 0};
+}
+
+Hand Player::getBestHand() const
+{
+    Hand flushes = getFlush();
+    
+    // Royal/Straight Flush?
+    if (flushes.handType_ >= STRAIGHT_FLUSH){
+        return flushes;
+    }
+
+    Hand counters = getCounterHand();
+    
+    // Four of a kind/Full house?
+    if (counters.handType_ >= FULL_HOUSE){
+        return counters;
+    }
+    // Flush?
+    if (flushes.handType_ == FLUSH){
+        return flushes;
+    }
+    // Straight?  
+    Hand straight = getStraight();
+    if (straight.handType_ == STRAIGHT){
+        return straight;
+    }
+    // Everything else?
+    else{
+        return counters;
+    }
+}
+
 void Player::printArrays() const
 {
     cout << "Value Array: [";
