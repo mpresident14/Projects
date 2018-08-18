@@ -69,7 +69,7 @@ void WinPercentages::addUserSelected(uchar cardNum, short pos)
     removeFromVector(c, deck_);
 }
 
-size_t** WinPercentages::getWinAndTieCounts()
+double** WinPercentages::getWinAndTiePercentages()
 {
     size_t* winCounts = new size_t[num_players_];
     size_t* tieCounts = new size_t[num_players_];
@@ -128,11 +128,56 @@ size_t** WinPercentages::getWinAndTieCounts()
         reset();
     }
 
-    size_t** result = new size_t*[2];
-    result[0] = winCounts;
-    result[1] = tieCounts;
-    return result;
+    return convertToPercentages(winCounts, tieCounts);
 }
+
+double** WinPercentages::convertToPercentages(size_t* winCounts, size_t* tieCounts)
+{
+    double* winPercentages = new double[num_players_];
+    double* tiePercentages = new double[num_players_];
+
+    for (uchar i = 0; i < num_players_; ++i) {
+        winPercentages[i] = winCounts[i] * 1.0 / NUM_ITERS;
+        tiePercentages[i] = tieCounts[i] * 1.0 / NUM_ITERS;
+    }
+
+    delete[] winCounts;
+    delete[] tieCounts;
+
+    return avgEmptyHands(winPercentages, tiePercentages);
+}
+
+double** WinPercentages::avgEmptyHands(double* winPercentages, double* tiePercentages)
+{
+    double emptyWins = 0;
+    double emptyTies = 0;
+    size_t numEmptyPositions = 0;
+    size_t* emptyPositions =  new size_t[num_players_];
+
+    for (uchar i = 0; i < num_players_; ++i) {
+        if (players_[i].num_cards_ == 0) {
+            emptyWins += winPercentages[i];
+            emptyTies += tiePercentages[i];
+            ++numEmptyPositions;
+            emptyPositions[i] = i;
+        }
+    }
+
+    double avgWins = emptyWins / numEmptyPositions;
+    double avgTies = emptyTies / numEmptyPositions;
+
+    for (uchar i = 0; i < numEmptyPositions; ++i) {
+        uchar pos = emptyPositions[i];
+        winPercentages[pos] = avgWins;
+        tiePercentages[pos] = avgTies;
+    }
+
+    double** percentages = new double*[2];
+    percentages[0] = winPercentages;
+    percentages[1] = tiePercentages;
+    return percentages;
+}
+
 
 void WinPercentages::dealRandomCard(short pos)
 {
@@ -191,10 +236,10 @@ void WinPercentages::printDeck()
     cout << "]" << endl;
 }
 
-void WinPercentages::printWinAndTieCounts(size_t** result)
+void WinPercentages::printWinAndTiePercentages(double** result)
 {
-    size_t* winCounts = result[0];
-    size_t* tieCounts = result[1];
+    double* winCounts = result[0];
+    double* tieCounts = result[1];
 
     cout << "Win Counts:";
     cout << "[";
@@ -219,11 +264,11 @@ void WinPercentages::printWinAndTieCounts(size_t** result)
 
 int main()
 {
-    int* info = new int[24]{2, 10,11,51,-1,-1, 25,26, 0,4, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1,};
+    int* info = new int[24]{9, -1,-1,-1,-1,-1, 24,25, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1};
     WinPercentages wp{info};
 
-    size_t** result = wp.getWinAndTieCounts();
-    wp.printWinAndTieCounts(result);
+    double** result = wp.getWinAndTiePercentages();
+    wp.printWinAndTiePercentages(result);
 
     delete[] result[0];
     delete[] result[1];

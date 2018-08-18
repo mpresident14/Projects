@@ -26,12 +26,15 @@ class WinPercentages{
         void removeUserSelected(uchar cardNum, short pos);
         
         /*** Iterations ***/
-        size_t** getWinAndTieCounts();
+        double** getWinAndTiePercentages();
+        double** convertToPercentages(size_t* winCounts, size_t* tieCounts);
+        double** avgEmptyHands(double* winPercentages, double* c);
+
         void dealRandomCard(short pos);
         void reset();
 
         void printDeck();
-        void printWinAndTieCounts(size_t** result);
+        void printWinAndTiePercentages(double** result);
 
         friend inline std::ostream& operator<<(std::ostream& out, const WinPercentages& h);
 
