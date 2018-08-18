@@ -231,6 +231,47 @@ void Player::getHandCountsHelper(const vector<Card>& deck, Card* combo, uchar de
     }
 }
 
+Hand Player::getCounterHand() const
+{
+    uchar threeRank = 0;
+    uchar pairRank1 = 0;
+    uchar pairRank2 = 0;
+
+    // Get # of three of a kinds and pairs
+    for (int i = NUMVALUES - 1; i >= 0; --i){
+        // The count is the first 3 bits of the encoding
+        uchar cur_val = value_arr_[i] & 7;
+        if (cur_val >= 2){ 
+            if (cur_val == 4){
+                return FOUR_OF_A_KIND;
+            }
+            else if (cur_val == 3){
+                ++threeCnt;
+            }
+            else{
+                ++pairCnt;
+            }
+        }
+    }
+    
+    // Determine hand based on counts
+    if ((pairCnt > 0 && threeCnt == 1) || (threeCnt == 2)){
+        return FULL_HOUSE;
+    }
+    else if (threeCnt == 1){
+        return THREE_OF_A_KIND;
+    }
+    else if (pairCnt >= 2){
+        return TWO_PAIR;
+    }
+    else if (pairCnt == 1){
+        return PAIR;
+    }
+    else{
+        return HIGH_CARD;
+    }
+}
+
 void Player::printArrays() const
 {
     cout << "Value Array: [";

@@ -31,9 +31,9 @@ Card::Card(uchar cardNum)
 Card& Card::operator=(const Card& other)
 {
     // Skipping self-id check for performance
-    this->value_ = other.value_;
-    this->suit_ = other.suit_;
-    this->encoding_ = other.encoding_;
+    value_ = other.value_;
+    suit_ = other.suit_;
+    encoding_ = other.encoding_;
     return *this;
 }
 

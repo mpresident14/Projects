@@ -2,6 +2,7 @@
 #define PLAYER_HPP_INCLUDED 1
 
 #include "card.hpp"
+#include "hand.hpp"
 #include <chrono>
 #include <vector>
 #include <cstring>
@@ -10,24 +11,10 @@
 #define NUMVALUES 13
 #define NUMSUITS 4
 
-enum HandType{
-    HIGH_CARD,
-    PAIR,
-    TWO_PAIR,
-    THREE_OF_A_KIND,
-    STRAIGHT,
-    FLUSH,
-    FULL_HOUSE,
-    FOUR_OF_A_KIND,
-    STRAIGHT_FLUSH,
-    ROYAL_FLUSH
-};
-
 class Player{
 
     public:
         Player();
-        // Player(Card* card1, Card* card2, uchar pos);
         /* 
          * Use default destructor because we will want 
          * to reuse the cards in the main class
@@ -46,7 +33,11 @@ class Player{
         void getHandCountsHelper(const std::vector<Card>& deck, Card* combo, uchar deckSize, uchar comboSize,
                 uchar deckIndex, uchar comboIndex);
 
-        /* Hand comparison */        
+        /* Hand comparison */   
+        Hand getCounterHand() const;
+        Hand getStraight() const;
+        Hand getFlush() const;
+        Hand getBestHand() const;
 
         /* Printing */
         void printArrays() const;
