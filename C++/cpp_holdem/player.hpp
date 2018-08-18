@@ -10,6 +10,7 @@
 
 #define NUMVALUES 13
 #define NUMSUITS 4
+#define ABSENT 0xFF
 
 class Player{
 
@@ -58,43 +59,6 @@ class Player{
         uchar num_cards_;
         size_t* handCounts_;
 };
-
-inline std::ostream& operator<<(std::ostream& out, const HandType& hand)
-{
-    switch(hand){
-        case HIGH_CARD:
-            out << "HIGH_CARD";
-            break;
-        case PAIR:
-            out << "PAIR";
-            break;
-        case TWO_PAIR:
-            out << "TWO_PAIR";
-            break;
-        case THREE_OF_A_KIND:
-            out << "THREE_OF_A_KIND";
-            break;
-        case STRAIGHT:
-            out << "STRAIGHT";
-            break;
-        case FLUSH:
-            out << "FLUSH";
-            break;
-        case FULL_HOUSE:
-            out << "FULL_HOUSE";
-            break;
-        case FOUR_OF_A_KIND:
-            out << "FOUR_OF_A_KIND";
-            break;
-        case STRAIGHT_FLUSH:
-            out << "STRAIGHT_FLUSH";
-            break;
-        case ROYAL_FLUSH:
-            out << "ROYAL_FLUSH";
-            break;
-    }
-    return out;
-}
 
 inline char* dec_to_bin_nbit(uchar num, size_t n){
     

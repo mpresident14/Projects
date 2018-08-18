@@ -233,9 +233,11 @@ void Player::getHandCountsHelper(const vector<Card>& deck, Card* combo, uchar de
 
 Hand Player::getCounterHand() const
 {
-    uchar threeRank = 0;
-    uchar pairRank1 = 0;
-    uchar pairRank2 = 0;
+    unsigned int threeRank = ABSENT;
+    unsigned int pairRank1 = ABSENT;
+    unsigned int pairRank2 = ABSENT;
+    uchar otherCardCount = 0;
+    unsigned int otherCards = 0;
 
     // Get # of three of a kinds and pairs
     for (int i = NUMVALUES - 1; i >= 0; --i){
@@ -243,33 +245,70 @@ Hand Player::getCounterHand() const
         uchar cur_val = value_arr_[i] & 7;
         if (cur_val >= 2){ 
             if (cur_val == 4){
-                return FOUR_OF_A_KIND;
+                if (i == NUMVALUES - 1) {
+                    otherCards = NUMVALUES - 2;
+                }
+                else {
+                    otherCards = NUMVALUES - 1;
+                }
+                return Hand{FOUR_OF_A_KIND, (unsigned int) i, otherCards};
             }
+
             else if (cur_val == 3){
-                ++threeCnt;
+                if (threeRank == ABSENT) {
+                    threeRank = i;
+                }
+                else if (pairRank1 == ABSENT) {
+                    pairRank1 = i;
+                }
+                else if (pairRank2 == ABSENT) {
+                    pairRank2 = i;
+                }
             }
-            else{
-                ++pairCnt;
+
+            else {
+                if (pairRank1 == ABSENT) {
+                    pairRank1 = i;
+                }
+                else if (pairRank2 == ABSENT) {
+                    pairRank2 = i;
+                }
+            }
+        } 
+        
+        else if (cur_val != 0) {
+            if (otherCardCount < 5) {
+                // Shift larger value to msb and add smaller value to lsb
+                otherCards <<= 4; 
+                otherCards += i;
+                ++otherCardCount;
             }
         }
     }
     
     // Determine hand based on counts
-    if ((pairCnt > 0 && threeCnt == 1) || (threeCnt == 2)){
-        return FULL_HOUSE;
+    if (threeRank != ABSENT) {
+        if (pairRank1 != ABSENT) {
+            return Hand{FULL_HOUSE, (threeRank << 4) + pairRank1, 0};
+        }
+        else {
+            // 4 cards in otherCards, only need 2
+            return Hand{THREE_OF_A_KIND, threeRank, otherCards >> 8};
+        }
     }
-    else if (threeCnt == 1){
-        return THREE_OF_A_KIND;
+
+    else if (pairRank1 != ABSENT) {
+        if (pairRank2 != ABSENT) {
+            // 3 cards in otherCards, only need 1
+            return Hand{TWO_PAIR, (pairRank1 << 4) + pairRank2, otherCards >> 8};
+        }
+        else {
+            // 5 cards in otherCards, only need 3
+            return Hand{PAIR, pairRank1, otherCards >> 8};
+        }
     }
-    else if (pairCnt >= 2){
-        return TWO_PAIR;
-    }
-    else if (pairCnt == 1){
-        return PAIR;
-    }
-    else{
-        return HIGH_CARD;
-    }
+
+    return Hand{HIGH_CARD, /* unused rank = */ 1, otherCards};
 }
 
 void Player::printArrays() const

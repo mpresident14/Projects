@@ -2,6 +2,7 @@
 #define WIN_PERCENTAGES_HPP_INCLUDED 1
 
 #include "player.hpp"
+#include "hand.hpp"
 #include "time.h"
 #include <random>
 #include <algorithm>
@@ -32,7 +33,7 @@ class WinPercentages{
 
         friend inline std::ostream& operator<<(std::ostream& out, const WinPercentages& h);
 
-    private:
+    // private:
         Player* players_;
         uchar num_players_;
         uchar board_size_;
