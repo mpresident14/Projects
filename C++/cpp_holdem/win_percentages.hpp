@@ -31,7 +31,6 @@ class WinPercentages{
         double** avgEmptyHands(double* winPercentages, double* c);
 
         void dealRandomCard(short pos);
-        void reset();
 
         void printDeck();
         void printWinAndTiePercentages(double** result);

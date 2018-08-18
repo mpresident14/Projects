@@ -14,7 +14,7 @@ WinPercentages::WinPercentages(int* info)
     // Populate the deck
     // TODO: emplace_back ???
     for (i = 0; i < 52; ++i){
-        deck_.push_back(Card{i});
+        deck_.emplace_back(i);
     }
 
     // Add Players
@@ -73,6 +73,11 @@ double** WinPercentages::getWinAndTiePercentages()
 {
     size_t* winCounts = new size_t[num_players_];
     size_t* tieCounts = new size_t[num_players_];
+    uchar* emptyTiedPositions = new uchar[num_players_];
+    for (uchar i = 0; i < num_players_; ++i) {
+        emptyTiedPositions[i] = 0;
+    }
+    uchar* tiedPositions = new uchar[num_players_];
 
     for (size_t iters = 0; iters < NUM_ITERS; ++iters) {
         // Finish the board
@@ -84,11 +89,7 @@ double** WinPercentages::getWinAndTiePercentages()
         Hand bestHand{HIGH_CARD, 0, 0};
         uchar bestPlayerPos = 0;
         uchar numPlayersTied = 1;
-        uchar* tiedPositions = new uchar[num_players_];
-        // TODO: Use std::fill here ???
-        for (uchar i = 0; i < num_players_; ++i) {
-            tiedPositions[i] = 0;
-        }
+        memcpy(tiedPositions, emptyTiedPositions, num_players_);
 
         for (uchar pos = 0; pos < num_players_; ++pos) {
             Player& player = players_[pos];
@@ -111,6 +112,10 @@ double** WinPercentages::getWinAndTiePercentages()
                 tiedPositions[numPlayersTied] = pos;
                 ++numPlayersTied;
             }
+
+            // Reset the player's values
+            memcpy(player.value_arr_, player.orig_value_arr_, NUMVALUES);
+            player.suit_counts_ = player.orig_suit_counts_;
         }
 
         if (numPlayersTied != 1) {
@@ -121,13 +126,14 @@ double** WinPercentages::getWinAndTiePercentages()
         else {
             ++winCounts[bestPlayerPos];
         }
-
-        // TODO: memcpy 0s here instead of continuously allocating and deallocating
-        delete[] tiedPositions;
-        // TODO: reset players within loop
-        reset();
+        
+        // Reset deck
+        for (Card& c : deck_) {
+            c.isDealt_ = false;
+        }
     }
-
+    delete[] tiedPositions;
+    delete[] emptyTiedPositions;
     return convertToPercentages(winCounts, tieCounts);
 }
 
@@ -207,21 +213,6 @@ void WinPercentages::dealRandomCard(short pos)
     }  
 }
 
-void WinPercentages::reset()
-{
-    // Reset deck
-    for (Card& c : deck_) {
-        c.isDealt_ = false;
-    }
-
-    // Reset players
-    for (uchar i = 0; i < num_players_; ++i) {
-        Player& p = players_[i];
-        memcpy(p.value_arr_, p.orig_value_arr_, NUMVALUES);
-        p.suit_counts_ = p.orig_suit_counts_;
-    }
-}
-
 void WinPercentages::printDeck()
 {
     size_t length = deck_.size();
@@ -267,8 +258,14 @@ int main()
     int* info = new int[24]{9, -1,-1,-1,-1,-1, 24,25, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1};
     WinPercentages wp{info};
 
+    auto start = chrono::steady_clock::now();
     double** result = wp.getWinAndTiePercentages();
+    auto stop = chrono::steady_clock::now();
+
+    double elapsedTime = chrono::duration_cast<chrono::nanoseconds>(stop - start).count() / 1000000000.0;
+
     wp.printWinAndTiePercentages(result);
+    cout << "Elapsed time: " << elapsedTime << endl;
 
     delete[] result[0];
     delete[] result[1];
