@@ -52,7 +52,6 @@ void WinPercentages::addPlayer()
 
 void WinPercentages::addUserSelected(uchar cardNum, short pos)
 {   
-    // TODO: Use move constructor here ???
     Card c{cardNum}; // Make card
     // Add to all players (board)
     if (pos == BOARD){
@@ -70,32 +69,6 @@ void WinPercentages::addUserSelected(uchar cardNum, short pos)
     removeFromVector(c, deck_);
 }
 
-// size_t WinPercentages::dealRandomCard(short pos)
-// {
-//     // Faster to check if card has been used vs erasing from deck ???
-//     // If so, add isDealt field to Card and change assignment operator to not worry about this field.
-
-//     // Get random card
-//     int n = rand() % deck_.size();
-//     Card* card = deck_[n];
-//     deck_.erase(deck_.begin() + n); // Erase from deck
-    
-//     // Add to all players (board)
-//     if (pos == BOARD){
-//         ++board_size_;
-//         for (uchar i = 0; i < num_players_; ++i){
-//             players_[i].addSingleCard(*card); // Give card to each player            
-//         }    
-        
-//     }
-//     // Add to single player
-//     else{
-//          players_[pos].addSingleCard(*card); // Give card to player
-//     }  
-
-//     return 13*card->suit_ + card->value_;
-// }
-
 size_t WinPercentages::dealRandomCard(short pos)
 {
     // Get random card
@@ -106,7 +79,7 @@ size_t WinPercentages::dealRandomCard(short pos)
         Card& deckCard = deck_[n];
         if (!deckCard.isDealt_) {
             card = deckCard;
-            deckCard.isDealt_ = true;
+            deckCard.isDealt_ = true; // Mark the card as used (but don't remove it)
             isInDeck = true;
         }
     }
