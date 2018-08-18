@@ -164,8 +164,8 @@ double** WinPercentages::avgEmptyHands(double* winPercentages, double* tiePercen
         if (players_[i].num_cards_ == 0) {
             emptyWins += winPercentages[i];
             emptyTies += tiePercentages[i];
+            emptyPositions[numEmptyPositions] = i;
             ++numEmptyPositions;
-            emptyPositions[i] = i;
         }
     }
 
@@ -187,6 +187,8 @@ double** WinPercentages::avgEmptyHands(double* winPercentages, double* tiePercen
 
 void WinPercentages::dealRandomCard(short pos)
 {
+    // TODO: convert deck_ to an array after I erase the necessary cards ???
+
     // Get random card
     Card* cardPtr;
     bool isInDeck = false;

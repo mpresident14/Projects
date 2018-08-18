@@ -5,6 +5,7 @@ using namespace std;
 HandPercentages::HandPercentages(int* info, int flopTurnRiver)
     : flopTurnRiver_{flopTurnRiver}
 {
+    // TODO: convert to an array after I erase the necessary cards ???
     deck_.reserve(52);
     
     // Populate the deck
@@ -25,7 +26,7 @@ HandPercentages::HandPercentages(int* info, int flopTurnRiver)
 void HandPercentages::addUserSelected(uchar cardNum)
 {   
     Card c{cardNum}; // Make card
-    player_.addOriginalCard(c); // Give card to player
+    player_.addOriginalHoleCard(c); // Give card to player
     removeFromVector(c, deck_); // Remove card from deck
 }
 
