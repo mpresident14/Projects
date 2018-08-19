@@ -20,7 +20,7 @@ class Hand {
   public:
     Hand() = default;
     Hand(HandType handType, unsigned long rank, unsigned long otherCards);
-    int compareTo(const Hand& other) const;
+    short compareTo(const Hand& other) const;
 
     friend inline std::ostream& operator<<(std::ostream& out, const Hand& hand);
 

@@ -3,7 +3,7 @@
 using namespace std;
 
 Player::Player()
-    : suit_counts_{0}, orig_suit_counts_{0}, num_cards_{0}, handCounts_{new size_t[10]}
+    : suit_counts_{0}, orig_suit_counts_{0}, num_cards_{0}
 {
     // Initialize arrays
     uchar i;
@@ -188,7 +188,7 @@ HandType Player::bestHandType() const
 }
 
 
-size_t* Player::getHandCounts(const vector<Card>& deck, uchar comboSize)
+void Player::getHandCounts(const vector<Card>& deck, uchar comboSize)
 {
     Card* combo = new Card[comboSize];
     // We add these default cards so that we can avoid a check for a null card in 
@@ -204,7 +204,6 @@ size_t* Player::getHandCounts(const vector<Card>& deck, uchar comboSize)
     }
 
     delete[] combo;
-    return handCounts_;
 }
 
 void Player::getHandCountsHelper(const vector<Card>& deck, Card* combo, uchar deckSize, 

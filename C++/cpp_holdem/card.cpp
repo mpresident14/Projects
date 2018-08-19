@@ -37,7 +37,7 @@ Card& Card::operator=(const Card& other)
     return *this;
 }
 
-bool Card::operator==(const Card& otherCard)
+bool Card::operator==(const Card& otherCard) const
 {
     return value_ == otherCard.value_ && suit_ == otherCard.suit_;
 }

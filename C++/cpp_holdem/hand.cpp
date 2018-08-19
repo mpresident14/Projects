@@ -8,7 +8,7 @@ Hand::Hand(HandType handType, unsigned long rank, unsigned long otherCards)
   // Nothing to do
 }
 
-int Hand::compareTo(const Hand& other) const
+short Hand::compareTo(const Hand& other) const
 {
   if (handType_ != other.handType_) {
     return handType_ < other.handType_ ? -1 : 1;

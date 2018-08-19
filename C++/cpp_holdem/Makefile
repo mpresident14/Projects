@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -g -pedantic -O2 -Wall
+CXXFLAGS = -g -std=c++11 -pedantic -O2 -Wall
 
 all: win_percentages
 

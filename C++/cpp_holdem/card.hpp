@@ -14,7 +14,7 @@ enum Suit{
 
 typedef unsigned char uchar;
 
-class Card{
+class Card {
 
     public:
         Card(); // default constructor
@@ -25,7 +25,7 @@ class Card{
         Card& operator=(const Card& otherCard);
         ~Card() = default;
 
-        bool operator==(const Card& otherCard);
+        bool operator==(const Card& otherCard) const;
         friend inline std::ostream& operator<<(std::ostream& out, const Card& card);
 
     //private:

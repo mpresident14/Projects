@@ -2,10 +2,9 @@
 
 using namespace std;
 
-HandPercentages::HandPercentages(int* info, int flopTurnRiver)
+HandPercentages::HandPercentages(const int* info, int flopTurnRiver)
     : flopTurnRiver_{flopTurnRiver}
 {
-    // TODO: convert to an array after I erase the necessary cards ???
     deck_.reserve(52);
     
     // Populate the deck
@@ -30,7 +29,8 @@ void HandPercentages::addUserSelected(uchar cardNum)
     removeFromVector(c, deck_); // Remove card from deck
 }
 
-unsigned HandPercentages::nChooseK(){
+unsigned HandPercentages::nChooseK() const
+{
     uchar n = uchar(52 - player_.num_cards_);
     uchar k = uchar(2 + flopTurnRiver_ - player_.num_cards_);
     double answer = 1;
@@ -40,8 +40,6 @@ unsigned HandPercentages::nChooseK(){
     }
     return unsigned(round(answer));
 }
-
-// TODO: Add zero card and single card probabilities
 
 double* HandPercentages::getHandPercentages()
 {
@@ -82,7 +80,9 @@ double* HandPercentages::getHandPercentages()
     }
     // Otherwise, run the algorithm
     uchar comboSize = 2 + uchar(flopTurnRiver_) - player_.num_cards_;
-    size_t* counts = player_.getHandCounts(deck_, comboSize);
+    player_.getHandCounts(deck_, comboSize);
+    size_t counts[10];
+    memcpy(counts, player_.handCounts_, sizeof(size_t) * 10);
 
     // cout << "Hand Counts:";
     // cout << "[";
@@ -99,7 +99,7 @@ double* HandPercentages::getHandPercentages()
     for (uchar i = 0; i < 10; ++i){
         percentages[i] = double(counts[i])/num_combos * 100;
     }
-    delete[] counts;
+
     return percentages;
 }
 

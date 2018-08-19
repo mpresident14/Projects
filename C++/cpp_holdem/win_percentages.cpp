@@ -99,7 +99,7 @@ double** WinPercentages::getWinAndTiePercentages()
             }
 
             Hand myHand = player.getBestHand();
-            int comparison = myHand.compareTo(bestHand);
+            short comparison = myHand.compareTo(bestHand);
 
             if (comparison > 0) {
                 bestHand = myHand;
@@ -181,6 +181,8 @@ double** WinPercentages::avgEmptyHands(double* winPercentages, double* tiePercen
     double** percentages = new double*[2];
     percentages[0] = winPercentages;
     percentages[1] = tiePercentages;
+
+    delete[] emptyPositions;
     return percentages;
 }
 

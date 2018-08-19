@@ -31,7 +31,7 @@ class Player{
         HandType isStraight() const;
         HandType isFlush() const;
         HandType bestHandType() const;
-        size_t* getHandCounts(const std::vector<Card>& deck, uchar comboSize);
+        void getHandCounts(const std::vector<Card>& deck, uchar comboSize);
         void getHandCountsHelper(const std::vector<Card>& deck, Card* combo, uchar deckSize, uchar comboSize,
                 uchar deckIndex, uchar comboIndex);
 
@@ -58,7 +58,7 @@ class Player{
         uchar orig_value_arr_[NUMVALUES];
         unsigned int orig_suit_counts_;
         uchar num_cards_;
-        size_t* handCounts_;
+        size_t handCounts_[10];
 };
 
 inline char* dec_to_bin_nbit(uchar num, size_t n){
