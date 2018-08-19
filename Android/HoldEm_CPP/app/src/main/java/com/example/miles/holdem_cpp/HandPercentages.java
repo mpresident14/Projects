@@ -46,7 +46,6 @@ public class HandPercentages extends AppCompatActivity{// implements View.OnClic
     Button chooseUnknownCard;
     RadioButton suit;
     RadioButton value;
-    List<String> usedCards;
     Context context = this;
     Button calculate;
     RadioGroup chooseFlopTurnRiver;
@@ -72,7 +71,6 @@ public class HandPercentages extends AppCompatActivity{// implements View.OnClic
 
         cards = new ArrayList<>(7); // TODO: Add in the -1s afterward
 
-        usedCards = new ArrayList<>();
         calculate = findViewById(R.id.calculate);
         chooseFlopTurnRiver = findViewById(R.id.choose_num_cards_dealt);
         numCardsToBeShownOnBoard = 5;
@@ -118,10 +116,10 @@ public class HandPercentages extends AppCompatActivity{// implements View.OnClic
                             }
 
                             Message msg = Message.obtain();
-                            long start = System.nanoTime();
+//                            long start = System.nanoTime();
                             msg.obj = getPercentages(info, numCardsToBeShownOnBoard);
-                            long stop = System.nanoTime();
-                            Log.v("Execution time", Double.toString((stop-start)/(1000000000.0)));
+//                            long stop = System.nanoTime();
+//                            Log.v("Execution time", Double.toString((stop-start)/(1000000000.0)));
                             handler.sendMessage(msg);
                         }
                     });
@@ -263,7 +261,7 @@ public class HandPercentages extends AppCompatActivity{// implements View.OnClic
 
             if (v instanceof ImageView) {
                 final ImageView chosenCard = (ImageView) v;
-                Log.d("Tag", chosenCard.getTag().getClass().toString()+": "+chosenCard.getTag());
+//                Log.d("Tag", chosenCard.getTag().getClass().toString()+": "+chosenCard.getTag());
 
 
                 LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -288,7 +286,6 @@ public class HandPercentages extends AppCompatActivity{// implements View.OnClic
                                 --numCardsOnBoard;
                             }
                         }
-
 
                         chosenCard.setImageResource(R.drawable.card_back);
                         chosenCard.setTag(-1);
