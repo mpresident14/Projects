@@ -31,11 +31,13 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class WinPercentages extends AppCompatActivity implements View.OnClickListener {
 
     int numPlayers = 2;
     int numCardsOnBoard = 0;
+    WinPercentagesBackgroundTask.WinPercentagesListener listener = this::onPercentagesLoaded;
     ImageView p1_c1;
     ImageView p1_c2;
     ImageView p2_c1;
@@ -104,38 +106,8 @@ public class WinPercentages extends AppCompatActivity implements View.OnClickLis
             public void onClick(View v) {
                 info[0] = numPlayers;
                 Log.v("MyTest", Arrays.toString(info));
-//                double[] winPercentages = new double[numPlayers];
-//                double[] tiePercentages = new double[numPlayers];
-//                DecimalFormat df2 = new DecimalFormat(".####");
-//
-//
-//                handler = new Handler() {
-//                    @Override
-//                    public void handleMessage(Message msg) {
-//                        double[] winPercentages =  ((double[][]) msg.obj)[0];
-//                        double[] tiePercentages =  ((double[][]) msg.obj)[1];
-//                        Resources res = context.getResources();
-//                        String pkg = context.getPackageName();
-//
-//
-//                        TextView winText;
-//                        TextView tieText;
-//                        int num;
-//                        int winID;
-//                        int tieID;
-//                        for (int i = 0; i < winPercentages.length; i++){
-//                            num = i+1;
-//                            winID = res.getIdentifier("win"+num,"id",pkg);
-//                            tieID = res.getIdentifier("tie"+num,"id",pkg);
-//                            winText = (TextView) findViewById(winID);
-//                            tieText = (TextView) findViewById(tieID);
-//                            winText.setText("Win: "+winPercentages[i]);
-//                            tieText.setText("Tie: "+tiePercentages[i]);
-//                        }
-//                        Toast toast = Toast.makeText(context, "Calculation complete", Toast.LENGTH_SHORT);
-//                        toast.show();
-//                    }
-//                };
+
+                new WinPercentagesBackgroundTask(info).setListener(listener).execute();
         }
     });
 }
@@ -358,22 +330,22 @@ public class WinPercentages extends AppCompatActivity implements View.OnClickLis
                         // Construct the tag (cardNum) and id
                         int cardNum = 13 * Integer.parseInt((String)suit.getTag()) + Integer.parseInt((String) value.getTag());
                         int cardID = context.getResources().getIdentifier("c"+Integer.toString(cardNum), "drawable", context.getPackageName());
-                        boolean isBoardCard = chosenCard.getParent() == findViewById(R.id.board);
-                        if (isBoardCard) {
-                            // Update index in info
-                            info[numCardsOnBoard + 1] = cardNum;
-                        }
-                        else {
-                            setPlayerInfo(chosenCard, cardNum);
-                        }
 
                         int prevCardNum = (int) chosenCard.getTag();
                         if (prevCardNum != -1) {
                             usedCards.remove(Integer.valueOf(prevCardNum));
                         }
-                        else if (isBoardCard){
-                            // Update number of board cards if card was previously unknown
-                            ++numCardsOnBoard;
+
+                        if (chosenCard.getParent() == findViewById(R.id.board)) {
+                            if (prevCardNum == -1) {
+                                // Update number of board cards if card was previously unknown
+                                ++numCardsOnBoard;
+                            }
+                            // Update index in info
+                            info[numCardsOnBoard] = cardNum;
+                        }
+                        else {
+                            setPlayerInfo(chosenCard, cardNum);
                         }
 
                         chosenCard.setImageResource(cardID);
@@ -397,23 +369,22 @@ public class WinPercentages extends AppCompatActivity implements View.OnClickLis
                         // Construct the tag (cardNum) and id
                         int cardNum = 13 * Integer.parseInt((String)suit.getTag()) + Integer.parseInt((String) value.getTag());
                         int cardID = context.getResources().getIdentifier("c"+Integer.toString(cardNum), "drawable", context.getPackageName());
-                        boolean isBoardCard = chosenCard.getParent() == findViewById(R.id.board);
-                        if (isBoardCard) {
-                            // Update index in info
-                            info[numCardsOnBoard + 1] = cardNum;
-                        }
-                        else {
-                            setPlayerInfo(chosenCard, cardNum);
-                        }
-
 
                         int prevCardNum = (int) chosenCard.getTag();
                         if (prevCardNum != -1) {
                             usedCards.remove(Integer.valueOf(prevCardNum));
                         }
-                        else if (isBoardCard){
-                            // Update number of board cards if card was previously unknown
-                            ++numCardsOnBoard;
+
+                        if (chosenCard.getParent() == findViewById(R.id.board)) {
+                            if (prevCardNum == -1) {
+                                // Update number of board cards if card was previously unknown
+                                ++numCardsOnBoard;
+                            }
+                            // Update index in info
+                            info[numCardsOnBoard] = cardNum;
+                        }
+                        else {
+                            setPlayerInfo(chosenCard, cardNum);
                         }
 
                         chosenCard.setImageResource(cardID);
@@ -437,6 +408,29 @@ public class WinPercentages extends AppCompatActivity implements View.OnClickLis
 
 
         }
+    }
+
+    void onPercentagesLoaded(double[] winPercentages, double[] tiePercentages) {
+        Resources res = context.getResources();
+        String pkg = context.getPackageName();
+        DecimalFormat df = new DecimalFormat("##0.00%");
+
+        TextView winText;
+        TextView tieText;
+        int num;
+        int winID;
+        int tieID;
+        for (int i = 0; i < winPercentages.length; i++){
+            num = i+1;
+            winID = res.getIdentifier("win"+num,"id",pkg);
+            tieID = res.getIdentifier("tie"+num,"id",pkg);
+            winText = (TextView) findViewById(winID);
+            tieText = (TextView) findViewById(tieID);
+            winText.setText("Win: " + df.format(winPercentages[i]));
+            tieText.setText("Tie: " + df.format(tiePercentages[i]));
+        }
+        Toast toast = Toast.makeText(context, "Calculation complete", Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     private void setPlayerInfo(ImageView v, int cardNum) {

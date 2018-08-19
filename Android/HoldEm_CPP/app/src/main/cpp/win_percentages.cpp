@@ -2,23 +2,21 @@
 
 using namespace std;
 
-// TODO: WE CAN PROBABLY GET RID OF BOARD ARRAY
-
 WinPercentages::WinPercentages(int* info)
-    : players_ {new Player[9]}, num_players_{0}, board_{new Card[5]}, board_size_{0}
-{
+    : players_ {new Player[9]}, num_players_{0}, board_size_{0}
+{    
     deck_.reserve(52);
-    used_cards_.reserve(23);
-    user_selected_.reserve(10);
-    
-    // Populate the deck
-    for (uchar suit = 0; suit < 4; ++suit){
-        for (uchar value = 1; value < 14; ++value){ // 1 to 25 to match Enum
-            deck_.push_back(new Card{value, (Suit) suit} );
-        }
-    }
+
+    srand(unsigned(time(NULL)));
 
     uchar i;
+
+    // Populate the deck
+    // TODO: emplace_back ???
+    for (i = 0; i < 52; ++i){
+        deck_.emplace_back(i);
+    }
+
     // Add Players
     for (i = 0; i < info[0]; ++i){
         addPlayer();
@@ -26,15 +24,15 @@ WinPercentages::WinPercentages(int* info)
 
     // Add board cards (slots 1 through 5)
     for (i = 1; i < 6; ++i){
-        if (info[i] != -1){
-            addUserSelected(uchar(info[i]), -1);
+        if (info[i] != UNKNOWN){
+            addUserSelected(uchar(info[i]), BOARD);
         }
     }
 
     // Add cards to each player
-    uchar upper_bound = 6 + num_players_ * 2;
+    uchar upper_bound = 6u + num_players_ * 2;
     for (i = 6; i < upper_bound; ++i){
-        if (info[i] != -1){
+        if (info[i] != UNKNOWN){
             addUserSelected(uchar(info[i]), (i-6)/2); // Convert index to player position
         }
     }
@@ -42,16 +40,9 @@ WinPercentages::WinPercentages(int* info)
 
 WinPercentages::~WinPercentages()
 {
-    // Delete cards in each vector
-    for (uchar i = 0; i < deck_.size(); ++i){
-        delete deck_[i];
-    }
-    for (uchar i = 0; i < used_cards_.size(); ++i){
-        delete used_cards_[i];
-    }
-    for (uchar i = 0; i < user_selected_.size(); ++i){
-        delete user_selected_[i];
-    }
+    delete[] players_;
+    delete[] winPercentages_;
+    delete[] tiePercentages_;
 }
 
 void WinPercentages::addPlayer()
@@ -63,112 +54,211 @@ void WinPercentages::addPlayer()
 
 void WinPercentages::addUserSelected(uchar cardNum, short pos)
 {   
+    Card c{cardNum}; // Make card
     // Add to all players (board)
-    if (pos == -1){
-        // TODO: DO THIS FOR EVERY PLAYER
-        Card c{cardNum}; // Make card
-        players_[0].addSingleCard(&c); // Give card to player
-        Card* added = removeFromVector(c, deck_); // Remove card from deck
-        user_selected_.push_back(added); // Add to user selected list
+    if (pos == BOARD){
+        ++board_size_;
+        for (uchar i = 0; i < num_players_; ++i){
+            players_[i].addOriginalBoardCard(c); // Give card to player            
+        }
     }
+    // Add to single player
     else{
-        Card c{cardNum}; // Make card
-        players_[pos].addSingleCard(&c); // Give card to player
-        Card* added = removeFromVector(c, deck_); // Remove card from deck
-        user_selected_.push_back(added); // Add to user selected list
+        players_[pos].addOriginalHoleCard(c); // Give card to each player
     }
+
+    // Remove card from deck
+    removeFromVector(c, deck_);
 }
 
-// void WinPercentages::removeUserSelected(uchar cardNum, short pos)
-// {
-//     // Remove from all players (board)
-//     if (pos == -1){
-//         // TODO: DO THIS FOR EVERY PLAYER
-//         Card c{cardNum}; // Make card
-//         players_[0].removeSingleCard(&c); // Give card to player
-//         Card* added = removeFromVector(c, user_selected_); // Remove card from user selected list
-//         deck_.push_back(added); // Add to deck
-//     }
-// }
-
-
-void WinPercentages::resetDeck()
+void WinPercentages::getWinAndTiePercentages()
 {
-    for (size_t i = 0; i < used_cards_.size(); ++i){
-        // Move cards from usedCards back into the deck
-        deck_.push_back(used_cards_[i]);
+    size_t* winCounts = new size_t[num_players_];
+    size_t* tieCounts = new size_t[num_players_];
+    uchar* emptyTiedPositions = new uchar[num_players_];
+    uchar* tiedPositions = new uchar[num_players_];
+    for (uchar i = 0; i < num_players_; ++i) {
+        winCounts[i] = 0;
+        tieCounts[i] = 0;
+        emptyTiedPositions[i] = 0;
+        tiedPositions[i] = 0;
     }
-    // Delete ptrs from usedCards
-    used_cards_.clear();
+
+
+    for (size_t iters = 0; iters < NUM_ITERS; ++iters) {
+        // Finish the board
+        for (uchar i = board_size_; i < 5; ++i) {
+            dealRandomCard(BOARD);
+        }
+
+        // Init comparison vars
+        Hand bestHand{HIGH_CARD, 0, 0};
+        uchar bestPlayerPos = 0;
+        uchar numPlayersTied = 1;
+        memcpy(tiedPositions, emptyTiedPositions, num_players_);
+
+        for (uchar pos = 0; pos < num_players_; ++pos) {
+            Player& player = players_[pos];
+            // Finish hole cards
+            for (uchar i = player.num_cards_; i < 2; ++i) {
+                dealRandomCard(pos);
+            }
+
+            Hand myHand = player.getBestHand();
+            short comparison = myHand.compareTo(bestHand);
+
+            if (comparison > 0) {
+                bestHand = myHand;
+                bestPlayerPos = pos;
+
+                tiedPositions[0] = pos;
+                numPlayersTied = 1;
+            }
+            else if (comparison == 0) {
+                tiedPositions[numPlayersTied] = pos;
+                ++numPlayersTied;
+            }
+
+            // Reset the player's values
+            memcpy(player.value_arr_, player.orig_value_arr_, NUMVALUES);
+            player.suit_counts_ = player.orig_suit_counts_;
+        }
+
+        if (numPlayersTied != 1) {
+            for (uchar i = 0; i < numPlayersTied; ++i) {
+                ++tieCounts[tiedPositions[i]];
+            }
+        }
+        else {
+            ++winCounts[bestPlayerPos];
+        }
+        
+        // Reset deck
+        for (Card& c : deck_) {
+            c.isDealt_ = false;
+        }
+    }
+    delete[] tiedPositions;
+    delete[] emptyTiedPositions;
+
+    convertToPercentages(winCounts, tieCounts);
 }
 
-int main()
+void WinPercentages::convertToPercentages(size_t* winCounts, size_t* tieCounts)
 {
-    // /**************
-    //  * One player *
-    //  **************/
-    // int* info = new int[24]{1, -1,-1,-1,-1,-1, 2,14, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1, -1,-1,};
-    
-    // auto start = chrono::steady_clock::now();
-    // WinPercentages h{info};
-    // // h.addPlayer();
-    // /* Add user-selected cards (for 1 player, board or hand doesn't matter) */
-    // // h.addUserSelected(2, -1);
-    // // h.addUserSelected(14, -1);
-    // // h.removeUserSelected(14, -1);
-    // // h.addUserSelected(7, -1);
-    // // h.addUserSelected(3, -1);
-    // // h.addUserSelected(8, -1);
-    // // h.addUserSelected(4, -1);
-    // // cout << h << endl;
+    double* winPercentages = new double[num_players_];
+    double* tiePercentages = new double[num_players_];
 
-    // /* TIMING */
-    // double iterations = 1;
-    // size_t* handCounts = nullptr;
-     
-    // // for (size_t i = 0; i < iterations; ++i){
-    // //     handCounts = h.getHandPercentages();
-    // // } 
-    // handCounts = h.getHandPercentages();
-    // auto stop = chrono::steady_clock::now();
-    // double elapsedTime = chrono::duration_cast<chrono::nanoseconds>(stop - start).count()/1000000000.0;
-    // cout << elapsedTime/iterations << " seconds" << endl;
+    for (uchar i = 0; i < num_players_; ++i) {
+        winPercentages[i] = winCounts[i] * 1.0 / NUM_ITERS;
+        tiePercentages[i] = tieCounts[i] * 1.0 / NUM_ITERS;
+    }
 
-    
-    // cout << "Hand Counts:";
-    // cout << "[";
-    // for (size_t i = 0; i < 10; ++i){
-    //     cout << (handCounts[i]);        
-    //     if (i != 9){
-    //         cout << ", ";
-    //     }
-    // }
-    // cout << "]" << endl;
-    
-    // // h.getHandPercentages()
+    delete[] winCounts;
+    delete[] tieCounts;
 
-    // /********************
-    //  * Multiple players *
-    //  ********************/
-    // // Player p0;
-    // // Player p1;
-    // // Player p2;
-    
+    avgEmptyHands(winPercentages, tiePercentages);
+}
 
-    // // WinPercentages g;
-    // // Add player
-    // /* Add user-selected cards */
-    // // h.addUserSelect(card, 0)
-    // // h.addUserSelect(card, 1)
-    // // h.addUserSelect(card, 2)
-    // // h.addUserSelect(card, 2)
-    // // h.addUserSelect(card, BOARD) (define BOARD = -2)
-    // // h.addUserSelect(card, BOARD)
-    // // h.addUserSelect(card, BOARD)
+void WinPercentages::avgEmptyHands(double* winPercentages, double* tiePercentages)
+{
+    double emptyWins = 0;
+    double emptyTies = 0;
+    size_t numEmptyPositions = 0;
+    uchar* emptyPositions =  new uchar[num_players_];
 
-    // // h.getWinPercentages()
+    for (uchar i = 0; i < num_players_; ++i) {
+        if (players_[i].num_cards_ == 0) {
+            emptyWins += winPercentages[i];
+            emptyTies += tiePercentages[i];
+            emptyPositions[numEmptyPositions] = i;
+            ++numEmptyPositions;
+        }
+    }
 
-    // return 0;
-    
-    
+    double avgWins = emptyWins / numEmptyPositions;
+    double avgTies = emptyTies / numEmptyPositions;
+
+    for (uchar i = 0; i < numEmptyPositions; ++i) {
+        uchar pos = emptyPositions[i];
+        winPercentages[pos] = avgWins;
+        tiePercentages[pos] = avgTies;
+    }
+
+
+    winPercentages_ = winPercentages;
+    tiePercentages_ = tiePercentages;
+
+    delete[] emptyPositions;
+}
+
+
+void WinPercentages::dealRandomCard(short pos)
+{
+    // TODO: convert deck_ to an array after I erase the necessary cards ???
+
+    // Get random card
+    Card* cardPtr;
+    bool isInDeck = false;
+    while (!isInDeck) {
+        size_t n = rand() % deck_.size();
+        Card& deckCard = deck_[n];
+        if (!deckCard.isDealt_) {
+            cardPtr = &deckCard;
+            deckCard.isDealt_ = true; // Mark the card as used (but don't remove it)
+            isInDeck = true;
+        }
+    }
+
+    // Add to all players (board)
+    if (pos == BOARD){
+        for (uchar i = 0; i < num_players_; ++i){
+            players_[i].addSingleCard(*cardPtr); // Give card to each player            
+        }    
+        
+    }
+    // Add to single player
+    else{
+         players_[pos].addSingleCard(*cardPtr); // Give card to player
+    }  
+}
+
+void WinPercentages::printDeck()
+{
+    size_t length = deck_.size();
+    cout << "Deck:";
+    cout << "[";
+    for (size_t i = 0; i < length; ++i){
+        cout << (deck_[i]);        
+        if (i != length-1){
+            cout << ", ";
+        }
+    }
+    cout << "]" << endl;
+}
+
+void WinPercentages::printWinAndTiePercentages(double** result)
+{
+    double* winCounts = result[0];
+    double* tieCounts = result[1];
+
+    cout << "Win Counts:";
+    cout << "[";
+    for (size_t i = 0; i < num_players_; ++i){
+        cout << winCounts[i];        
+        if (i != size_t(num_players_ - 1)){
+            cout << ", ";
+        }
+    }
+    cout << "]" << endl;
+
+    cout << "Tie Counts:";
+    cout << "[";
+    for (size_t i = 0; i < num_players_; ++i){
+        cout << tieCounts[i];        
+        if (i != size_t(num_players_ - 1)){
+            cout << ", ";
+        }
+    }
+    cout << "]" << endl;
 }

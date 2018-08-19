@@ -2,7 +2,7 @@
 
 using namespace std;
 
-HandPercentages::HandPercentages(int* info, int flopTurnRiver)
+HandPercentages::HandPercentages(const int* info, int flopTurnRiver)
     : flopTurnRiver_{flopTurnRiver}
 {
     deck_.reserve(52);
@@ -13,7 +13,6 @@ HandPercentages::HandPercentages(int* info, int flopTurnRiver)
             deck_.push_back(Card{value, (Suit) suit} );
         }
     }
-    // Add Player
 
     // Add cards
     for (uchar i = 0; i < 7; ++i){ // 7 = 2 hole cards + 5 board cards
@@ -25,14 +24,13 @@ HandPercentages::HandPercentages(int* info, int flopTurnRiver)
 
 void HandPercentages::addUserSelected(uchar cardNum)
 {   
-    // Add to all players (board)
     Card c{cardNum}; // Make card
-    player_.addSingleCard(&c); // Give card to player
-    ++player_.num_cards_;
+    player_.addOriginalHoleCard(c); // Give card to player
     removeFromVector(c, deck_); // Remove card from deck
 }
 
-unsigned HandPercentages::nChooseK(){
+unsigned HandPercentages::nChooseK() const
+{
     uchar n = uchar(52 - player_.num_cards_);
     uchar k = uchar(2 + flopTurnRiver_ - player_.num_cards_);
     double answer = 1;
@@ -43,19 +41,16 @@ unsigned HandPercentages::nChooseK(){
     return unsigned(round(answer));
 }
 
-// TODO: Add zero card and single card probabilities
-
 double* HandPercentages::getHandPercentages()
 {
     /* Takes too long to calculate with 6 or 7 unknown cards, just use predetermined percentages */
     // Zero cards
-    if (player_.num_cards_ == 0){
+    if (player_.num_cards_ == 0){ // To river
         if (flopTurnRiver_ == 5) {
-            return new double[10]{17.4119, 43.8225, 23.4955, 4.82987, 4.61938, 3.02549, 2.5961,
-                                  0.168067, 0.0278507, 0.00323206};
+            return new double[10]{0.174119, 0.438225, 0.234955, 0.0482987, 0.0461938, 0.0302549, 0.025961, 0.00168067, 0.000278507, 0.0000323206};
         }
         else if (flopTurnRiver_== 4){ // To turn
-            return new double[10]{32.4822, 47.7969, 12.4411, 3.59633, 1.77626, 1.01084, 0.815305, 0.0720288, 0.00813419, 0.000923446};
+            return new double[10]{0.324822, 0.477969, 0.124411, 0.0359633, 0.0177626, 0.0101084, 0.00815305, 0.000720288, 0.0000813419, 0.00000923446};
         }
     }
     // One card
@@ -68,58 +63,42 @@ double* HandPercentages::getHandPercentages()
         }
         val = i + 2;
         switch (val){
-            case 2: return new double[10] {17.9695, 44.4441, 23.5769, 4.84802, 3.34071, 3.03557, 2.5961, 0.168067, 0.0199895, 0.00102169};
-            case 3: return new double[10] {17.6459, 44.0978, 23.5328, 4.83819, 4.06451, 3.03007, 2.5961, 0.168067, 0.0254866, 0.00102169};
-            case 4: return new double[10] {17.3223, 43.7515, 23.4888, 4.82836, 4.78832, 3.02457, 2.5961, 0.168067, 0.0309837, 0.00102169};
-            case 5: return new double[10] {16.9987, 43.4052, 23.4447, 4.81852, 5.51213, 3.01907, 2.5961, 0.168067, 0.0364808, 0.00102169};
-            case 6: return new double[10] {17.1282, 43.4629, 23.4447, 4.81852, 5.32498, 3.01932, 2.5961, 0.168067, 0.036231,  0.00102169};
-            case 7: return new double[10] {17.1282, 43.4629, 23.4447, 4.81852, 5.32498, 3.01932, 2.5961, 0.168067, 0.036231,  0.00102169};
-            case 8: return new double[10] {17.1282, 43.4629, 23.4447, 4.81852, 5.32498, 3.01932, 2.5961, 0.168067, 0.036231,  0.00102169};
-            case 9: return new double[10] {17.1282, 43.4629, 23.4447, 4.81852, 5.32498, 3.01932, 2.5961, 0.168067, 0.036231,  0.00102169};
-            case 10: return new double[10] {16.9987, 43.4052, 23.4447, 4.81852, 5.51213, 3.01907, 2.5961, 0.168067, 0.0307338, 0.00676866};
-            case 11: return new double[10] {17.3223, 43.7515, 23.4888, 4.82836, 4.78832, 3.02457, 2.5961, 0.168067, 0.0252367, 0.00676866}; // Jack
-            case 12: return new double[10] {17.6459, 44.0978, 23.5328, 4.83819, 4.06451, 3.03007, 2.5961, 0.168067, 0.0197396, 0.00676866}; // Queen
-            case 13: return new double[10] {17.9695, 44.4441, 23.5769, 4.84802, 3.34071, 3.03557, 2.5961, 0.168067, 0.0142425, 0.00676866}; // King
-            case 14: return new double[10] {17.9695, 44.4441, 23.5769, 4.84802, 3.34071, 3.03557, 2.5961, 0.168067, 0.0142425, 0.00676866}; // Ace
+            case 2: return new double[10] {0.179695, 0.444441, 0.235769, 0.0484802, 0.0334071, 0.0303557, 0.025961, 0.00168067, 0.000199895, 0.0000102169};
+            case 3: return new double[10] {0.176459, 0.440978, 0.235328, 0.0483819, 0.0406451, 0.0303007, 0.025961, 0.00168067, 0.000254866, 0.0000102169};
+            case 4: return new double[10] {0.173223, 0.437515, 0.234888, 0.0482836, 0.0478832, 0.0302457, 0.025961, 0.00168067, 0.000309837, 0.0000102169};
+            case 5: return new double[10] {0.169987, 0.434052, 0.234447, 0.0481852, 0.0551213, 0.0301907, 0.025961, 0.00168067, 0.000364808, 0.0000102169};
+            case 6: return new double[10] {0.171282, 0.434629, 0.234447, 0.0481852, 0.0532498, 0.0301932, 0.025961, 0.00168067, 0.00036231,  0.0000102169};
+            case 7: return new double[10] {0.171282, 0.434629, 0.234447, 0.0481852, 0.0532498, 0.0301932, 0.025961, 0.00168067, 0.00036231,  0.0000102169};
+            case 8: return new double[10] {0.171282, 0.434629, 0.234447, 0.0481852, 0.0532498, 0.0301932, 0.025961, 0.00168067, 0.00036231,  0.0000102169};
+            case 9: return new double[10] {0.171282, 0.434629, 0.234447, 0.0481852, 0.0532498, 0.0301932, 0.025961, 0.00168067, 0.00036231,  0.0000102169};
+            case 10: return new double[10] {0.169987, 0.434052, 0.234447, 0.0481852, 0.0551213, 0.0301907, 0.025961, 0.00168067, 0.000307338, 0.0000676866};
+            case 11: return new double[10] {0.173223, 0.437515, 0.234888, 0.0482836, 0.0478832, 0.0302457, 0.025961, 0.00168067, 0.000252367, 0.0000676866}; // Jack
+            case 12: return new double[10] {0.176459, 0.440978, 0.235328, 0.0483819, 0.0406451, 0.0303007, 0.025961, 0.00168067, 0.000197396, 0.0000676866}; // Queen
+            case 13: return new double[10] {0.179695, 0.444441, 0.235769, 0.0484802, 0.0334071, 0.0303557, 0.025961, 0.00168067, 0.000142425, 0.0000676866}; // King
+            case 14: return new double[10] {0.179695, 0.444441, 0.235769, 0.0484802, 0.0334071, 0.0303557, 0.025961, 0.00168067, 0.000142425, 0.0000676866}; // Ace
         }
     }
     // Otherwise, run the algorithm
     uchar comboSize = 2 + uchar(flopTurnRiver_) - player_.num_cards_;
-    size_t* counts = player_.getHandCounts(deck_, comboSize);
+    player_.getHandCounts(deck_, comboSize);
+    size_t counts[10];
+    memcpy(counts, player_.handCounts_, sizeof(size_t) * 10);
+
+    // cout << "Hand Counts:";
+    // cout << "[";
+    // for (size_t i = 0; i < 10; ++i){
+    //     cout << (counts[i]);        
+    //     if (i != 9){
+    //         cout << ", ";
+    //     }
+    // }
+    // cout << "]" << endl;
+
     size_t num_combos = nChooseK();
     double* percentages = new double[10];
     for (uchar i = 0; i < 10; ++i){
-        percentages[i] = double(counts[i])/num_combos * 100;
+        percentages[i] = double(counts[i])/num_combos;
     }
-    delete[] counts;
+
     return percentages;
-}
-
-int main()
-{
-    int* info = new int[7]{2,14,-1,-1,-1,-1,-1}; // 2, 14};
-    
-    /* TIMING */
-    auto start = chrono::steady_clock::now();
-    HandPercentages h{info, 5};
-    double* handCounts = h.getHandPercentages();
-    auto stop = chrono::steady_clock::now();
-    double elapsedTime = chrono::duration_cast<chrono::nanoseconds>(stop - start).count()/1000000000.0;
-    cout << elapsedTime << " seconds" << endl;
-
-    /* PRINT */
-    cout << "Hand Counts:";
-    cout << "[";
-    for (size_t i = 0; i < 10; ++i){
-        cout << (handCounts[i]);        
-        if (i != 9){
-            cout << ", ";
-        }
-    }
-    cout << "]" << endl;
-
-    delete[] info;
-    delete[] handCounts;
-    
-    return 0;   
 }

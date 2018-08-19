@@ -3,70 +3,44 @@
 using namespace std;
 
 Player::Player()
-    : num_cards_{0}
+    : suit_counts_{0}, orig_suit_counts_{0}, num_cards_{0}
 {
     // Initialize arrays
-    for (uchar i = 0; i < NUMVALUES; ++i){
+    uchar i;
+    for (i = 0; i < NUMVALUES; ++i){
         value_arr_[i] = 0;
+        orig_value_arr_[i] = 0;
     }
-    for (uchar i = 0; i < NUMSUITS; ++i){
-        suit_arr_[i] = 0; 
+
+    for (size_t i = 0; i < 10; ++i){
+        handCounts_[i] = 0;
     }
 }
 
-
-
-// Player::Player(Card* card1, Card* card2, uchar pos)
-//     : num_cards_{0}, pos_{pos}
-// {
-//     // Initialize arrays
-//     for (uchar i = 0; i < NUMVALUES; ++i){
-//         value_arr_[i] = 0; 
-//     }
-//     for (uchar i = 0; i < NUMSUITS; ++i){
-//         suit_arr_[i] = 0; 
-//     }
-
-//     // Update data members based on cards and their values
-//     if (card1){
-//         value_arr_[card1->getValue()] += 16 + (1 << card1->getSuit());
-//         ++suit_arr_[card1->getSuit()];
-//         ++num_cards_;
-//     }
-//     if (card2){
-//         value_arr_[card2->getValue()] += 16 + (1 << card2->getSuit());
-//         ++suit_arr_[card2->getSuit()];
-//         ++num_cards_;
-//     }
-// }
-
-void Player::addSingleCard(Card* card)
+void Player::addSingleCard(const Card& card)
 {   
-    value_arr_[card->value_] += card->encoding_;
-    ++suit_arr_[card->suit_];
-    // ++num_cards_; (Now updated in addUserSelected)
-    
+    value_arr_[card.value_] += card.encoding_;
+    suit_counts_ += 1 << (card.suit_ << 2);
 }
 
-void Player::addCards(Card* cards, uchar length)
+void Player::removeSingleCard(const Card& card)
+{  
+    value_arr_[card.value_] -= card.encoding_;
+    suit_counts_ -= 1 << (card.suit_ << 2);
+}
+
+void Player::addOriginalHoleCard(const Card& card)
 {   
-    for (uchar i = 0; i < length; ++i){
-        addSingleCard(cards+i);
-    }
+    addOriginalBoardCard(card);
+    ++num_cards_;
 }
 
-void Player::removeSingleCard(Card* card)
-{
-    value_arr_[card->value_] -= card->encoding_;
-    --suit_arr_[card->suit_];
-    // --num_cards_; (Now updated in userSelected, so no need to remove)
-}
-
-void Player::removeCards(Card* cards, uchar length)
+void Player::addOriginalBoardCard(const Card& card)
 {   
-    for (uchar i = 0; i < length; ++i){
-        removeSingleCard(cards+i);
-    }
+    value_arr_[card.value_] += card.encoding_;
+    suit_counts_ += 1 << (card.suit_ << 2);
+    orig_value_arr_[card.value_] += card.encoding_;
+    orig_suit_counts_ += 1 << (card.suit_ << 2);
 }
 
 HandType Player::isCounterHand() const
@@ -76,11 +50,13 @@ HandType Player::isCounterHand() const
 
     // Get # of three of a kinds and pairs
     for (uchar i = 0; i < NUMVALUES; ++i){
-        if (value_arr_[i] > 0x20){ // count >= 2
-            if (value_arr_[i] >> 4 == 4){
+        // The count is the first 3 bits of the encoding
+        uchar cur_val = value_arr_[i] & 7;
+        if (cur_val >= 2){ 
+            if (cur_val == 4){
                 return FOUR_OF_A_KIND;
             }
-            else if (value_arr_[i] >> 4 == 3){
+            else if (cur_val == 3){
                 ++threeCnt;
             }
             else{
@@ -107,11 +83,8 @@ HandType Player::isCounterHand() const
     }
 }
 
-// ??? Might be faster to combine isStraight with isCounter
-// so only looping through array once
 HandType Player::isStraight() const
 {
-
     uchar consecutive = 0;
 
     // Catches wrap around A2345 straight
@@ -129,9 +102,9 @@ HandType Player::isStraight() const
         }
         else{
             consecutive = 0;
-            // If we reached the 10 slot, then no chance of straight
+            // If we reached the 10 slot, then no chance of straight.
             if (i >= 8){
-                break;
+                return HIGH_CARD;
             }
         }
     }
@@ -140,10 +113,11 @@ HandType Player::isStraight() const
 
 HandType Player::isFlush() const
 {
-    // If there is more than 5 of a suit, get that suit
-    uchar best_suit = 5;
+    // If there is more than 5 of a suit, get that suit.
+    uchar best_suit = 5u;
     for (uchar i = 0; i < NUMSUITS; ++i){
-        if (suit_arr_[i] >= 5){
+        // Bit mask for the count of each suit
+        if ((suit_counts_ & (15u << (i << 2))) >= (5u << (i << 2))){
             best_suit = i;
             break;
         }
@@ -155,154 +129,34 @@ HandType Player::isFlush() const
 
     // Search for straight among cards with best_suit
     uchar consecutive = 0;
-    uchar suit_bit = 1 << best_suit;
-    // Save straight flush if we find it
-    bool is_sf = false;
-    // Catches wrap around A2345 straight
-    if (value_arr_[NUMVALUES-1] != 0 && value_arr_[NUMVALUES-1] & suit_bit){
-        ++consecutive;
-    }
+    uchar suit_bit = 1 << (best_suit + 3); // Because 3 bits for the count
 
     // Search for 5 consecutive 1s
-    for (uchar i = 0; i < NUMVALUES; ++i){
-        if (value_arr_[i] != 0 && value_arr_[i] & suit_bit){
+    for (int i = NUMVALUES - 1; i >= 0; --i){
+        if (value_arr_[i] & suit_bit){
             ++consecutive;
             if (consecutive == 5){
-                is_sf = true;
+                return i == 8 ? ROYAL_FLUSH : STRAIGHT_FLUSH;
             }
         }
         else{
             consecutive = 0;
-            // If we reached the 10 slot, then no chance of straight
-            if (i >= 8){ // 8 == NUMVALUES - 4
-                break;
+            // If we reached the 5 slot, then no chance of straight
+            if (i <= 3){
+                return FLUSH;
             }
         }
     }
-    if (is_sf){
-        // If consecutive is >=5 after loop, then last card of straight flush was an ace
-        if (consecutive >= 5){
-            return ROYAL_FLUSH;
+    
+    // Catches wrap around A2345 straight
+    if (value_arr_[NUMVALUES-1] & suit_bit){
+        if (consecutive == 4){
+            return STRAIGHT_FLUSH;
         }
-        return STRAIGHT_FLUSH;
     }
+
     return FLUSH;
 }
-
-
-// THIS IS NOT WORKING CORRECTLY, flushes being counted as straight flushes
-HandType Player::bht() const
-{
-    // FLUSH: If there is more than 5 of a suit, get that suit
-    bool is_f = false;
-    uchar best_suit = 5;
-    for (uchar i = 0; i < NUMSUITS; ++i){
-        if (suit_arr_[i] >= 5){
-            best_suit = i;
-            is_f = true;
-            break;
-        }
-    }
-
-    // FLUSH: If flush, set up rf and sf
-    uchar s_consecutive = 0;
-    uchar sf_consecutive = 0;
-    // Save straight and straight flush if we find it
-    bool is_sf = false;
-    bool is_s = false;
-
-    // COUNTER: Set up counter variables
-    uchar fourCnt = 0;
-    uchar threeCnt = 0;
-    uchar pairCnt = 0;
-    uchar cur_cnt = 0;  
-
-    // Catches wrap around A2345 straight
-    // STRAIGHT
-    if (value_arr_[NUMVALUES-1] > 0 ){
-        ++s_consecutive;
-        // SF/RF
-        if (is_f && (value_arr_[NUMVALUES-1] & (1 << best_suit))){
-            ++sf_consecutive;
-        }
-    }
-
-    // Iterate through value_arr
-    for (uchar i = 0; i < NUMVALUES; ++i){
-        // STRAIGHT
-        if (value_arr_[i] > 0){
-            ++s_consecutive;
-            if (s_consecutive == 5){
-                is_s = true;
-            }
-            // SF/RF
-            if (is_f && (value_arr_[i] & (1 << best_suit))){
-                ++sf_consecutive;
-                if (sf_consecutive == 5){
-                    is_sf = true;
-                }
-            }           
-        }
-        else{
-            // STRAIGHT
-            s_consecutive = 0;
-            // SF_RF
-            if (is_f){
-                sf_consecutive = 0;
-            }
-        }
-        // COUNT
-        // Count is bits 5 and 6
-        cur_cnt = value_arr_[i] >> 4;
-        if (cur_cnt > 1){
-            if (cur_cnt == 4){
-                fourCnt = 1;
-            }
-            else if (cur_cnt == 3){
-                ++threeCnt;
-            }
-            else{
-                ++pairCnt;
-            }
-        }
-    }
-    // Check which hand it is
-    if (is_sf){
-        // If consecutive is >=5 after loop, then last card of straight flush was an ace
-        if (sf_consecutive >= 5){
-            return ROYAL_FLUSH;
-        }
-        return STRAIGHT_FLUSH;
-    }
-    else if(fourCnt){
-        return FOUR_OF_A_KIND;
-    }
-    else if ((threeCnt == 1 && pairCnt > 0) || (threeCnt == 2)){
-        return FULL_HOUSE;
-    }
-    else if(is_f){
-        return FLUSH;
-    }
-    else if (is_s){
-        return STRAIGHT;
-    }
-    else if (threeCnt == 1){
-        return THREE_OF_A_KIND;
-    }
-    else if (pairCnt >= 2){
-        return TWO_PAIR;
-    }
-    else if (pairCnt == 1){
-        return PAIR;
-    }
-    else{
-        return HIGH_CARD;
-    }
-}
-
-// double elapsedTime = 0;
-// auto start = chrono::steady_clock::now();     
-// auto stop = chrono::steady_clock::now();
 
 HandType Player::bestHandType() const
 {
@@ -312,24 +166,21 @@ HandType Player::bestHandType() const
     if (flushes >= STRAIGHT_FLUSH){
         return flushes;
     }
+
     HandType counters = isCounterHand();
     
     // Four of a kind/Full house?
     if (counters >= FULL_HOUSE){
         return counters;
     }
-    
     // Flush?
     else if (flushes == FLUSH){
         return FLUSH;
     }
-    
     // Straight?    
     else if (isStraight()){
-        
         return STRAIGHT;
     }
-    
     // Everything else?
     else{
         return counters;
@@ -337,47 +188,236 @@ HandType Player::bestHandType() const
 }
 
 
-size_t* Player::getHandCounts(vector<Card>& deck, uchar comboSize)
+void Player::getHandCounts(const vector<Card>& deck, uchar comboSize)
 {
     Card* combo = new Card[comboSize];
-    size_t* handCounts = new size_t[10];
-    for (size_t i = 0; i < 10; ++i){
-        handCounts[i] = 0;
+    // We add these default cards so that we can avoid a check for a null card in 
+    // removeSingleCard() and subtract normally.
+    for (size_t i = 0; i < comboSize; ++i) {
+        addSingleCard(combo[i]);
     }
-   
-    getHandCountsHelper(deck, combo, uchar(deck.size()), comboSize, 0, 0, handCounts);
+    
+    getHandCountsHelper(deck, combo, uchar(deck.size()), comboSize, 0, 0);
+    // Restore value_arr_ and suit_arr_ to their initial states
+    for (size_t i = 0; i < comboSize; ++i) {
+        removeSingleCard(combo[i]);
+    }
+
     delete[] combo;
-    // cout << elapsedTime << " seconds" << endl;
-    return handCounts;
 }
 
-
-
-void Player::getHandCountsHelper(vector<Card>& deck, Card* combo, uchar deckSize, 
-uchar comboSize, uchar deckIndex, uchar comboIndex, size_t* handCounts)
+void Player::getHandCountsHelper(const vector<Card>& deck, Card* combo, uchar deckSize, 
+        uchar comboSize, uchar deckIndex, uchar comboIndex)
 {
-    // When combo is filled, add Cards to Player, get the best hand type,
-    // and update handCounts accordingly
-    if (comboIndex == comboSize){
-        
-        addCards(combo, comboSize);
-        
-        // auto start = chrono::steady_clock::now();     
-        ++handCounts[bestHandType()];
-        // auto stop = chrono::steady_clock::now();
-
-        removeCards(combo, comboSize);
-        // elapsedTime += chrono::duration_cast<chrono::nanoseconds>(stop - start).count()/1000000000.0;
-
+    // When combo is filled, figure out the hand.
+    if (comboIndex == comboSize){  
+        // Use value_arr_ and suit_arr_ to figure out what hand the player has
+        ++handCounts_[bestHandType()];
     }
     else{
         for (uchar i = deckIndex; i <= deckSize - comboSize + comboIndex; ++i){
-            combo[comboIndex] = deck[i];
-            getHandCountsHelper(deck, combo, deckSize, comboSize, i+1, comboIndex+1, handCounts);
+            // Update value count based on the card being added and the one being removed from the
+            // current combo.
+            removeSingleCard(combo[comboIndex]);
+            const Card& deck_card = deck[i];
+            addSingleCard(deck_card);
+            combo[comboIndex] = deck_card;
+            getHandCountsHelper(deck, combo, deckSize, comboSize, i+1, comboIndex+1);
         }
     }
 }
 
+Hand Player::getCounterHand() const
+{
+    unsigned int threeRank = ABSENT;
+    unsigned int pairRank1 = ABSENT;
+    unsigned int pairRank2 = ABSENT;
+    uchar otherCardCount = 0;
+    unsigned int otherCards = 0;
+
+    // Get # of three of a kinds and pairs
+    for (int i = NUMVALUES - 1; i >= 0; --i){
+        // The count is the first 3 bits of the encoding
+        uchar cur_val = value_arr_[i] & 7;
+        if (cur_val >= 2){ 
+            if (cur_val == 4){
+                if (i == NUMVALUES - 1) {
+                    otherCards = NUMVALUES - 2;
+                }
+                else {
+                    otherCards = NUMVALUES - 1;
+                }
+                return Hand{FOUR_OF_A_KIND, (unsigned int) i, otherCards};
+            }
+
+            else if (cur_val == 3){
+                if (threeRank == ABSENT) {
+                    threeRank = i;
+                }
+                else if (pairRank1 == ABSENT) {
+                    pairRank1 = i;
+                }
+                else if (pairRank2 == ABSENT) {
+                    pairRank2 = i;
+                }
+            }
+
+            else {
+                if (pairRank1 == ABSENT) {
+                    pairRank1 = i;
+                }
+                else if (pairRank2 == ABSENT) {
+                    pairRank2 = i;
+                }
+            }
+        } 
+        
+        else if (cur_val != 0) {
+            if (otherCardCount < 5) {
+                // Shift larger value to msb and add smaller value to lsb
+                otherCards <<= 4; 
+                otherCards += i;
+                ++otherCardCount;
+            }
+        }
+    }
+    
+    // Determine hand based on counts
+    if (threeRank != ABSENT) {
+        if (pairRank1 != ABSENT) {
+            return Hand{FULL_HOUSE, (threeRank << 4) + pairRank1, 0};
+        }
+        else {
+            // 4 cards in otherCards, only need 2
+            return Hand{THREE_OF_A_KIND, threeRank, otherCards >> 8};
+        }
+    }
+
+    else if (pairRank1 != ABSENT) {
+        if (pairRank2 != ABSENT) {
+            // 3 cards in otherCards, only need 1
+            return Hand{TWO_PAIR, (pairRank1 << 4) + pairRank2, otherCards >> 8};
+        }
+        else {
+            // 5 cards in otherCards, only need 3
+            return Hand{PAIR, pairRank1, otherCards >> 8};
+        }
+    }
+
+    return Hand{HIGH_CARD, /* unused rank = */ 1, otherCards};
+}
+
+Hand Player::getStraight() const
+{
+    uchar consecutive = 0;
+
+    // Search for 5 consecutive 1s
+    for (int i = NUMVALUES - 1; i >= 0; --i){
+        if (value_arr_[i] != 0){
+            ++consecutive;
+            if (consecutive == 5){
+                return Hand{STRAIGHT, uchar(i + 4), 0};
+            }
+        }
+        else{
+            consecutive = 0;
+            // If we reached the 5 slot, then no chance of straight.
+            if (i <= 3){
+                // No need to keep track of otherCards because getCounterHand already does this
+                return Hand{HIGH_CARD, 0, 0};
+            }
+        }
+    }
+
+    // Catches wrap around A2345 straight
+    if (value_arr_[NUMVALUES-1] != 0){
+        if (consecutive == 4){
+            return Hand{STRAIGHT, 3u, 0};
+        }
+    }
+
+    return Hand{HIGH_CARD, 0, 0};
+}
+
+Hand Player::getFlush() const
+{
+    // If there is more than 5 of a suit, get that suit.
+    uchar best_suit = 5u;
+    for (uchar i = 0; i < NUMSUITS; ++i){
+        // Bit mask for the count of each suit
+        if ((suit_counts_ & (15u << (i << 2))) >= (5u << (i << 2))){
+            best_suit = i;
+            break;
+        }
+    }
+    // We did not find a flush
+    if (best_suit == 5){
+        return Hand{HIGH_CARD, 0, 0};
+    }
+
+    // Search for straight among cards with best_suit
+    uchar consecutive = 0;
+    uchar suit_bit = 1 << (best_suit + 3); // Because 3 bits for the count
+
+    unsigned int flushRank = 0;
+
+    // Search for 5 consecutive 1s
+    for (int i = NUMVALUES - 1; i >= 0; --i){
+        if (value_arr_[i] & suit_bit){
+            ++consecutive;
+            flushRank <<= 4;
+            flushRank += i;
+            if (consecutive == 5){
+                return Hand{STRAIGHT_FLUSH, uchar(i + 4), 0};
+            }
+        }
+        else{
+            consecutive = 0;
+        }
+    }
+
+    // Catches wrap around A2345 straight
+    if (value_arr_[NUMVALUES-1] & suit_bit){
+        if (consecutive == 4){
+            return Hand{STRAIGHT_FLUSH, 3, 0};
+        }
+    }
+
+    // If more than 5 cards in flush, only the top 5 count.
+    uchar best_suit_count = suit_counts_ & (15u << (best_suit << 2));
+    flushRank >>= (best_suit_count - 5u) << 2;
+    return Hand{FLUSH, flushRank, 0};
+}
+
+Hand Player::getBestHand() const
+{
+    Hand flushes = getFlush();
+    
+    // Royal/Straight Flush?
+    if (flushes.handType_ >= STRAIGHT_FLUSH){
+        return flushes;
+    }
+
+    Hand counters = getCounterHand();
+    
+    // Four of a kind/Full house?
+    if (counters.handType_ >= FULL_HOUSE){
+        return counters;
+    }
+    // Flush?
+    if (flushes.handType_ == FLUSH){
+        return flushes;
+    }
+    // Straight?  
+    Hand straight = getStraight();
+    if (straight.handType_ == STRAIGHT){
+        return straight;
+    }
+    // Everything else?
+    else{
+        return counters;
+    }
+}
 
 void Player::printArrays() const
 {
@@ -386,63 +426,16 @@ void Player::printArrays() const
         if (i != 0){
             cout << ", ";
         }
-        cout << dec_to_bin_6bit(value_arr_[i]); 
+        cout << dec_to_bin_nbit(value_arr_[i], 7); 
     }
     cout << "]" << endl;
 
-    cout << "Suit Array: [";
-    for (uchar i = 0; i < NUMSUITS; ++i){
-        if (i != 0){
-            cout << ", ";
-        }
-        cout << suit_arr_[i]; 
-    }
-    cout << "]" << endl;
+    // cout << "Suit Array: [";
+    // for (uchar i = 0; i < NUMSUITS; ++i){
+    //     if (i != 0){
+    //         cout << ", ";
+    //     }
+    //     cout << int(suit_arr_[i]); 
+    // }
+    // cout << "]" << endl;
 }
-
-
-// int main()
-// {
-//     Card c1{10, HEARTS};
-//     Card c2{11, HEARTS};
-//     Card c3{4, DIAMONDS};
-//     Card c4{3, HEARTS};
-//     Card c5{3, DIAMONDS};
-//     Card c6{2, SPADES};
-//     Card c7{1, DIAMONDS};
-
-//     Player p1;
-//     p1.addSingleCard(c3);
-//     p1.addSingleCard(c4);
-//     p1.addSingleCard(c5);
-//     p1.addSingleCard(c6);
-//     p1.addSingleCard(c7);
-
-//     cout << p1.bestHandType() << endl;
-//     cout << p1.bht() << endl;
-//     // p1.printArrays();
-//     // cout << p1 << endl;
-
-
-//     /* TIMING */
-//     auto start = chrono::steady_clock::now(); 
-//     for (size_t i = 0; i < 0xFFFFFF; ++i){
-//         p1.bestHandType();
-//     }
-//     auto stop = chrono::steady_clock::now();
-//     double elapsedTime = chrono::duration_cast<chrono::nanoseconds>(stop - start).count()/1000000000.0;
-//     cout << elapsedTime << " seconds" << endl;
-
-//     start = chrono::steady_clock::now(); 
-//     for (size_t i = 0; i < 0xFFFFFF; ++i){
-//         p1.bht();
-//     }
-//     stop = chrono::steady_clock::now();
-//     elapsedTime = chrono::duration_cast<chrono::nanoseconds>(stop - start).count()/1000000000.0;
-//     cout << elapsedTime << " seconds" << endl;
-
-//     // int x = 43;
-//     // cout << (x & 15) << endl;
-    
-//     return 0;
-// }

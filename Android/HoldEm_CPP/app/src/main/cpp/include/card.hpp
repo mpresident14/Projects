@@ -5,41 +5,38 @@
 #include <iostream>
 #include <string>
 
-#define BOARD -2
-
 enum Suit{
     HEARTS,
     DIAMONDS,
     CLUBS,
-    SPADES
+    SPADES,
 };
 
 typedef unsigned char uchar;
 
-class Card{
+class Card {
 
     public:
-        Card() = default; // default constructor
-        Card(uchar value, Suit suit); // parameterized constructor
+        Card(); // default constructor
+        Card(uchar rank, Suit suit); // parameterized constructor
         Card(uchar cardNum); // 0 = 2Hearts, 1 = 3Hearts, ... , 13 = 2Diamonds, ... , 26 = 2Clubs, ... , 50 = KSpades, 51 = ASpades
         Card(const Card& otherCard) = default; // default copy constructor
+        // Card(Card&& otherCard);
+        Card& operator=(const Card& otherCard);
         ~Card() = default;
-        void setPlayerPos(short pos);
 
-        bool operator==(const Card& otherCard);
+        bool operator==(const Card& otherCard) const;
         friend inline std::ostream& operator<<(std::ostream& out, const Card& card);
 
     //private:
-        uchar value_; // Holds Card's would-be index in Player value_arr
+        uchar value_; // Card's index in Player value_arr
         Suit suit_;
-        uchar encoding_;
-        short player_pos_; // Keeps track of which player has this card, -1 for single player, -2 for multiple players' board
+        uchar encoding_; // 7 bits: 4 msbs for suits (S,C,D,H), and 3 lsbs for value count
+        bool isDealt_;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const Card& card)
 {
-    // Restore real value from Player value_arr index
-    uchar val = card.value_ == 12 ? 1 : card.value_ + 2;
     std::string s;
     switch(card.suit_){
         case 0:
@@ -54,7 +51,7 @@ inline std::ostream& operator<<(std::ostream& out, const Card& card)
         default:
             s = "SPADES";
     }
-    out << val << " " << s;
+    out << (unsigned int) card.value_ << " " << s;
     return out;
 }
 

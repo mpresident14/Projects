@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +31,6 @@ public class HandPercentages extends AppCompatActivity{// implements View.OnClic
     static{
         System.loadLibrary("native-lib");
     }
-
 
     ImageView p1_c1;
     ImageView p1_c2;
@@ -160,10 +160,11 @@ public class HandPercentages extends AppCompatActivity{// implements View.OnClic
             HandPercentages hp = myActivity.get();
             if (hp != null) {
 
+                DecimalFormat df = new DecimalFormat("##0.0000%");
                 double[] percentages = (double[]) msg.obj;
                 String[] strPrct = new String[10];
                 for (int i = 0; i < 10; ++i){
-                    strPrct[i] = convertTo2SigFig(percentages[i]);
+                    strPrct[i] = df.format(percentages[i]);
                 }
                 TextView handType;
                 for (int i = 0; i < percentages.length; i++) {
