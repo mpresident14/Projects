@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstddef>
 #include <initializer_list>
+#include <stdexcept>
 
 using namespace std;
 
@@ -51,10 +52,8 @@ void Graph<T>::addVertex(const T& item, initializer_list<T> relatives)
 {
   // Check to make sure all relatives are in the graph
   for (auto iter = relatives.begin(); iter != relatives.end(); ++iter) {
-    if (relativeMap_.find(*iter) == relativeMap_.end()) {
-      // TODO: Throw exception here
-      cerr << "Illegal args." << endl;
-      return;
+    if (relativeMap_.count(*iter) == 0) {
+      throw std::invalid_argument("All relatives must be present in graph.");
     }
   }
 
@@ -67,13 +66,31 @@ void Graph<T>::addVertex(T&& item, initializer_list<T> relatives)
 {
   // Check to make sure all relatives are in the graph
   for (auto iter = relatives.begin(); iter != relatives.end(); ++iter) {
-    if (relativeMap_.find(*iter) == relativeMap_.end()) {
-      // TODO: Throw exception here
-      cerr << "Illegal args." << endl;
-      return;
+    if (relativeMap_.count(*iter) == 0) {
+      throw std::invalid_argument("All relatives must be present in graph.");
     }
   }
 
   relativeMap_.insert({std::move(item), unordered_set<T>(relatives)});
   ++numVertices_;
+}
+
+// TODO: Make sure this ptr doesn't mess up if hashmap is reallocated
+template <typename T>
+const unordered_set<T>* Graph<T>::getRelatives(const T& item)
+{
+  auto iter = relativeMap_.find(item);
+  return iter == relativeMap_.end() ? nullptr : &(iter->second);
+}
+
+template <typename T>
+bool Graph<T>::contains(const T& item)
+{
+  return relativeMap_.count(item) != 0;
+}
+
+template <typename T>
+bool Graph<T>::removeVertex(const T& item)
+{
+  return relativeMap_.erase(item) != 0;
 }
