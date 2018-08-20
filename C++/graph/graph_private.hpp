@@ -127,51 +127,47 @@ int Graph<T>::getPath(const T& start, const T& finish)
   }
 
   /**
-   * Dynamic array approach
-   * 1 -> (2,3)
-   * 2 -> (1,3)
-   * 3 -> (1,2)
-   * 4 -> (3,5)
-   * 5 -> (4)
+   * Dynamic approach: example
+   * a -> (b,c)
+   * b -> (a,c,f)
+   * c -> (a,b)
+   * d -> (c,e)
+   * e -> (d)
+   * f -> (b)
    * 
    * Done when queue is empty
    * Put in visited set when we add to the queue
    * Check if visited before adding to the queue
    *   
-   *   1 2 3 4 5
-   * 1   1 1      ------->
-   * 2            ------->
-   * 3     2      ------->
-   * 4         3  ------->
-   * 5            ------->
+   *   a b c d e f
+   * a 0 1 1         ------->
+   * b           2   ------->
+   * c     2         ------->
+   * d         3     ------->
+   * e               ------->
+   * f
    * 
+   * {1:0, 2:1, 3:1, 6:2, 4:2, 5:3}
    */
 
   // forward_list path{1, start};
-  unordered_set<T> visited({start});
+  unordered_map<T, size_t> visited({{start, 0}});
   queue<T> q;
   q.push(start);
-
-  int steps = 0;
 
   while(!q.empty()) {
     T& item = q.front();
     q.pop();
 
-    bool hasUnvisitedRelative = false;
     const unordered_set<T>* relatives = getRelatives(item);
     for (auto iter = relatives->begin(); iter != relatives->end(); ++iter) {
       if (*iter == finish) {
-        return ++steps;
+        return visited.at(item) + 1;
       }
       if (visited.count(*iter) == 0) {
-        visited.insert(*iter);
+        visited.insert({{*iter, visited.at(item) + 1}});
         q.push(*iter);
-        hasUnvisitedRelative = true;
       }
-    }
-    if (hasUnvisitedRelative) {
-      ++steps;
     }
   }
 
