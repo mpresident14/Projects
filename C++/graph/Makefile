@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -g -std=c++1z -Wall -Wextra -pedantic -O2
+CXXFLAGS = -g -std=c++1z -Wall -Wextra -pedantic -O0
 
 all: main
 	./main
