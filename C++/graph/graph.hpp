@@ -22,7 +22,7 @@ class Graph {
     // TODO: If relatives not in graph, then add to graph ???
     void addVertex(const T& item, std::initializer_list<T> relatives);
     void addVertex(T&& item, std::initializer_list<T> relatives);
-    // TODO: Fix this, needs to remove item from relative sets of other vertices
+    
     bool removeVertex(const T& item);
     const std::unordered_set<T>* getRelatives(const T& item);
     int getRelativeCount(const T& item);

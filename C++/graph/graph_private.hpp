@@ -162,7 +162,6 @@ bool Graph<T,F>::contains(const T& item)
   return relativeMap_.count(item) != 0;
 }
 
-// TODO: have to remove from all vertices' relatives
 template <typename T, bool(*F)(const T&, const T&)>
 bool Graph<T,F>::removeVertex(const T& item)
 {
