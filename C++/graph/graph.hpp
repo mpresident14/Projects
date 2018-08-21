@@ -32,6 +32,7 @@ class Graph {
     Graph& operator=(Graph other);
     void swap(Graph& second);
     
+    // Iterators iterate over vertices in no particular order
     iterator begin();
     iterator end();
     const_iterator begin() const;
@@ -133,6 +134,14 @@ class Graph {
      * @note O(V)
      */
     size_t numEdges();
+
+    friend inline std::ostream& operator<<(std::ostream& out, const Graph& graph)
+    {
+      for (auto& pair : graph.relativeMap_) {
+        out << pair.first << ", ";
+      }
+      return out;
+    }
   
   private:
     std::unordered_map<T, std::unordered_set<T>> relativeMap_;
@@ -145,8 +154,8 @@ class Graph {
 
         // Make Iterator STL-friendly with these typedefs:
         using difference_type   = ptrdiff_t;
-        using iterator_category = std::bidirectional_iterator_tag;
-        using value_type        = T;
+        using iterator_category = std::forward_iterator_tag;
+        using value_type        = std::pair<const T, std::unordered_set<T>>;
         using const_reference   = const value_type&;
         
         using reference = typename std::conditional<is_const, 
@@ -158,14 +167,14 @@ class Graph {
                                                   value_type*>::type;
         
         using map_iter_t = typename std::conditional<is_const,
-                                typename std::unordered_map<value_type, std::unordered_set<value_type>>::const_iterator,
-                                typename std::unordered_map<value_type, std::unordered_set<value_type>>::iterator>::type;
+                                typename std::unordered_map<T, std::unordered_set<T>>::const_iterator,
+                                typename std::unordered_map<T, std::unordered_set<T>>::iterator>::type;
 
         Iterator(map_iter_t mapIter);
 
         Iterator& operator++();
-        Iterator& operator--();
         reference operator*() const;
+        pointer operator->() const;
         bool operator==(const Iterator& other) const;
         bool operator!=(const Iterator& other) const;
 

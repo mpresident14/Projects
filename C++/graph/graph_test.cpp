@@ -2,6 +2,7 @@
 #include "../testing_program/testing-program.hpp"
 #include <string>
 #include <unordered_set>
+#include <unordered_map>
 #include <stdexcept>
 
 using namespace std;
@@ -436,12 +437,62 @@ void test_numEdges()
   TestingProgram::printResults();
 }
 
+void test_begin()
+{
+  TestingProgram tester{"Begin"};
+  
+  Graph<string> g;
+  affirm(g.begin() == g.end());
+
+  g.addVertex("hi");
+  affirm(g.begin()->first == "hi");
+
+  TestingProgram::printResults();
+}
+
+void test_end()
+{
+  TestingProgram tester{"End"};
+
+  Graph<string> g;
+  affirm(g.begin() == g.end());
+
+  g.addVertex("hi");
+  affirm(++g.begin() == g.end());
+
+  TestingProgram::printResults();
+}
+
 /******************
  * Iterator Tests *
  ******************/
-
 void test_IterIncrement() {
   TestingProgram tester{"Iterator ++"};
+
+  Graph<string, oneLetterDifferent> g;
+
+  string str1 = "bay";
+  string str2 = "day";
+  string str3 = "buy";
+  string str4 = "cut";
+  
+  g.addVertex(str1);
+  g.addVertex(str2);
+  g.addVertex(str3);
+  g.addVertex(str4);
+
+  size_t increments = 0;
+  for (auto iter = g.begin(); iter != g.end(); ++iter) {
+    ++increments;
+  }
+
+  affirm(increments == g.size());
+
+  TestingProgram::printResults();
+}  
+
+void test_IterDereference() {
+  TestingProgram tester{"Iterator *"};
 
   Graph<string, oneLetterDifferent> g;
 
@@ -460,14 +511,60 @@ void test_IterIncrement() {
   g.addVertex(str6);
 
   unordered_set<string> traversed;
-  for (Graph<string, oneLetterDifferent>::iterator iter = g.begin(); iter != g.end(); ++iter) {
-    traversed.insert(*iter);
+  for (auto iter = g.begin(); iter != g.end(); ++iter) {
+    traversed.insert(iter->first);
+    affirm(iter->second == *g.getRelatives(iter->first));
   }
-
   affirm(traversed == unordered_set<string>( {"bay", "day", "buy", "cut", "but", "gut"}));
 
   TestingProgram::printResults();
 }  
+
+void test_IterEquals() {
+  TestingProgram tester{"Iterator =="};
+
+  Graph<string, oneLetterDifferent> g;
+
+  string str1 = "bay";
+  string str2 = "day";
+  string str3 = "buy";
+  
+  g.addVertex(str1);
+  g.addVertex(str2);
+  g.addVertex(str3);
+
+  auto iter1 = g.begin();
+  auto iter2 = g.begin();
+  
+  affirm(iter1 == iter2);
+  affirm(++iter1 == ++iter2);
+  affirm(g.end() == g.end());
+
+  TestingProgram::printResults();
+}  
+
+void test_IterNotEquals() {
+  TestingProgram tester{"Iterator !="};
+
+  Graph<string, oneLetterDifferent> g;
+
+  string str1 = "bay";
+  string str2 = "day";
+  string str3 = "buy";
+  
+  g.addVertex(str1);
+  g.addVertex(str2);
+  g.addVertex(str3);
+
+  auto iter1 = g.begin();
+  auto iter2 = ++g.begin();
+  
+  affirm(iter1 != iter2);
+  affirm(++iter1 != ++iter2);
+  affirm(iter1 != g.end());
+
+  TestingProgram::printResults();
+} 
 
 int main()
 {
@@ -490,7 +587,12 @@ int main()
   test_getShortestPath();
   test_size();
   test_numEdges();
+  test_begin();
+  test_end();
   test_IterIncrement();
+  test_IterDereference();
+  test_IterEquals();
+  test_IterNotEquals();
 
   TestingProgram::summarize();
 

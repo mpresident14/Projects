@@ -313,6 +313,7 @@ typename Graph<T,F>::iterator Graph<T,F>::end()
 template <typename T, bool(*F)(const T&, const T&)>
 typename Graph<T,F>::const_iterator Graph<T,F>::begin() const
 {
+  cout << "called" << endl;
   Graph<T,F>::const_iterator i{relativeMap_.cbegin()};
   return i;
 }
@@ -354,18 +355,16 @@ Graph<T,F>::Iterator<is_const>& Graph<T,F>::Iterator<is_const>::operator++()
 
 template <typename T, bool(*F)(const T&, const T&)>
 template <bool is_const>
-Graph<T,F>::Iterator<is_const>& Graph<T,F>::Iterator<is_const>::operator--()
+typename Graph<T,F>::template Iterator<is_const>::reference Graph<T,F>::Iterator<is_const>::operator*() const
 {
-  mapIter_.operator--();
-  return *this;
+  return *mapIter_;
 }
 
 template <typename T, bool(*F)(const T&, const T&)>
 template <bool is_const>
-typename Graph<T,F>::template Iterator<is_const>::reference Graph<T,F>::Iterator<is_const>::operator*() const
+typename Graph<T,F>::template Iterator<is_const>::pointer Graph<T,F>::Iterator<is_const>::operator->() const
 {
-  // Underlying unordered_map will never be const
-  return const_cast<value_type&>(mapIter_->first);
+  return mapIter_.operator->();
 }
 
 template <typename T, bool(*F)(const T&, const T&)>
