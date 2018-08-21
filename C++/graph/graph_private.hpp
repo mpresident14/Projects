@@ -183,8 +183,12 @@ bool Graph<T,F>::removeVertex(const T& item)
 template <typename T, bool(*F)(const T&, const T&)>
 forward_list<T> Graph<T,F>::getShortestPath(const T& start, const T& finish)
 {
-  if (getRelativeCount(start) < 1 || getRelativeCount(finish) < 1) {
-    throw std::invalid_argument("Params start and finish must be present in graph.");
+  if ( getRelativeCount(start) == -1 || getRelativeCount(finish) == -1 ) {
+    throw std::invalid_argument("Params \"start\" and \"finish\" must be present in graph.");
+  }
+
+  if ( getRelativeCount(start) == 0 || getRelativeCount(finish) == 0 ) {
+    return forward_list<T>();
   }
 
   if (start == finish) {
@@ -216,34 +220,37 @@ forward_list<T> Graph<T,F>::getShortestPath(const T& start, const T& finish)
    */
 
   // TODO: map reallocation may change memory address of T objects
-  unordered_map<T, T*> visited( {{start, nullptr}} );
+  unordered_map<T, T> visited( {{start, start}} );
   queue<T> q;
   q.push(start);
 
   while(!q.empty()) {
     T& item = q.front();
-    q.pop();
 
     const unordered_set<T>* relatives = getRelatives(item);
     for (const T& rel : *relatives) {
 
       // Traverse the visited map backwards to find path
       if (rel == finish) {
-        forward_list<T> path( {finish} ); // Probably can include item here and init current node to item
-        T* prevNode = &item;
-        while (prevNode != nullptr) {
-          path.push_front(*prevNode);
-          prevNode = visited.at(*prevNode);
+        forward_list<T> path( {finish} );
+        T&& prevNode = std::move(item);
+        while (prevNode != start) {
+          path.push_front(prevNode);
+          prevNode = visited.at(prevNode);
         }
+
+        path.push_front(start);
         return path;
       }
 
       // If has not been visited, map the relative to the item that led to it
       if (visited.count(rel) == 0) {
-        visited.insert( {{rel, &item}} );
+        visited.insert( {{rel, item}} );
         q.push(rel);
       }
     }
+
+    q.pop();
   }
 
   // Return empty list if no path
