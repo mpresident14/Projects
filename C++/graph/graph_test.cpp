@@ -95,7 +95,7 @@ void test_assignmentOperator()
 
 void test_addVertex_lvalue()
 {
-  TestingProgram tester{"Add Vertex LValue"};
+  TestingProgram tester{"Add Vertex lValue"};
 
   string str1 = "make";
   string str2 = "mate";
@@ -118,9 +118,34 @@ void test_addVertex_lvalue()
   TestingProgram::printResults();
 }
 
+void test_addVertex_lvalue_noAdjFcn()
+{
+  TestingProgram tester{"Add Vertex lValue no adj fcn"};
+
+  string str1 = "make";
+  string str2 = "mate";
+  string str3 = "mite";
+  string str4 = "cool";
+  Graph<string> g;
+  
+  g.addVertex(str1);
+  g.addVertex(str2);
+  g.addVertex(str3);
+  g.addVertex(str4);
+
+  affirm(!g.addVertex(str1));
+  affirm(g.size() == 4);
+  affirm(*(g.getRelatives(str1)) == unordered_set<string>());
+  affirm(*(g.getRelatives(str2)) == unordered_set<string>());
+  affirm(*(g.getRelatives(str3)) == unordered_set<string>());
+  affirm(*(g.getRelatives(str4)) == unordered_set<string>());
+
+  TestingProgram::printResults();
+}
+
 void test_addVertex_rvalue()
 {
-  TestingProgram tester{"Add Vertex LValue"};
+  TestingProgram tester{"Add Vertex rValue"};
 
   string str1 = "make";
   string str2 = "mate";
@@ -143,9 +168,56 @@ void test_addVertex_rvalue()
   TestingProgram::printResults();
 }
 
+void test_addVertex_rvalue_noAdjFcn()
+{
+  TestingProgram tester{"Add Vertex rValue no adj fcn"};
+
+  Graph<string> g;
+  
+  g.addVertex("a");
+  g.addVertex("b");
+  g.addVertex("c");
+  g.addVertex("d");
+
+  affirm(!g.addVertex("a"));
+  affirm(g.size() == 4);
+  affirm(*(g.getRelatives("a")) == unordered_set<string>());
+  affirm(*(g.getRelatives("b")) == unordered_set<string>());
+  affirm(*(g.getRelatives("c")) == unordered_set<string>());
+  affirm(*(g.getRelatives("d")) == unordered_set<string>());
+
+  TestingProgram::printResults();
+}
+
+void test_addEdge()
+{
+  TestingProgram tester{"Add Edge"};
+
+  Graph<string> g;
+
+  string str1 = "make";
+  string str2 = "mate";
+  string str3 = "late";
+  g.addVertex(str1);
+  g.addVertex(str2);
+  g.addVertex(str3);
+
+  affirm(g.addEdge(str1, str2));
+  affirm(g.addEdge(str2, str3));
+  affirm(!g.addEdge(str2, str1));
+  affirm(!g.addEdge(str2, str3));
+  affirm(!g.addEdge("absent", str1));
+
+  affirm(*(g.getRelatives(str1)) == unordered_set<string>({str2}));
+  affirm(*(g.getRelatives(str2)) == unordered_set<string>({str1, str3}));
+  affirm(*(g.getRelatives(str3)) == unordered_set<string>({str2}));
+
+  TestingProgram::printResults();
+}
+
 void test_removeVertex()
 {
-  TestingProgram tester{"removeVertex"};
+  TestingProgram tester{"Remove Vertex"};
 
   Graph<string, oneLetterDifferent> g;
 
@@ -162,6 +234,34 @@ void test_removeVertex()
   affirm(g.size() == 2);
   affirm(*(g.getRelatives(str2)) == unordered_set<string>({str3}));
   affirm(*(g.getRelatives(str3)) == unordered_set<string>({str2}));
+
+  TestingProgram::printResults();
+}
+
+void test_removeEdge()
+{
+  TestingProgram tester{"Remove Edge"};
+
+  Graph<string, oneLetterDifferent> g;
+
+  string str1 = "make";
+  string str2 = "mate";
+  string str3 = "late";
+  string str4 = "lake";
+  g.addVertex(str1);
+  g.addVertex(str2);
+  g.addVertex(str3);
+  g.addVertex(str4);
+
+  affirm(g.removeEdge(str2, str3));
+  affirm(g.removeEdge(str1, str4));
+  affirm(!g.removeEdge(str1, str4));
+  affirm(!g.removeEdge("absent", str1));
+
+  affirm(*(g.getRelatives(str1)) == unordered_set<string>({str2}));
+  affirm(*(g.getRelatives(str2)) == unordered_set<string>({str1}));
+  affirm(*(g.getRelatives(str3)) == unordered_set<string>({str4}));
+  affirm(*(g.getRelatives(str4)) == unordered_set<string>({str3}));
 
   TestingProgram::printResults();
 }
@@ -215,6 +315,29 @@ void test_getRelativeCount()
   TestingProgram::printResults();
 }
 
+void test_adajacent()
+{
+  TestingProgram tester{"Adjacent"};
+
+  Graph<int> g;
+
+  int a = 5;
+  int b = 50;
+  int c = 77;
+
+  g.addVertex(a);
+  g.addVertex(b);
+  g.addVertex(c);
+  g.addEdge(a, b);
+
+  affirm(g.adjacent(a, b));
+  affirm(!g.adjacent(c, b));
+  affirm(g.removeEdge(a, b));
+  affirm(!g.adjacent(a, b));
+
+  TestingProgram::printResults();
+}
+
 void test_contains()
 {
   TestingProgram tester{"Contains"};
@@ -230,9 +353,9 @@ void test_contains()
   TestingProgram::printResults();
 }
 
-void test_getPath()
+void test_getShortestPath()
 {
-  TestingProgram tester{"Get Path"};
+  TestingProgram tester{"Get Shortest Path"};
 
   Graph<string, oneLetterDifferent> g;
 
@@ -257,6 +380,95 @@ void test_getPath()
   TestingProgram::printResults();
 }
 
+void test_size()
+{
+  TestingProgram tester{"Size"};
+
+  Graph<string, oneLetterDifferent> g;
+
+  string str1 = "bay";
+  string str2 = "day";
+  string str3 = "buy";
+  string str4 = "cut";
+  string str5 = "but";
+  string str6 = "gut";
+  
+  g.addVertex(str1);
+  g.addVertex(str2);
+  g.addVertex(str3);
+  g.addVertex(str4);
+  g.addVertex(str5);
+  g.addVertex(str6);
+
+  TestingProgram::printResults();
+}
+
+void test_numEdges()
+{
+  TestingProgram tester{"Num Edges"};
+
+  Graph<int> g;
+
+  int a = 5;
+  int b = 50;
+  int c = 500;
+  int d = 5000;
+
+  g.addVertex(a);
+  g.addVertex(b);
+  g.addVertex(c);
+  g.addVertex(d);
+
+  affirm(g.numEdges() == 0);
+  g.addEdge(a, b);
+  affirm(g.numEdges() == 1);
+  g.addEdge(b, c);
+  g.addEdge(b, c); // repeat
+  affirm(g.numEdges() == 2);
+  g.addEdge(c, d);
+  affirm(g.numEdges() == 3);
+  g.addEdge(d, a);
+  affirm(g.numEdges() == 4);
+
+  g.removeEdge(a, b);
+  affirm(g.numEdges() == 3);
+
+  TestingProgram::printResults();
+}
+
+/******************
+ * Iterator Tests *
+ ******************/
+
+void test_IterIncrement() {
+  TestingProgram tester{"Iterator ++"};
+
+  Graph<string, oneLetterDifferent> g;
+
+  string str1 = "bay";
+  string str2 = "day";
+  string str3 = "buy";
+  string str4 = "cut";
+  string str5 = "but";
+  string str6 = "gut";
+  
+  g.addVertex(str1);
+  g.addVertex(str2);
+  g.addVertex(str3);
+  g.addVertex(str4);
+  g.addVertex(str5);
+  g.addVertex(str6);
+
+  unordered_set<string> traversed;
+  for (Graph<string, oneLetterDifferent>::iterator iter = g.begin(); iter != g.end(); ++iter) {
+    traversed.insert(*iter);
+  }
+
+  affirm(traversed == unordered_set<string>( {"bay", "day", "buy", "cut", "but", "gut"}));
+
+  TestingProgram::printResults();
+}  
+
 int main()
 {
   test_oneLetterDifferent();
@@ -265,12 +477,20 @@ int main()
   test_moveConstructor();
   test_assignmentOperator();
   test_addVertex_lvalue();
+  test_addVertex_lvalue_noAdjFcn();
   test_addVertex_rvalue();
+  test_addVertex_rvalue_noAdjFcn();
+  test_addEdge();
+  test_removeEdge();
   test_removeVertex();
   test_getRelatives();
   test_getRelativeCount();
+  test_adajacent();
   test_contains();
-  test_getPath();
+  test_getShortestPath();
+  test_size();
+  test_numEdges();
+  test_IterIncrement();
 
   TestingProgram::summarize();
 

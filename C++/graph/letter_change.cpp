@@ -29,7 +29,7 @@ bool oneLetterDifferent(const string& s, const string& t)
 
 void printPath(forward_list<string> path)
 {
-  if (path.begin() == path.end()) {
+  if (path.empty()) {
     cout << "NO PATHS" << endl;
     return;
   }

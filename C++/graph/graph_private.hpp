@@ -41,12 +41,6 @@ void Graph<T,F>::swap(Graph<T,F>& second)
 }
 
 template <typename T, bool(*F)(const T&, const T&)>
-size_t Graph<T,F>::size()
-{
-  return relativeMap_.size();
-}
-
-template <typename T, bool(*F)(const T&, const T&)>
 bool Graph<T,F>::addVertex(const T& item)
 {
   // Return if already in the graph
@@ -57,6 +51,16 @@ bool Graph<T,F>::addVertex(const T& item)
   // Insert the adjacency set for item
   relativeMap_.insert( {item, unordered_set<T>()} );
 
+  // Return if an adjacency function was not specified
+  // Suppress warning about F never being nullptr (checked and tested)
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Waddress"
+  if (F == nullptr) {
+    return true;
+  }
+  #pragma GCC diagnostic pop
+
+  // If an adj fcn was specified, insert item into the other sets
   unordered_set<T>& relatives = relativeMap_.at(item);
 
   for (auto& pair : relativeMap_) {
@@ -81,6 +85,16 @@ bool Graph<T,F>::addVertex(T&& item)
   // Insert the adjacency set for item
   relativeMap_.insert({rval, unordered_set<T>()});
 
+  // Return if an adjacency function was not specified
+  // Suppress warning about F never being nullptr (checked and tested)
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Waddress"
+  if (F == nullptr) {
+    return true;
+  }
+  #pragma GCC diagnostic pop
+
+  // If an adj fcn was specified, insert item into the other sets
   unordered_set<T>& relatives = relativeMap_.at(rval);
 
   for (auto& pair : relativeMap_) {
@@ -94,24 +108,23 @@ bool Graph<T,F>::addVertex(T&& item)
 }
 
 template <typename T, bool(*F)(const T&, const T&)>
-const unordered_set<T>* Graph<T,F>::getRelatives(const T& item)
+bool Graph<T,F>::addEdge(const T& first, const T& second)
 {
-  auto iter = relativeMap_.find(item);
-  return iter == relativeMap_.end() ? nullptr : &(iter->second);
-}
+  // Check if first and second are in the graph
+  auto firstIter = relativeMap_.find(first);
+  auto secondIter = relativeMap_.find(second);
 
-template <typename T, bool(*F)(const T&, const T&)>
-int Graph<T,F>::getRelativeCount(const T& item)
-{
-  const unordered_set<T>* relatives = getRelatives(item);
-  return relatives == nullptr ? -1 : relatives->size();
-}
+  if (firstIter == relativeMap_.end() || secondIter == relativeMap_.end()) {
+    return false;
+  }
 
+  // Check if there is already an edge in first's set
+  bool wasInserted = firstIter->second.insert(second).second;
+  if (wasInserted) {
+    secondIter->second.insert(first);
+  }
 
-template <typename T, bool(*F)(const T&, const T&)>
-bool Graph<T,F>::contains(const T& item)
-{
-  return relativeMap_.count(item) != 0;
+  return wasInserted;
 }
 
 template <typename T, bool(*F)(const T&, const T&)>
@@ -128,6 +141,63 @@ bool Graph<T,F>::removeVertex(const T& item)
   }
 
   return true;
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+bool Graph<T,F>::removeEdge(const T& first, const T& second)
+{
+  // Check if first and second are in the graph
+  auto firstIter = relativeMap_.find(first);
+  auto secondIter = relativeMap_.find(second);
+
+  if (firstIter == relativeMap_.end() || secondIter == relativeMap_.end()) {
+    return false;
+  }
+
+  // Check if there is an edge in first's set and remove
+  size_t numRemoved = firstIter->second.erase(second);
+  if (numRemoved != 0) {
+    secondIter->second.erase(first);
+  }
+
+  return numRemoved != 0;
+}
+
+
+template <typename T, bool(*F)(const T&, const T&)>
+const unordered_set<T>* Graph<T,F>::getRelatives(const T& item)
+{
+  auto iter = relativeMap_.find(item);
+  return iter == relativeMap_.end() ? nullptr : &(iter->second);
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+int Graph<T,F>::getRelativeCount(const T& item)
+{
+  const unordered_set<T>* relatives = getRelatives(item);
+  return relatives == nullptr ? -1 : relatives->size();
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+bool Graph<T,F>::adjacent(const T& first, const T& second)
+{
+  // Check if first and second are in the graph
+  auto firstIter = relativeMap_.find(first);
+  auto secondIter = relativeMap_.find(second);
+
+  if (firstIter == relativeMap_.end() || secondIter == relativeMap_.end()) {
+    return false;
+  }
+
+  // Check if second is in first's set
+  return firstIter->second.count(second) != 0;
+}
+
+
+template <typename T, bool(*F)(const T&, const T&)>
+bool Graph<T,F>::contains(const T& item)
+{
+  return relativeMap_.count(item) != 0;
 }
 
 template <typename T, bool(*F)(const T&, const T&)>
@@ -205,4 +275,109 @@ forward_list<T> Graph<T,F>::getShortestPath(const T& start, const T& finish)
 
   // Return empty list if no path
   return forward_list<T>();
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+size_t Graph<T,F>::size()
+{
+  return relativeMap_.size();
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+size_t Graph<T,F>::numEdges()
+{
+  // Add up degrees of vertices and divide by 2
+  size_t total = 0;
+
+  for (auto& pair : relativeMap_) {
+    total += pair.second.size();
+  }
+  
+  return total / 2;
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+typename Graph<T,F>::iterator Graph<T,F>::begin()
+{
+  Graph<T,F>::iterator i{relativeMap_.begin()};
+  return i;
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+typename Graph<T,F>::iterator Graph<T,F>::end()
+{
+  Graph<T,F>::iterator i{relativeMap_.end()};
+  return i;
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+typename Graph<T,F>::const_iterator Graph<T,F>::begin() const
+{
+  Graph<T,F>::const_iterator i{relativeMap_.cbegin()};
+  return i;
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+typename Graph<T,F>::const_iterator Graph<T,F>::end() const
+{
+  Graph<T,F>::const_iterator i{relativeMap_.cend()};
+  return i;
+}
+
+/***********************
+ * Iterator Operations *
+ ***********************/
+
+template <typename T, bool(*F)(const T&, const T&)>
+template <bool is_const>
+Graph<T,F>::Iterator<is_const>::Iterator(const Iterator<false>& iter)
+  : mapIter_{iter.mapIter_}
+{
+  // Nothing to do
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+template <bool is_const>
+Graph<T,F>::Iterator<is_const>::Iterator(map_iter_t mapIter)
+  : mapIter_{mapIter}
+{
+  // Nothing to do
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+template <bool is_const>
+Graph<T,F>::Iterator<is_const>& Graph<T,F>::Iterator<is_const>::operator++()
+{
+  mapIter_.operator++();
+  return *this;
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+template <bool is_const>
+Graph<T,F>::Iterator<is_const>& Graph<T,F>::Iterator<is_const>::operator--()
+{
+  mapIter_.operator--();
+  return *this;
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+template <bool is_const>
+typename Graph<T,F>::template Iterator<is_const>::reference Graph<T,F>::Iterator<is_const>::operator*() const
+{
+  // Underlying unordered_map will never be const
+  return const_cast<value_type&>(mapIter_->first);
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+template <bool is_const>
+bool Graph<T,F>::Iterator<is_const>::operator==(const Iterator& other) const
+{
+  return mapIter_ == other.mapIter_;
+}
+
+template <typename T, bool(*F)(const T&, const T&)>
+template <bool is_const>
+bool Graph<T,F>::Iterator<is_const>::operator!=(const Iterator& other) const
+{
+  return mapIter_ != other.mapIter_;
 }
