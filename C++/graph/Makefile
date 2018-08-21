@@ -2,7 +2,6 @@ CXX = g++
 CXXFLAGS = -g -std=c++1z -Wall -Wextra -pedantic -O2
 
 all: main
-	# ./main
 
 test: graph_test
 	./graph_test

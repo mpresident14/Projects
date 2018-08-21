@@ -43,7 +43,7 @@ void test_defaultConstructor()
   TestingProgram tester{"Default Constructor"};
 
   Graph<string, oneLetterDifferent> g;
-  affirm(g.numVertices() == 0);
+  affirm(g.size() == 0);
 
   TestingProgram::printResults();
 }
@@ -109,7 +109,7 @@ void test_addVertex_lvalue()
   g.addVertex(str4);
 
   affirm(!g.addVertex(str1));
-  affirm(g.numVertices() == 4);
+  affirm(g.size() == 4);
   affirm(*(g.getRelatives(str1)) == unordered_set<string>({str2}));
   affirm(*(g.getRelatives(str2)) == unordered_set<string>({str1, str3}));
   affirm(*(g.getRelatives(str3)) == unordered_set<string>({str2}));
@@ -134,96 +134,11 @@ void test_addVertex_rvalue()
   g.addVertex("cool");
 
   affirm(!g.addVertex("make"));
-  affirm(g.numVertices() == 4);
+  affirm(g.size() == 4);
   affirm(*(g.getRelatives(str1)) == unordered_set<string>({str2}));
   affirm(*(g.getRelatives(str2)) == unordered_set<string>({str1, str3}));
   affirm(*(g.getRelatives(str3)) == unordered_set<string>({str2}));
   affirm(*(g.getRelatives(str4)) == unordered_set<string>());
-
-  TestingProgram::printResults();
-}
-
-void test_addVertex_initList_lValue_works()
-{
-  TestingProgram tester{"Add Vertex init list LValue works"};
-
-  Graph<string, oneLetterDifferent> g;
-
-  string str1 = "hello";
-  string str2 = "bye";
-  string str3 = "I'm back";
-  string str4 = "cool";
-  g.addVertex(str1, {});
-  g.addVertex(str2, {str1});
-  g.addVertex(str3, {str1, str2});
-  g.addVertex(str4, {str1});
-
-
-  affirm(g.numVertices() == 4);
-  affirm(*(g.getRelatives(str1)) == unordered_set<string>({str2, str3, str4}));
-  affirm(*(g.getRelatives(str2)) == unordered_set<string>({str1, str3}));
-  affirm(*(g.getRelatives(str3)) == unordered_set<string>({str1, str2}));
-  affirm(*(g.getRelatives(str4)) == unordered_set<string>({str1}));
-
-  TestingProgram::printResults();
-}
-
-void test_addVertex_initList_lValue_withIllegalArgs()
-{
-  TestingProgram tester{"Add Vertex init list LValue with illegal args"};
-
-  Graph<string, oneLetterDifferent> g;
-
-  string str1 = "hello";
-
-  bool threwError = false;
-  try {
-    g.addVertex(str1, {"Not in graph"});
-  }
-  catch (const invalid_argument&) {
-    threwError = true;
-  }
-  
-  affirm(threwError == true);
-
-  TestingProgram::printResults();
-}
-
-void test_addVertex_initList_rValue_works()
-{
-  TestingProgram tester{"Add Vertex init list RValue works"};
-
-  Graph<string, oneLetterDifferent> g;
-
-  g.addVertex("hello", {});
-  g.addVertex("bye", {"hello"});
-  g.addVertex("I'm back", {"hello", "bye"});
-  g.addVertex("cool", {"hello"});
-
-  affirm(g.numVertices() == 4);
-  affirm(*(g.getRelatives("hello")) == unordered_set<string>({"bye", "I'm back", "cool"}));
-  affirm(*(g.getRelatives("bye")) == unordered_set<string>({"hello", "I'm back"}));
-  affirm(*(g.getRelatives("I'm back")) == unordered_set<string>({"hello", "bye"}));
-  affirm(*(g.getRelatives("cool")) == unordered_set<string>({"hello"}));
-
-  TestingProgram::printResults();
-}
-
-void test_addVertex_initList_rValue_withIllegalArgs()
-{
-  TestingProgram tester{"Add Vertex init list RValue with illegal args"};
-
-  Graph<string, oneLetterDifferent> g;
-
-  bool threwError = false;
-  try {
-    g.addVertex("hello", {"Not in graph"});
-  }
-  catch (const invalid_argument&) {
-    threwError = true;
-  }
-  
-  affirm(threwError == true);
 
   TestingProgram::printResults();
 }
@@ -244,7 +159,7 @@ void test_removeVertex()
   affirm(g.removeVertex(str1));
   affirm(!g.removeVertex(str1));
 
-  affirm(g.numVertices() == 2);
+  affirm(g.size() == 2);
   affirm(*(g.getRelatives(str2)) == unordered_set<string>({str3}));
   affirm(*(g.getRelatives(str3)) == unordered_set<string>({str2}));
 
@@ -266,7 +181,7 @@ void test_getRelatives()
   g.addVertex(str3);
   g.addVertex(str4);
 
-  affirm(g.numVertices() == 4);
+  affirm(g.size() == 4);
   affirm(*(g.getRelatives(str1)) == unordered_set<string>( {str2, str4} ));
   affirm(*(g.getRelatives(str2)) == unordered_set<string>( {str1, str3, str4} ));
   affirm(*(g.getRelatives(str3)) == unordered_set<string>( {str2} ));
@@ -351,10 +266,6 @@ int main()
   test_assignmentOperator();
   test_addVertex_lvalue();
   test_addVertex_rvalue();
-  test_addVertex_initList_lValue_works();
-  test_addVertex_initList_lValue_withIllegalArgs();
-  test_addVertex_initList_rValue_works();
-  test_addVertex_initList_rValue_withIllegalArgs();
   test_removeVertex();
   test_getRelatives();
   test_getRelativeCount();
