@@ -1,4 +1,4 @@
-CXX = g++
+CXX = clang++
 CXXFLAGS = -g -std=c++1z -Wall -Wextra -pedantic -O2
 
 all: graph_test letter_change solver
@@ -33,5 +33,5 @@ graph_test: graph_test.o testing-program.o
 letter_change: letter_change.o testing-program.o
 	$(CXX) $(CXXFLAGS) -o letter_change $^
 
-solver: solver.o slide_puzzle.o testing-program.o
+solver: solver.o testing-program.o
 	$(CXX) $(CXXFLAGS) -o solver $^	

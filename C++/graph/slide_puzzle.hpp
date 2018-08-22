@@ -1,9 +1,11 @@
 #ifndef SLIDE_PUZZLE_HPP
 #define SLIDE_PUZZLE_HPP 1
 
+#include "graph.hpp"
 #include <cstddef>
 #include <iostream>
 #include <unordered_set>
+#include <queue>
 
 template<size_t width, size_t height>
 class SlidePuzzle {
@@ -15,18 +17,28 @@ class SlidePuzzle {
     bool operator==(const SlidePuzzle& other) const;
     size_t hashFunction() const;
     
-    std::unordered_set<SlidePuzzle> getAllTransformations() const;
-    
     static bool adjacent(const SlidePuzzle& first, const SlidePuzzle& second);
 
-    // private:
-      int getAdjacentEmptyPosition(const SlidePuzzle& other) const;
+    Graph<SlidePuzzle, SlidePuzzle::adjacent> getAllTransformations() const;
 
-      static const int NONE = -1;
-      static const size_t NUM_ELEMENTS = width * height;
+    friend inline std::ostream& operator<<(std::ostream& out, const SlidePuzzle<width, height>& puzzle)
+    {
+      for (size_t i = 0; i < 4; ++i) {
+        out << puzzle.grid_[i] << ", ";
+      }
+      out << endl;
+      return out;
+    }
+  // private:
+    void addAllSwaps(Graph<SlidePuzzle, SlidePuzzle::adjacent>& graph, std::queue<SlidePuzzle>& q) const;
+    int* copyGrid();
+    int getAdjacentEmptyPosition(const SlidePuzzle& other) const;
 
-      int* grid_;
-      size_t emptyPosition_;
+    static const int NONE = -1;
+    static const size_t NUM_ELEMENTS = width * height;
+
+    int grid_[NUM_ELEMENTS];
+    size_t emptyPosition_;
 };
 
 namespace std

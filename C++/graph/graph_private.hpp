@@ -347,7 +347,7 @@ Graph<T,F>::Iterator<is_const>::Iterator(map_iter_t mapIter)
 
 template <typename T, bool(*F)(const T&, const T&)>
 template <bool is_const>
-Graph<T,F>::Iterator<is_const>& Graph<T,F>::Iterator<is_const>::operator++()
+typename Graph<T,F>::template Iterator<is_const>& Graph<T,F>::Iterator<is_const>::operator++()
 {
   mapIter_.operator++();
   return *this;
