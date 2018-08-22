@@ -33,5 +33,5 @@ graph_test: graph_test.o testing-program.o
 letter_change: letter_change.o testing-program.o
 	$(CXX) $(CXXFLAGS) -o letter_change $^
 
-solver: solver.o slide_puzzle.o
+solver: solver.o slide_puzzle.o testing-program.o
 	$(CXX) $(CXXFLAGS) -o solver $^	

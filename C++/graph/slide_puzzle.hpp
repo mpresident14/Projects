@@ -8,20 +8,25 @@
 template<size_t width, size_t height>
 class SlidePuzzle {
   public:
-    SlidePuzzle();
-    SlidePuzzle(const int* grid);
+    SlidePuzzle() = delete;
+    SlidePuzzle(const int* grid); ///< Must have one -1 to signal empty position
     ~SlidePuzzle();
     
     bool operator==(const SlidePuzzle& other) const;
     size_t hashFunction() const;
     
     std::unordered_set<SlidePuzzle> getAllTransformations() const;
+    
     static bool adjacent(const SlidePuzzle& first, const SlidePuzzle& second);
 
-    private:
+    // private:
+      int getAdjacentEmptyPosition(const SlidePuzzle& other) const;
+
+      static const int NONE = -1;
+      static const size_t NUM_ELEMENTS = width * height;
+
       int* grid_;
-      size_t width_;
-      size_t height_;
+      size_t emptyPosition_;
 };
 
 namespace std
