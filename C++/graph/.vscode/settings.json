@@ -35,6 +35,7 @@
     "typeinfo": "cpp",
     "utility": "cpp",
     "forward_list": "cpp",
-    "deque": "cpp"
+    "deque": "cpp",
+    "chrono": "cpp"
   }
 }

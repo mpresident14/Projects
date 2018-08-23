@@ -12,30 +12,32 @@ class SlidePuzzle {
   public:
     SlidePuzzle() = delete;
     SlidePuzzle(const int* grid); ///< Must have one -1 to signal empty position
-    ~SlidePuzzle();
+    SlidePuzzle(const SlidePuzzle& other);
+    SlidePuzzle(SlidePuzzle&& other);
+    ~SlidePuzzle() = default;
+    SlidePuzzle& operator=(SlidePuzzle other);
+    void swap(SlidePuzzle& other);
     
     bool operator==(const SlidePuzzle& other) const;
     size_t hashFunction() const;
-    
-    static bool adjacent(const SlidePuzzle& first, const SlidePuzzle& second);
 
-    Graph<SlidePuzzle, SlidePuzzle::adjacent> getAllTransformations() const;
+    Graph<SlidePuzzle> getAllTransformations() const;
 
     friend inline std::ostream& operator<<(std::ostream& out, const SlidePuzzle<width, height>& puzzle)
     {
-      for (size_t i = 0; i < 4; ++i) {
-        out << puzzle.grid_[i] << ", ";
+      for (size_t row = 0; row < height; ++row) {
+        for (size_t col = 0; col < width; ++col) {
+          out << puzzle.grid_[row*width + col] << ", ";
+        }  
+        out << endl;
       }
-      out << endl;
       return out;
     }
   // private:
-    void addAllSwaps(Graph<SlidePuzzle, SlidePuzzle::adjacent>& graph, std::queue<SlidePuzzle>& q) const;
-    int* copyGrid();
-    int getAdjacentEmptyPosition(const SlidePuzzle& other) const;
+    void addAllSwaps(Graph<SlidePuzzle>& graph, std::queue<SlidePuzzle>& q) const;
 
-    static const int NONE = -1;
     static const size_t NUM_ELEMENTS = width * height;
+    static const size_t NUM_ARRAY_BYTES = NUM_ELEMENTS * sizeof(int);
 
     int grid_[NUM_ELEMENTS];
     size_t emptyPosition_;

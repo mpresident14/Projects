@@ -7,6 +7,13 @@
 
 using namespace std;
 
+void trade(int *x, int *y)
+{
+    *x = *x ^ *y;
+    *y = *x ^ *y;
+    *x = *x ^ *y;
+}
+
 template<size_t width, size_t height>
 SlidePuzzle<width, height>::SlidePuzzle(const int* grid)
 {
@@ -20,21 +27,36 @@ SlidePuzzle<width, height>::SlidePuzzle(const int* grid)
 }  
 
 template<size_t width, size_t height>
-SlidePuzzle<width, height>::~SlidePuzzle()
+bool SlidePuzzle<width, height>::operator==(const SlidePuzzle<width, height>& other) const
 {
-  // delete[] grid_;
+  return memcmp(grid_, other.grid_, NUM_ARRAY_BYTES) == 0;
 }
 
 template<size_t width, size_t height>
-bool SlidePuzzle<width, height>::operator==(const SlidePuzzle<width, height>& other) const
+SlidePuzzle<width, height>::SlidePuzzle(const SlidePuzzle<width, height>& other)
+  : emptyPosition_{other.emptyPosition_}
 {
-  for (size_t i = 0; i < NUM_ELEMENTS; ++i) {
-    if (grid_[i] != other.grid_[i]) {
-      return false;
-    }
-  }
+  memcpy(grid_, other.grid_, NUM_ARRAY_BYTES);
+}
 
-  return true;
+template<size_t width, size_t height>
+SlidePuzzle<width, height>::SlidePuzzle(SlidePuzzle<width, height>&& other)
+{
+  swap(other);
+}
+
+template<size_t width, size_t height>
+SlidePuzzle<width, height>& SlidePuzzle<width, height>::operator=(SlidePuzzle<width, height> other)
+{
+  swap(other);
+  return *this;
+}
+
+template<size_t width, size_t height>
+void SlidePuzzle<width, height>::swap(SlidePuzzle<width, height>& other)
+{
+  std::swap(grid_, other.grid_);
+  std::swap(emptyPosition_, other.emptyPosition_);
 }
 
 template<size_t width, size_t height>
@@ -50,17 +72,17 @@ size_t SlidePuzzle<width, height>::hashFunction() const
   return result;
 }
 
+// TODO: stop searching when we find the desired end state, then use 
+// Graph::getShortestPath to construct the path
 template<size_t width, size_t height>
-Graph<SlidePuzzle<width, height>, SlidePuzzle<width, height>::adjacent> 
-    SlidePuzzle<width, height>::getAllTransformations() const
+Graph<SlidePuzzle<width, height>> SlidePuzzle<width, height>::getAllTransformations() const
 {
-  Graph<SlidePuzzle<width, height>, SlidePuzzle<width, height>::adjacent> graph;
+  Graph<SlidePuzzle<width, height>> graph;
   graph.addVertex(*this);
   queue<SlidePuzzle<width, height>> q( {*this} );
 
   while (!q.empty()) {
-    SlidePuzzle& puzzle = q.front();
-    puzzle.addAllSwaps(graph, q);
+    q.front().addAllSwaps(graph, q);
     q.pop();
   }
 
@@ -69,122 +91,54 @@ Graph<SlidePuzzle<width, height>, SlidePuzzle<width, height>::adjacent>
 
 template<size_t width, size_t height>
 void SlidePuzzle<width, height>::addAllSwaps(
-    Graph<SlidePuzzle<width, height>, SlidePuzzle<width, height>::adjacent>& graph, 
-    queue<SlidePuzzle<width, height>>& q) const
+    Graph<SlidePuzzle<width, height>>& graph, queue<SlidePuzzle<width, height>>& q) const
 {
-  // TODO: Store these ???
-  size_t row = emptyPosition_ / height;
+  size_t row = emptyPosition_ / width;
   size_t col = emptyPosition_ % width; 
 
   // Check above
   if (row != 0) {
-    int copy[NUM_ELEMENTS];
-    memcpy(copy, grid_, sizeof(int) * NUM_ELEMENTS);
-    std::swap(copy[emptyPosition_], copy[emptyPosition_ - width]);
-
-    SlidePuzzle<width, height> swap{copy};
-    if (graph.addVertex(swap)) {
-      q.push(std::move(swap));
+    SlidePuzzle<width, height> copy{*this};
+    trade(copy.grid_ + emptyPosition_, copy.grid_ + emptyPosition_ - width);
+    copy.emptyPosition_ -= width;
+    if (graph.addVertex(copy)) {;
+      graph.addEdge(*this, copy);
+      q.push(std::move(copy));
     }
   }
 
   // Check below
   if (row != height - 1) {
-    int copy[NUM_ELEMENTS];
-    memcpy(copy, grid_, sizeof(int) * NUM_ELEMENTS);
-    std::swap(copy[emptyPosition_], copy[emptyPosition_ + width]);
-    
-    SlidePuzzle<width, height> swap{copy};
-    if (graph.addVertex(swap)) {
-      q.push(std::move(swap));
+    SlidePuzzle<width, height> copy{*this};
+    int temp = copy.grid_[copy.emptyPosition_];
+    copy.grid_[copy.emptyPosition_] = copy.grid_[copy.emptyPosition_ + width];
+    copy.grid_[copy.emptyPosition_ + width] = temp;
+    copy.emptyPosition_ += width;
+    if (graph.addVertex(copy)) {
+      graph.addEdge(*this, copy);
+      q.push(std::move(copy));
     }
   }
 
   // Check to the left
   if (col != 0) {
-    int copy[NUM_ELEMENTS];
-    memcpy(copy, grid_, sizeof(int) * NUM_ELEMENTS);
-    std::swap(copy[emptyPosition_], copy[emptyPosition_ - 1]);
-    
-    SlidePuzzle<width, height> swap{copy};
-    if (graph.addVertex(swap)) {
-      q.push(std::move(swap));
+    SlidePuzzle<width, height> copy{*this};
+    trade(copy.grid_ + emptyPosition_, copy.grid_ + emptyPosition_ -1);
+    --copy.emptyPosition_;
+    if (graph.addVertex(copy)) {
+      graph.addEdge(*this, copy);
+      q.push(std::move(copy));
     }
   }
 
   // Check to the right
   if (col != width - 1) {
-    int copy[NUM_ELEMENTS];
-    memcpy(copy, grid_, sizeof(int) * NUM_ELEMENTS);
-    std::swap(copy[emptyPosition_], copy[emptyPosition_ + 1]);
-    
-    SlidePuzzle<width, height> swap{copy};
-    if (graph.addVertex(swap)) {
-      q.push(std::move(swap));
+    SlidePuzzle<width, height> copy{*this};
+    trade(copy.grid_ + emptyPosition_, copy.grid_ + emptyPosition_ + 1);
+    ++copy.emptyPosition_;
+    if (graph.addVertex(copy)) {
+      graph.addEdge(*this, copy);
+      q.push(std::move(copy));
     }
   }
-}
-
-template<size_t width, size_t height>
-bool SlidePuzzle<width, height>::adjacent(const SlidePuzzle<width, height>& first, const SlidePuzzle<width, height>& second)
-{
-  // Check for adjacent empty position
-  int adjacentEmptyPosition = first.getAdjacentEmptyPosition(second);
-  if (adjacentEmptyPosition == NONE) {
-    return false;
-  }
-
-  // Check that the same value was swapped from the empty position
-  if (first.grid_[second.emptyPosition_] != second.grid_[first.emptyPosition_]) {
-    return false;
-  }
-
-  // Check to make sure all other values are in the same position
-  for (size_t i = 0; i < NUM_ELEMENTS; ++i) {
-    if (i != first.emptyPosition_ && i != second.emptyPosition_) {
-      if (first.grid_[i] != second.grid_[i]) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-template<size_t width, size_t height>
-int SlidePuzzle<width, height>::getAdjacentEmptyPosition(const SlidePuzzle<width, height>& other) const
-{
-  // TODO: Store these ???
-  size_t row = emptyPosition_ / height;
-  size_t col = emptyPosition_ % width; 
-
-  // Check above
-  if (row != 0) {
-    if (other.emptyPosition_ == emptyPosition_ - width) {
-      return emptyPosition_ - 3;
-    }
-  }
-
-  // Check below
-  if (row != height - 1) {
-    if (other.emptyPosition_ == emptyPosition_ + width) {
-      return emptyPosition_ + 3;
-    }
-  }
-
-  // Check to the left
-  if (col != 0) {
-    if (other.emptyPosition_ == emptyPosition_ - 1) {
-      return emptyPosition_ - 1;
-    }
-  }
-
-  // Check to the right
-  if (col != width - 1) {
-    if (other.emptyPosition_ == emptyPosition_ + 1) {
-      return emptyPosition_ + 1;
-    }
-  }
-
-  return NONE;
 }
