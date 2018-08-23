@@ -204,7 +204,7 @@ template <typename T, bool(*F)(const T&, const T&)>
 forward_list<T> Graph<T,F>::getShortestPath(const T& start, const T& finish)
 {
   if ( getRelativeCount(start) == -1 || getRelativeCount(finish) == -1 ) {
-    throw std::invalid_argument("Params \"start\" and \"finish\" must be present in graph.");
+    return forward_list<T>();
   }
 
   if ( getRelativeCount(start) == 0 || getRelativeCount(finish) == 0 ) {

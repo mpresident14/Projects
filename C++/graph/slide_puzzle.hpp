@@ -4,14 +4,15 @@
 #include "graph.hpp"
 #include <cstddef>
 #include <iostream>
-#include <unordered_set>
+#include <iomanip>
 #include <queue>
+#include <forward_list>
 
 template<size_t width, size_t height>
 class SlidePuzzle {
   public:
     SlidePuzzle() = delete;
-    SlidePuzzle(const int* grid); ///< Must have one -1 to signal empty position
+    SlidePuzzle(const int* grid); // Must have exactly one -1 to signal empty position
     SlidePuzzle(const SlidePuzzle& other);
     SlidePuzzle(SlidePuzzle&& other);
     ~SlidePuzzle() = default;
@@ -19,21 +20,29 @@ class SlidePuzzle {
     void swap(SlidePuzzle& other);
     
     bool operator==(const SlidePuzzle& other) const;
+    bool operator!=(const SlidePuzzle& other) const;
     size_t hashFunction() const;
 
-    Graph<SlidePuzzle> getAllTransformations() const;
+    std::forward_list<SlidePuzzle> solvePuzzle(const SlidePuzzle& completed) const;
 
     friend inline std::ostream& operator<<(std::ostream& out, const SlidePuzzle<width, height>& puzzle)
     {
       for (size_t row = 0; row < height; ++row) {
         for (size_t col = 0; col < width; ++col) {
-          out << puzzle.grid_[row*width + col] << ", ";
+          size_t i = row*width + col;
+          if (i == puzzle.emptyPosition_) {
+            out << std::setw(3) << " ";
+          }
+          else {
+            out << std::setw(3) << puzzle.grid_[i];
+          }  
         }  
         out << endl;
       }
       return out;
     }
-  // private:
+
+  private:
     void addAllSwaps(Graph<SlidePuzzle>& graph, std::queue<SlidePuzzle>& q) const;
 
     static const size_t NUM_ELEMENTS = width * height;

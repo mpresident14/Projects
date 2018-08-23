@@ -36,6 +36,7 @@
     "utility": "cpp",
     "forward_list": "cpp",
     "deque": "cpp",
-    "chrono": "cpp"
+    "chrono": "cpp",
+    "iomanip": "cpp"
   }
 }

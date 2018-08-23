@@ -114,8 +114,8 @@ class Graph {
      * @param end the ending vertex
      * @return std::forward_list<T> a list starting with start and ending with end that indicating
      *  the shortest path between the two. If there are multiple paths of the shortest length, any
-     *  of them can be returned. Returns empty list if there is no path. 
-     * @throws invalid_argument if begin or end are not in the graph
+     *  of them can be returned. Returns empty list if there is no path or if begin or end are not
+     *  in the graph. 
      */
     std::forward_list<T> getShortestPath(const T& begin, const T& end);
     /**

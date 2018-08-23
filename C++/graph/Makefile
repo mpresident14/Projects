@@ -6,11 +6,6 @@ all: graph_test letter_change solver
 test: graph_test
 	./graph_test
 
-letter: letter_change
-
-solve: solver
-	./solver
-
 clean: 
 	rm -rf *.o
 	rm -rf *.exe
@@ -33,5 +28,5 @@ graph_test: graph_test.o testing-program.o
 letter_change: letter_change.o testing-program.o
 	$(CXX) $(CXXFLAGS) -o letter_change $^
 
-solver: solver.o testing-program.o
+solver: solver.o
 	$(CXX) $(CXXFLAGS) -o solver $^	

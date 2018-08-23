@@ -17,12 +17,21 @@ void trade(int *x, int *y)
 template<size_t width, size_t height>
 SlidePuzzle<width, height>::SlidePuzzle(const int* grid)
 {
+  bool isEmptyPositionSet = false;
   for (size_t i = 0; i < NUM_ELEMENTS; ++i) {
     int num = grid[i];
     grid_[i] = num;
     if (num == -1) {
+      if (isEmptyPositionSet) {
+        throw std::invalid_argument("Exactly one -1 must be present in parameter \"grid.\"");
+      }
       emptyPosition_ = i;
+      isEmptyPositionSet = true;
     }
+  }
+
+  if (!isEmptyPositionSet) {
+    throw std::invalid_argument("Exactly one -1 must be present in parameter \"grid.\"");
   }
 }  
 
@@ -30,6 +39,12 @@ template<size_t width, size_t height>
 bool SlidePuzzle<width, height>::operator==(const SlidePuzzle<width, height>& other) const
 {
   return memcmp(grid_, other.grid_, NUM_ARRAY_BYTES) == 0;
+}
+
+template<size_t width, size_t height>
+bool SlidePuzzle<width, height>::operator!=(const SlidePuzzle<width, height>& other) const
+{
+  return !(*this == other);
 }
 
 template<size_t width, size_t height>
@@ -72,23 +87,28 @@ size_t SlidePuzzle<width, height>::hashFunction() const
   return result;
 }
 
-// TODO: stop searching when we find the desired end state, then use 
-// Graph::getShortestPath to construct the path
 template<size_t width, size_t height>
-Graph<SlidePuzzle<width, height>> SlidePuzzle<width, height>::getAllTransformations() const
+std::forward_list<SlidePuzzle<width, height>>  
+    SlidePuzzle<width, height>::solvePuzzle(const SlidePuzzle<width, height>& completed) const
 {
   Graph<SlidePuzzle<width, height>> graph;
   graph.addVertex(*this);
   queue<SlidePuzzle<width, height>> q( {*this} );
 
   while (!q.empty()) {
-    q.front().addAllSwaps(graph, q);
+    SlidePuzzle<width, height>& puzzle = q.front();
+    if (puzzle == completed) {
+      break;
+    }
+
+    puzzle.addAllSwaps(graph, q);
     q.pop();
   }
 
-  return graph;
+  return graph.getShortestPath(*this, completed);
 }
 
+/* Adds all of the possible SlidePuzzles that could be created by performing one slide (4 is max possible) */
 template<size_t width, size_t height>
 void SlidePuzzle<width, height>::addAllSwaps(
     Graph<SlidePuzzle<width, height>>& graph, queue<SlidePuzzle<width, height>>& q) const
@@ -110,9 +130,7 @@ void SlidePuzzle<width, height>::addAllSwaps(
   // Check below
   if (row != height - 1) {
     SlidePuzzle<width, height> copy{*this};
-    int temp = copy.grid_[copy.emptyPosition_];
-    copy.grid_[copy.emptyPosition_] = copy.grid_[copy.emptyPosition_ + width];
-    copy.grid_[copy.emptyPosition_ + width] = temp;
+    trade(copy.grid_ + emptyPosition_, copy.grid_ + emptyPosition_ + width);
     copy.emptyPosition_ += width;
     if (graph.addVertex(copy)) {
       graph.addEdge(*this, copy);

@@ -1,5 +1,34 @@
 \hypertarget{class_graph}{}\section{Graph$<$ T, F $>$ Class Template Reference}
 \label{class_graph}\index{Graph$<$ T, F $>$@{Graph$<$ T, F $>$}}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{class_graph_1_1_iterator}{Iterator}
+\end{DoxyCompactItemize}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_graph_aedf6cad874fd826bf77ab643200c39dc}\label{class_graph_aedf6cad874fd826bf77ab643200c39dc}} 
+using {\bfseries value\+\_\+type} = T
+\item 
+\mbox{\Hypertarget{class_graph_a80445edfcf7d49e6c79ae79360296e15}\label{class_graph_a80445edfcf7d49e6c79ae79360296e15}} 
+using {\bfseries size\+\_\+type} = size\+\_\+t
+\item 
+\mbox{\Hypertarget{class_graph_a207656ac7a99d90358f78b8c51f32494}\label{class_graph_a207656ac7a99d90358f78b8c51f32494}} 
+using {\bfseries difference\+\_\+type} = ptrdiff\+\_\+t
+\item 
+\mbox{\Hypertarget{class_graph_af78f88103388afabda8a0b3967ad5c8e}\label{class_graph_af78f88103388afabda8a0b3967ad5c8e}} 
+using {\bfseries reference} = value\+\_\+type \&
+\item 
+\mbox{\Hypertarget{class_graph_a9ca79400773a3df3b6373b34d015532c}\label{class_graph_a9ca79400773a3df3b6373b34d015532c}} 
+using {\bfseries const\+\_\+reference} = const value\+\_\+type \&
+\item 
+\mbox{\Hypertarget{class_graph_ae7feb4d2f5882998b5179262032faa62}\label{class_graph_ae7feb4d2f5882998b5179262032faa62}} 
+using {\bfseries iterator} = \hyperlink{class_graph_1_1_iterator}{Iterator}$<$ false $>$
+\item 
+\mbox{\Hypertarget{class_graph_aa71325d80c02101dfc74f068848cae14}\label{class_graph_aa71325d80c02101dfc74f068848cae14}} 
+using {\bfseries const\+\_\+iterator} = \hyperlink{class_graph_1_1_iterator}{Iterator}$<$ true $>$
+\end{DoxyCompactItemize}
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
@@ -15,44 +44,93 @@
 \mbox{\Hypertarget{class_graph_a427b02545efdf010462925ad5ff05726}\label{class_graph_a427b02545efdf010462925ad5ff05726}} 
 void {\bfseries swap} (\hyperlink{class_graph}{Graph} \&second)
 \item 
+\mbox{\Hypertarget{class_graph_ae249d5954c95e0b313d53ffe38963b54}\label{class_graph_ae249d5954c95e0b313d53ffe38963b54}} 
+\hyperlink{class_graph_1_1_iterator}{iterator} {\bfseries begin} ()
+\item 
+\mbox{\Hypertarget{class_graph_a46a1f0ef6b81885b6bf40ad9cf527a94}\label{class_graph_a46a1f0ef6b81885b6bf40ad9cf527a94}} 
+\hyperlink{class_graph_1_1_iterator}{iterator} {\bfseries end} ()
+\item 
+\mbox{\Hypertarget{class_graph_a3a735dd82d4a50de2aa8f07f84efa593}\label{class_graph_a3a735dd82d4a50de2aa8f07f84efa593}} 
+\hyperlink{class_graph_1_1_iterator}{const\+\_\+iterator} {\bfseries begin} () const
+\item 
+\mbox{\Hypertarget{class_graph_a3ad7d926d0085be10f901e0ba4c98ddd}\label{class_graph_a3ad7d926d0085be10f901e0ba4c98ddd}} 
+\hyperlink{class_graph_1_1_iterator}{const\+\_\+iterator} {\bfseries end} () const
+\item 
 bool \hyperlink{class_graph_a0d9a2a945cb00f2600f26ad63a4828d6}{add\+Vertex} (const T \&item)
 \begin{DoxyCompactList}\small\item\em Adds a vertex to the graph. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_graph_ac65b5e08820fafb280c55bdce732f19a}\label{class_graph_ac65b5e08820fafb280c55bdce732f19a}} 
 bool {\bfseries add\+Vertex} (T \&\&item)
 \item 
+bool \hyperlink{class_graph_ae68a4a6bcb5dacf54f389ec9f28eb9e7}{add\+Edge} (const T \&first, const T \&second)
+\begin{DoxyCompactList}\small\item\em Adds an edge between two vertices. \end{DoxyCompactList}\item 
 bool \hyperlink{class_graph_ab60cdf74dfbd8c7682b760338fb8a952}{remove\+Vertex} (const T \&item)
 \begin{DoxyCompactList}\small\item\em Removes a vertex to the graph. \end{DoxyCompactList}\item 
+bool \hyperlink{class_graph_afec0f8270f77a9b54f6528a4e7182c84}{remove\+Edge} (const T \&first, const T \&second)
+\begin{DoxyCompactList}\small\item\em Removes an edge between two vertices. \end{DoxyCompactList}\item 
 const std\+::unordered\+\_\+set$<$ T $>$ $\ast$ \hyperlink{class_graph_add90c1bc37771d0bf57515fd30d4c6c4}{get\+Relatives} (const T \&item)
 \begin{DoxyCompactList}\small\item\em Retrieves a set of vertices adjacent to a particular item. \end{DoxyCompactList}\item 
 int \hyperlink{class_graph_aaab69d9804f13918c7fe260b86a40d91}{get\+Relative\+Count} (const T \&item)
 \begin{DoxyCompactList}\small\item\em Returns the number of vertices adjacent to a particular item. \end{DoxyCompactList}\item 
+bool \hyperlink{class_graph_adb8fbcba5e10315bba9e60080d4bac50}{adjacent} (const T \&first, const T \&second)
+\begin{DoxyCompactList}\small\item\em Determines whether two vertices are adjacent. \end{DoxyCompactList}\item 
 bool \hyperlink{class_graph_a9e88e1fec0b85da66ea58a39a4fdc652}{contains} (const T \&item)
 \begin{DoxyCompactList}\small\item\em Return existence of item in graph. \end{DoxyCompactList}\item 
 std\+::forward\+\_\+list$<$ T $>$ \hyperlink{class_graph_a30e9323548d265416291e975cfed93db}{get\+Shortest\+Path} (const T \&begin, const T \&end)
 \begin{DoxyCompactList}\small\item\em Find the shortest path between two items. \end{DoxyCompactList}\item 
 size\+\_\+t \hyperlink{class_graph_a98ac5dfc305ed0e31b6bb160503151ba}{size} ()
-\begin{DoxyCompactList}\small\item\em Returns number of vertices in the graph. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Returns number of vertices in the graph. \end{DoxyCompactList}\item 
+size\+\_\+t \hyperlink{class_graph_a5548064ddb3dfa56bb32347ee47f98dd}{num\+Edges} ()
+\begin{DoxyCompactList}\small\item\em Returns number of edges in the graph. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsection*{Private Attributes}
 \begin{DoxyCompactItemize}
 \item 
 \mbox{\Hypertarget{class_graph_a949a8e9a754adedac0e83bce9e97d392}\label{class_graph_a949a8e9a754adedac0e83bce9e97d392}} 
 std\+::unordered\+\_\+map$<$ T, std\+::unordered\+\_\+set$<$ T $>$ $>$ {\bfseries relative\+Map\+\_\+}
 \end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_graph_a8c95b2eba4c48f2610a84160fa6871f2}\label{class_graph_a8c95b2eba4c48f2610a84160fa6871f2}} 
+std\+::ostream \& {\bfseries operator$<$$<$} (std\+::ostream \&out, const \hyperlink{class_graph}{Graph} \&graph)
+\end{DoxyCompactItemize}
 
 
 \subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_graph_ae68a4a6bcb5dacf54f389ec9f28eb9e7}\label{class_graph_ae68a4a6bcb5dacf54f389ec9f28eb9e7}} 
+\index{Graph@{Graph}!add\+Edge@{add\+Edge}}
+\index{add\+Edge@{add\+Edge}!Graph@{Graph}}
+\subsubsection{\texorpdfstring{add\+Edge()}{addEdge()}}
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
+bool \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::add\+Edge (\begin{DoxyParamCaption}\item[{const T \&}]{first,  }\item[{const T \&}]{second }\end{DoxyParamCaption})}
+
+
+
+Adds an edge between two vertices. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em first} & the first vertex to be connected \\
+\hline
+{\em second} & the second vertex to be connected \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if edge added 
+
+false if edge already exists or first or second is not in the graph 
+\end{DoxyReturn}
 \mbox{\Hypertarget{class_graph_a0d9a2a945cb00f2600f26ad63a4828d6}\label{class_graph_a0d9a2a945cb00f2600f26ad63a4828d6}} 
 \index{Graph@{Graph}!add\+Vertex@{add\+Vertex}}
 \index{add\+Vertex@{add\+Vertex}!Graph@{Graph}}
 \subsubsection{\texorpdfstring{add\+Vertex()}{addVertex()}}
-{\footnotesize\ttfamily template$<$typename T , bool($\ast$)(const T \&, const T \&) F$>$ \\
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
 bool \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::add\+Vertex (\begin{DoxyParamCaption}\item[{const T \&}]{item }\end{DoxyParamCaption})}
 
 
 
 Adds a vertex to the graph. 
 
-Edges are constructed based on the template function.
+Edges are constructed based on the template function. If no template function is specified, then the inserted vertex will have no adjacent vertices.
 
 
 \begin{DoxyParams}{Parameters}
@@ -64,11 +142,34 @@ true if the item was inserted
 
 false if the item was already in the graph 
 \end{DoxyReturn}
+\mbox{\Hypertarget{class_graph_adb8fbcba5e10315bba9e60080d4bac50}\label{class_graph_adb8fbcba5e10315bba9e60080d4bac50}} 
+\index{Graph@{Graph}!adjacent@{adjacent}}
+\index{adjacent@{adjacent}!Graph@{Graph}}
+\subsubsection{\texorpdfstring{adjacent()}{adjacent()}}
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
+bool \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::adjacent (\begin{DoxyParamCaption}\item[{const T \&}]{first,  }\item[{const T \&}]{second }\end{DoxyParamCaption})}
+
+
+
+Determines whether two vertices are adjacent. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em first} & the first vertex \\
+\hline
+{\em second} & the second vertex \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if the two vertices are adjacent 
+
+false if two verticecs are not adjacent or if either vertex is not in the graph 
+\end{DoxyReturn}
 \mbox{\Hypertarget{class_graph_a9e88e1fec0b85da66ea58a39a4fdc652}\label{class_graph_a9e88e1fec0b85da66ea58a39a4fdc652}} 
 \index{Graph@{Graph}!contains@{contains}}
 \index{contains@{contains}!Graph@{Graph}}
 \subsubsection{\texorpdfstring{contains()}{contains()}}
-{\footnotesize\ttfamily template$<$typename T , bool($\ast$)(const T \&, const T \&) F$>$ \\
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
 bool \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::contains (\begin{DoxyParamCaption}\item[{const T \&}]{item }\end{DoxyParamCaption})}
 
 
@@ -82,14 +183,12 @@ Return existence of item in graph.
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
 true if the item is in the graph 
-
-false otherwise 
 \end{DoxyReturn}
 \mbox{\Hypertarget{class_graph_aaab69d9804f13918c7fe260b86a40d91}\label{class_graph_aaab69d9804f13918c7fe260b86a40d91}} 
 \index{Graph@{Graph}!get\+Relative\+Count@{get\+Relative\+Count}}
 \index{get\+Relative\+Count@{get\+Relative\+Count}!Graph@{Graph}}
 \subsubsection{\texorpdfstring{get\+Relative\+Count()}{getRelativeCount()}}
-{\footnotesize\ttfamily template$<$typename T , bool($\ast$)(const T \&, const T \&) F$>$ \\
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
 int \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::get\+Relative\+Count (\begin{DoxyParamCaption}\item[{const T \&}]{item }\end{DoxyParamCaption})}
 
 
@@ -110,7 +209,7 @@ int number of vertices adjacent to item
 \index{Graph@{Graph}!get\+Relatives@{get\+Relatives}}
 \index{get\+Relatives@{get\+Relatives}!Graph@{Graph}}
 \subsubsection{\texorpdfstring{get\+Relatives()}{getRelatives()}}
-{\footnotesize\ttfamily template$<$typename T , bool($\ast$)(const T \&, const T \&) F$>$ \\
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
 const unordered\+\_\+set$<$ T $>$ $\ast$ \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::get\+Relatives (\begin{DoxyParamCaption}\item[{const T \&}]{item }\end{DoxyParamCaption})}
 
 
@@ -131,7 +230,7 @@ nullptr if item is not in the graph
 \index{Graph@{Graph}!get\+Shortest\+Path@{get\+Shortest\+Path}}
 \index{get\+Shortest\+Path@{get\+Shortest\+Path}!Graph@{Graph}}
 \subsubsection{\texorpdfstring{get\+Shortest\+Path()}{getShortestPath()}}
-{\footnotesize\ttfamily template$<$typename T , bool($\ast$)(const T \&, const T \&) F$>$ \\
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
 forward\+\_\+list$<$ T $>$ \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::get\+Shortest\+Path (\begin{DoxyParamCaption}\item[{const T \&}]{begin,  }\item[{const T \&}]{end }\end{DoxyParamCaption})}
 
 
@@ -146,18 +245,53 @@ Find the shortest path between two items.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-std\+::forward\+\_\+list$<$\+T$>$ a list starting with start and ending with end that indicating the shortest path between the two. If there are multiple paths of the shortest length, any of them can be returned. Returns empty list if there is no path. 
+std\+::forward\+\_\+list$<$\+T$>$ a list starting with start and ending with end that indicating the shortest path between the two. If there are multiple paths of the shortest length, any of them can be returned. Returns empty list if there is no path or if begin or end are not in the graph. 
 \end{DoxyReturn}
+\mbox{\Hypertarget{class_graph_a5548064ddb3dfa56bb32347ee47f98dd}\label{class_graph_a5548064ddb3dfa56bb32347ee47f98dd}} 
+\index{Graph@{Graph}!num\+Edges@{num\+Edges}}
+\index{num\+Edges@{num\+Edges}!Graph@{Graph}}
+\subsubsection{\texorpdfstring{num\+Edges()}{numEdges()}}
+{\footnotesize\ttfamily template$<$typename T , bool($\ast$)(const T \&, const T \&) F$>$ \\
+size\+\_\+t \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::num\+Edges (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
-\begin{DoxyExceptions}{Exceptions}
-{\em invalid\+\_\+argument} & if begin or end are not in the graph \\
+
+
+Returns number of edges in the graph. 
+
+\begin{DoxyReturn}{Returns}
+size\+\_\+t the number of edges in the graph
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+O(\+V) 
+\end{DoxyNote}
+\mbox{\Hypertarget{class_graph_afec0f8270f77a9b54f6528a4e7182c84}\label{class_graph_afec0f8270f77a9b54f6528a4e7182c84}} 
+\index{Graph@{Graph}!remove\+Edge@{remove\+Edge}}
+\index{remove\+Edge@{remove\+Edge}!Graph@{Graph}}
+\subsubsection{\texorpdfstring{remove\+Edge()}{removeEdge()}}
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
+bool \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::remove\+Edge (\begin{DoxyParamCaption}\item[{const T \&}]{first,  }\item[{const T \&}]{second }\end{DoxyParamCaption})}
+
+
+
+Removes an edge between two vertices. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em first} & the first vertex to be disconnected \\
 \hline
-\end{DoxyExceptions}
+{\em second} & the second vertex to be disconnected \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if edge removed 
+
+false if edge did not exist or first or second is not in the graph 
+\end{DoxyReturn}
 \mbox{\Hypertarget{class_graph_ab60cdf74dfbd8c7682b760338fb8a952}\label{class_graph_ab60cdf74dfbd8c7682b760338fb8a952}} 
 \index{Graph@{Graph}!remove\+Vertex@{remove\+Vertex}}
 \index{remove\+Vertex@{remove\+Vertex}!Graph@{Graph}}
 \subsubsection{\texorpdfstring{remove\+Vertex()}{removeVertex()}}
-{\footnotesize\ttfamily template$<$typename T , bool($\ast$)(const T \&, const T \&) F$>$ \\
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
 bool \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::remove\+Vertex (\begin{DoxyParamCaption}\item[{const T \&}]{item }\end{DoxyParamCaption})}
 
 
@@ -186,8 +320,11 @@ size\+\_\+t \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::size (\begin{DoxyParam
 Returns number of vertices in the graph. 
 
 \begin{DoxyReturn}{Returns}
-size\+\_\+t the number of vertices in the graph 
+size\+\_\+t the number of vertices in the graph
 \end{DoxyReturn}
+\begin{DoxyNote}{Note}
+O(1) 
+\end{DoxyNote}
 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
