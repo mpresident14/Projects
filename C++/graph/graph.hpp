@@ -118,6 +118,7 @@ class Graph {
      *  length, any of them can be returned. Returns empty list if there is no path or if begin or
      *  end are not in the graph. 
      */
+    template<typename... Args>
     std::forward_list<T> getShortestPath(const T& start, const T& finish);
     /**
      * @brief Find the shortest path between two items where all nodes in between start and finish

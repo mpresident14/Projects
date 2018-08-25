@@ -7,6 +7,7 @@
 #include <queue>
 #include <utility>
 #include <cstdarg>
+#include <functional>
 
 using namespace std;
 
@@ -203,81 +204,12 @@ bool Graph<T,F>::contains(const T& item)
 }
 
 template <typename T, bool(*F)(const T&, const T&)>
+template<typename... Args>
 forward_list<T> Graph<T,F>::getShortestPath(const T& start, const T& finish)
 {
-  if ( getRelativeCount(start) == -1 || getRelativeCount(finish) == -1 ) {
-    return forward_list<T>();
-  }
-
-  if ( getRelativeCount(start) == 0 || getRelativeCount(finish) == 0 ) {
-    return forward_list<T>();
-  }
-
-  if (start == finish) {
-    return forward_list<T>( {start} );
-  }
-
-  /*
-   * Dynamic approach: example
-   * a -> (b,c)
-   * b -> (a,c,f)
-   * c -> (a,b)
-   * d -> (c,e)
-   * e -> (d)
-   * f -> (b)
-   * 
-   * Done when queue is empty.
-   * Map next item to previous item when we add to queue.
-   * Check if visited already before adding to the queue.
-   *   
-   *   a  b  c  d  e  f
-   * a a  a  a            ------->
-   * b                b   ------->
-   * c          c         ------->
-   * d             d      ------->
-   * e                    ------->
-   * f
-   * 
-   * {a:nullptr, b:&a, c:&a, f:&b, d:&c, e:&d}
-   */
-
-  // Just because we need start in the visited map (value doesn't matter)
-  unordered_map<T, T> visited( {{start, start}} );
-  queue<T> q;
-  q.push(start);
-
-  while(!q.empty()) {
-    T& item = q.front();
-
-    const unordered_set<T>* relatives = getRelatives(item);
-    for (const T& rel : *relatives) {
-
-      // Traverse the visited map backwards to find path
-      if (rel == finish) {
-        forward_list<T> path( {finish} );
-        T&& prevNode = std::move(item);
-        while (prevNode != start) {
-          path.push_front(prevNode);
-          prevNode = visited.at(prevNode);
-        }
-
-        path.push_front(start);
-        return path;
-      }
-
-      // If has not been visited, map the relative to the item that led to it
-      if (visited.count(rel) == 0) {
-        visited.insert( {{rel, item}} );
-        q.push(rel);
-      }
-    }
-
-    q.pop();
-  }
-
-  // Return empty list if no path
-  return forward_list<T>();
-}
+  bool (*fcn)(const T& item, Args...) = [](const T&, Args...) -> bool {return true;};
+  return getShortestPath(start, finish, fcn);
+}  
 
 template <typename T, bool(*F)(const T&, const T&)>
 template<typename... Args, typename...Arg2s>

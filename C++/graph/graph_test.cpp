@@ -27,6 +27,15 @@ bool oneLetterDifferent(const string& s, const string& t)
   return foundDifferent;
 }
 
+bool hasNoneOf(const string& s, char c) {
+  for (auto& letter : s) {
+    if (letter == c) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Because template is lazily instantiated, but we want to explicitly test everything
 template class Graph<string, oneLetterDifferent>;
 
@@ -374,9 +383,42 @@ void test_getShortestPath()
   g.addVertex(str5);
   g.addVertex(str6);
 
-  affirm( g.getShortestPath("day", "cut") == forward_list<string>( {"day", "bay", "buy", "but", "cut"} ));
+  affirm( g.getShortestPath("day", "cut") 
+      == forward_list<string>( {"day", "bay", "buy", "but", "cut"} ));
   affirm( g.getShortestPath("cut", "gut") == forward_list<string>( {"cut", "gut"} ));
   affirm( g.getShortestPath("but", "but") == forward_list<string>( {"but"} ));
+
+  TestingProgram::printResults();
+}
+
+void test_getShortestPath_withCondition()
+{
+  TestingProgram tester{"Get Shortest Path with condition"};
+
+  Graph<string, oneLetterDifferent> g;
+
+  string str1 = "bard";
+  string str2 = "hard";
+  string str3 = "hare";
+  string str4 = "care";
+  string str5 = "cane";
+  string str6 = "cans";
+  string str7 = "bars";
+  string str8 = "bans";
+  
+  g.addVertex(str1);
+  g.addVertex(str2);
+  g.addVertex(str3);
+  g.addVertex(str4);
+  g.addVertex(str5);
+  g.addVertex(str6);
+  g.addVertex(str7);
+  g.addVertex(str8);
+
+  affirm( g.getShortestPath("hare", "cans") 
+      == forward_list<string>( {"hare", "care", "cane", "cans"} ));
+  affirm( g.getShortestPath("hare", "cans", hasNoneOf, 'e') 
+      == forward_list<string>( {"hare", "hard", "bard", "bars", "bans", "cans"} ));
 
   TestingProgram::printResults();
 }
@@ -585,6 +627,7 @@ int main()
   test_adajacent();
   test_contains();
   test_getShortestPath();
+  test_getShortestPath_withCondition();
   test_size();
   test_numEdges();
   test_begin();

@@ -85,13 +85,9 @@ int main(int argc, char** args)
     }  
   }
 
-  // Print the shortest path
-  try {
-    printPath(g.getShortestPath(first, second, hasNoneOf,'E'));
-  }
-  catch (invalid_argument ex) {
-    cerr << ex.what() << endl;
-  }
+  // Print the shortest path with and without an E
+  printPath(g.getShortestPath(first, second));
+  printPath(g.getShortestPath(first, second, hasNoneOf, 'E'));
   
   return 0;
 }
