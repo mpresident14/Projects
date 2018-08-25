@@ -47,6 +47,8 @@ class Graph {
      * @param item the item to be inserted into the graph
      * @return true if the item was inserted
      * @return false if the item was already in the graph
+     * 
+     * @note O(V) if F is specified in template. Otherwise O(1);
      */
     bool addVertex(const T& item);
     bool addVertex(T&& item);   
@@ -57,14 +59,18 @@ class Graph {
      * @param second the second vertex to be connected
      * @return true if edge added
      * @return false if edge already exists or first or second is not in the graph
+     * 
+     * @note O(1)
      */
     bool addEdge(const T& first, const T& second); 
     /**
-     * @brief Removes a vertex to the graph. 
+     * @brief Removes a vertex and all its edges from the graph. 
      * 
      * @param item the item to be removed from the graph
      * @return true if the item was removed
      * @return false if the item was not in the graph
+     * 
+     * @note O(V)
      */
     bool removeVertex(const T& item);
     /**
@@ -74,6 +80,8 @@ class Graph {
      * @param second the second vertex to be disconnected
      * @return true if edge removed
      * @return false if edge did not exist or first or second is not in the graph
+     * 
+     * @note O(1)
      */
     bool removeEdge(const T& first, const T& second); 
     /**
@@ -82,6 +90,8 @@ class Graph {
      * @param item the item for which to retrieve adjacent vertices
      * @return const std::unordered_set<T>* vertices in the graph that are adjacent to item.
      * @return nullptr if item is not in the graph
+     * 
+     * @note O(1)
      */
     const std::unordered_set<T>* getRelatives(const T& item);
     /**
@@ -90,6 +100,8 @@ class Graph {
      * @param item the item for which to get the number of adjacent vertices
      * @return int number of vertices adjacent to item
      * @return -1 if item is not in the graph
+     * 
+     * @note O(1)
      */
     int getRelativeCount(const T& item);
     /**
@@ -99,6 +111,8 @@ class Graph {
      * @param second the second vertex
      * @return true if the two vertices are adjacent
      * @return false if two verticecs are not adjacent or if either vertex is not in the graph
+     * 
+     * @note O(1)
      */
     bool adjacent(const T& first, const T& second);
     /**
@@ -106,6 +120,8 @@ class Graph {
      * 
      * @param item the item to search for
      * @return true if the item is in the graph
+     * 
+     * @note O(1)
      */
     bool contains(const T& item);
     /**
@@ -117,6 +133,8 @@ class Graph {
      *  indicating the shortest path between the two. If there are multiple paths of the shortest 
      *  length, any of them can be returned. Returns empty list if there is no path or if begin or
      *  end are not in the graph. 
+     * 
+     * @note Worst case O(V)
      */
     template<typename... Args>
     std::forward_list<T> getShortestPath(const T& start, const T& finish);
@@ -132,6 +150,8 @@ class Graph {
      *  the shortest path between the two. If there are multiple paths of the shortest length, any
      *  of them can be returned. Returns empty list if there is no path or if begin or end are not
      *  in the graph. 
+     * 
+     * @note Worst case O(V)
      */
     template<typename... Args, typename...Arg2s>
     std::forward_list<T> getShortestPath(const T& start, const T& finish, bool (*fcn)(const T& item, Args...), Arg2s... args);
