@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <forward_list>
 #include <functional>
+#include <cstdarg>
 
 template <typename T, bool(*F)(const T&, const T&)=nullptr>
 class Graph {
@@ -110,14 +111,29 @@ class Graph {
     /**
      * @brief Find the shortest path between two items
      * 
-     * @param begin the starting vertex
-     * @param end the ending vertex
-     * @return std::forward_list<T> a list starting with start and ending with end that indicating
+     * @param start the starting vertex
+     * @param finish the ending vertex
+     * @return std::forward_list<T> a list starting with start and ending with finish that 
+     *  indicating the shortest path between the two. If there are multiple paths of the shortest 
+     *  length, any of them can be returned. Returns empty list if there is no path or if begin or
+     *  end are not in the graph. 
+     */
+    std::forward_list<T> getShortestPath(const T& start, const T& finish);
+    /**
+     * @brief Find the shortest path between two items where all nodes in between start and finish
+     *  meet a condition specified in fcn
+     * 
+     * @param start the starting vertex
+     * @param finish the ending vertex
+     * @param fcn a function specifying a condition that all nodes on the path between start and 
+     *  finish must meet
+     * @return std::forward_list<T> a list starting with start and ending with finish indicating
      *  the shortest path between the two. If there are multiple paths of the shortest length, any
      *  of them can be returned. Returns empty list if there is no path or if begin or end are not
      *  in the graph. 
      */
-    std::forward_list<T> getShortestPath(const T& begin, const T& end);
+    template<typename... Args, typename...Arg2s>
+    std::forward_list<T> getShortestPath(const T& start, const T& finish, bool (*fcn)(const T& item, Args...), Arg2s... args);
     /**
      * @brief Returns number of vertices in the graph
      * 

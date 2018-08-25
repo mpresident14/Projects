@@ -27,6 +27,15 @@ bool oneLetterDifferent(const string& s, const string& t)
   return foundDifferent;
 }
 
+bool hasNoneOf(const string& s, char c) {
+  for (auto& letter : s) {
+    if (letter == c) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void printPath(forward_list<string> path)
 {
   if (path.empty()) {
@@ -78,7 +87,7 @@ int main(int argc, char** args)
 
   // Print the shortest path
   try {
-    printPath(g.getShortestPath(first, second));
+    printPath(g.getShortestPath(first, second, hasNoneOf,'E'));
   }
   catch (invalid_argument ex) {
     cerr << ex.what() << endl;
