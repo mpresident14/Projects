@@ -136,7 +136,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>addVertex</b> (T &amp
 <tr class="memdesc:ae68a4a6bcb5dacf54f389ec9f28eb9e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds an edge between two vertices.  <a href="#ae68a4a6bcb5dacf54f389ec9f28eb9e7">More...</a><br /></td></tr>
 <tr class="separator:ae68a4a6bcb5dacf54f389ec9f28eb9e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab60cdf74dfbd8c7682b760338fb8a952"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_graph.html#ab60cdf74dfbd8c7682b760338fb8a952">removeVertex</a> (const T &amp;item)</td></tr>
-<tr class="memdesc:ab60cdf74dfbd8c7682b760338fb8a952"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a vertex to the graph.  <a href="#ab60cdf74dfbd8c7682b760338fb8a952">More...</a><br /></td></tr>
+<tr class="memdesc:ab60cdf74dfbd8c7682b760338fb8a952"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a vertex and all its edges from the graph.  <a href="#ab60cdf74dfbd8c7682b760338fb8a952">More...</a><br /></td></tr>
 <tr class="separator:ab60cdf74dfbd8c7682b760338fb8a952"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afec0f8270f77a9b54f6528a4e7182c84"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_graph.html#afec0f8270f77a9b54f6528a4e7182c84">removeEdge</a> (const T &amp;first, const T &amp;second)</td></tr>
 <tr class="memdesc:afec0f8270f77a9b54f6528a4e7182c84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes an edge between two vertices.  <a href="#afec0f8270f77a9b54f6528a4e7182c84">More...</a><br /></td></tr>
@@ -153,15 +153,28 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>addVertex</b> (T &amp
 <tr class="memitem:a9e88e1fec0b85da66ea58a39a4fdc652"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_graph.html#a9e88e1fec0b85da66ea58a39a4fdc652">contains</a> (const T &amp;item)</td></tr>
 <tr class="memdesc:a9e88e1fec0b85da66ea58a39a4fdc652"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return existence of item in graph.  <a href="#a9e88e1fec0b85da66ea58a39a4fdc652">More...</a><br /></td></tr>
 <tr class="separator:a9e88e1fec0b85da66ea58a39a4fdc652"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30e9323548d265416291e975cfed93db"><td class="memItemLeft" align="right" valign="top">std::forward_list&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_graph.html#a30e9323548d265416291e975cfed93db">getShortestPath</a> (const T &amp;begin, const T &amp;end)</td></tr>
-<tr class="memdesc:a30e9323548d265416291e975cfed93db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the shortest path between two items.  <a href="#a30e9323548d265416291e975cfed93db">More...</a><br /></td></tr>
-<tr class="separator:a30e9323548d265416291e975cfed93db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d04a41dc37e5d4604f8ae546fbdfca9"><td class="memTemplParams" colspan="2">template&lt;typename... Args&gt; </td></tr>
+<tr class="memitem:a8d04a41dc37e5d4604f8ae546fbdfca9"><td class="memTemplItemLeft" align="right" valign="top">std::forward_list&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_graph.html#a8d04a41dc37e5d4604f8ae546fbdfca9">getShortestPath</a> (const T &amp;start, const T &amp;finish)</td></tr>
+<tr class="memdesc:a8d04a41dc37e5d4604f8ae546fbdfca9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the shortest path between two items.  <a href="#a8d04a41dc37e5d4604f8ae546fbdfca9">More...</a><br /></td></tr>
+<tr class="separator:a8d04a41dc37e5d4604f8ae546fbdfca9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b2f84e77b6fffbea0c4581524c8d04d"><td class="memTemplParams" colspan="2">template&lt;typename... Args, typename... Arg2s&gt; </td></tr>
+<tr class="memitem:a8b2f84e77b6fffbea0c4581524c8d04d"><td class="memTemplItemLeft" align="right" valign="top">std::forward_list&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_graph.html#a8b2f84e77b6fffbea0c4581524c8d04d">getShortestPath</a> (const T &amp;start, const T &amp;finish, bool(*fcn)(const T &amp;item, Args...), Arg2s... args)</td></tr>
+<tr class="memdesc:a8b2f84e77b6fffbea0c4581524c8d04d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the shortest path between two items where all nodes in between start and finish meet a condition specified in fcn.  <a href="#a8b2f84e77b6fffbea0c4581524c8d04d">More...</a><br /></td></tr>
+<tr class="separator:a8b2f84e77b6fffbea0c4581524c8d04d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98ac5dfc305ed0e31b6bb160503151ba"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_graph.html#a98ac5dfc305ed0e31b6bb160503151ba">size</a> ()</td></tr>
 <tr class="memdesc:a98ac5dfc305ed0e31b6bb160503151ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns number of vertices in the graph.  <a href="#a98ac5dfc305ed0e31b6bb160503151ba">More...</a><br /></td></tr>
 <tr class="separator:a98ac5dfc305ed0e31b6bb160503151ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5548064ddb3dfa56bb32347ee47f98dd"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_graph.html#a5548064ddb3dfa56bb32347ee47f98dd">numEdges</a> ()</td></tr>
 <tr class="memdesc:a5548064ddb3dfa56bb32347ee47f98dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns number of edges in the graph.  <a href="#a5548064ddb3dfa56bb32347ee47f98dd">More...</a><br /></td></tr>
 <tr class="separator:a5548064ddb3dfa56bb32347ee47f98dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7e790b5a83e2cf795adb57ebb92ed96"><td class="memTemplParams" colspan="2"><a id="ab7e790b5a83e2cf795adb57ebb92ed96"></a>
+template&lt;typename... Args&gt; </td></tr>
+<tr class="memitem:ab7e790b5a83e2cf795adb57ebb92ed96"><td class="memTemplItemLeft" align="right" valign="top">forward_list&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>getShortestPath</b> (const T &amp;start, const T &amp;finish)</td></tr>
+<tr class="separator:ab7e790b5a83e2cf795adb57ebb92ed96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd1c78e2297eb288b0ee884fde4ddfe9"><td class="memTemplParams" colspan="2"><a id="acd1c78e2297eb288b0ee884fde4ddfe9"></a>
+template&lt;typename... Args, typename... Arg2s&gt; </td></tr>
+<tr class="memitem:acd1c78e2297eb288b0ee884fde4ddfe9"><td class="memTemplItemLeft" align="right" valign="top">forward_list&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>getShortestPath</b> (const T &amp;start, const T &amp;finish, bool(*fcn)(const T &amp;item, Args...), Arg2s... args)</td></tr>
+<tr class="separator:acd1c78e2297eb288b0ee884fde4ddfe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -214,7 +227,8 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if edge added </dd>
 <dd>
-false if edge already exists or first or second is not in the graph </dd></dl>
+false if edge already exists or first or second is not in the graph</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>O(1) </dd></dl>
 
 </div>
 </div>
@@ -246,7 +260,8 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the item was inserted </dd>
 <dd>
-false if the item was already in the graph </dd></dl>
+false if the item was already in the graph</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>O(V) if F is specified in template. Otherwise O(1); </dd></dl>
 
 </div>
 </div>
@@ -288,7 +303,8 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the two vertices are adjacent </dd>
 <dd>
-false if two verticecs are not adjacent or if either vertex is not in the graph </dd></dl>
+false if two verticecs are not adjacent or if either vertex is not in the graph</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>O(1) </dd></dl>
 
 </div>
 </div>
@@ -317,7 +333,8 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>true if the item is in the graph </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the item is in the graph</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>O(1) </dd></dl>
 
 </div>
 </div>
@@ -348,7 +365,8 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>int number of vertices adjacent to item </dd>
 <dd>
--1 if item is not in the graph </dd></dl>
+-1 if item is not in the graph</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>O(1) </dd></dl>
 
 </div>
 </div>
@@ -379,29 +397,32 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>const std::unordered_set&lt;T&gt;* vertices in the graph that are adjacent to item. </dd>
 <dd>
-nullptr if item is not in the graph </dd></dl>
+nullptr if item is not in the graph</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>O(1) </dd></dl>
 
 </div>
 </div>
-<a id="a30e9323548d265416291e975cfed93db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30e9323548d265416291e975cfed93db">&#9670;&nbsp;</a></span>getShortestPath()</h2>
+<a id="a8d04a41dc37e5d4604f8ae546fbdfca9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8d04a41dc37e5d4604f8ae546fbdfca9">&#9670;&nbsp;</a></span>getShortestPath() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
+template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F = nullptr&gt; </div>
+<div class="memtemplate">
+template&lt;typename... Args&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">forward_list&lt; T &gt; <a class="el" href="class_graph.html">Graph</a>&lt; T, F &gt;::getShortestPath </td>
+          <td class="memname">std::forward_list&lt;T&gt; <a class="el" href="class_graph.html">Graph</a>&lt; T, F &gt;::getShortestPath </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
-          <td class="paramname"><em>begin</em>, </td>
+          <td class="paramname"><em>start</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const T &amp;&#160;</td>
-          <td class="paramname"><em>end</em>&#160;</td>
+          <td class="paramname"><em>finish</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -414,12 +435,69 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
 <p>Find the shortest path between two items. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">begin</td><td>the starting vertex </td></tr>
-    <tr><td class="paramname">end</td><td>the ending vertex </td></tr>
+    <tr><td class="paramname">start</td><td>the starting vertex </td></tr>
+    <tr><td class="paramname">finish</td><td>the ending vertex </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::forward_list&lt;T&gt; a list starting with start and ending with end that indicating the shortest path between the two. If there are multiple paths of the shortest length, any of them can be returned. Returns empty list if there is no path or if begin or end are not in the graph. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>std::forward_list&lt;T&gt; a list starting with start and ending with finish that indicating the shortest path between the two. If there are multiple paths of the shortest length, any of them can be returned. Returns empty list if there is no path or if begin or end are not in the graph.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Worst case O(V) </dd></dl>
+
+</div>
+</div>
+<a id="a8b2f84e77b6fffbea0c4581524c8d04d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b2f84e77b6fffbea0c4581524c8d04d">&#9670;&nbsp;</a></span>getShortestPath() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F = nullptr&gt; </div>
+<div class="memtemplate">
+template&lt;typename... Args, typename... Arg2s&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">std::forward_list&lt;T&gt; <a class="el" href="class_graph.html">Graph</a>&lt; T, F &gt;::getShortestPath </td>
+          <td>(</td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>start</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>finish</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool(*)(const T &amp;item, Args...)&#160;</td>
+          <td class="paramname"><em>fcn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Arg2s...&#160;</td>
+          <td class="paramname"><em>args</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Find the shortest path between two items where all nodes in between start and finish meet a condition specified in fcn. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">start</td><td>the starting vertex </td></tr>
+    <tr><td class="paramname">finish</td><td>the ending vertex </td></tr>
+    <tr><td class="paramname">fcn</td><td>a function specifying a condition that all nodes on the path between start and finish must meet </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>std::forward_list&lt;T&gt; a list starting with start and ending with finish indicating the shortest path between the two. If there are multiple paths of the shortest length, any of them can be returned. Returns empty list if there is no path or if begin or end are not in the graph.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Worst case O(V) </dd></dl>
 
 </div>
 </div>
@@ -484,7 +562,8 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if edge removed </dd>
 <dd>
-false if edge did not exist or first or second is not in the graph </dd></dl>
+false if edge did not exist or first or second is not in the graph</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>O(1) </dd></dl>
 
 </div>
 </div>
@@ -506,7 +585,7 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Removes a vertex to the graph. </p>
+<p>Removes a vertex and all its edges from the graph. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">item</td><td>the item to be removed from the graph </td></tr>
@@ -515,7 +594,8 @@ template&lt;typename T, bool(*)(const T &amp;, const T &amp;) F&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the item was removed </dd>
 <dd>
-false if the item was not in the graph </dd></dl>
+false if the item was not in the graph</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>O(V) </dd></dl>
 
 </div>
 </div>
@@ -549,7 +629,7 @@ template&lt;typename T , bool(*)(const T &amp;, const T &amp;) F&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Aug 23 2018 00:28:07 for Graph by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Jan 6 2019 19:27:51 for Graph by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

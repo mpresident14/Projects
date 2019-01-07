@@ -11,6 +11,13 @@
         "unordered_map": "cpp",
         "vector": "cpp",
         "list": "cpp",
-        "xhash": "cpp"
+        "xhash": "cpp",
+        "system_error": "cpp",
+        "type_traits": "cpp",
+        "xfunctional": "cpp",
+        "xstddef": "cpp",
+        "xtr1common": "cpp",
+        "optional": "cpp",
+        "variant": "cpp"
     }
 }

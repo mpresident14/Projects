@@ -64,7 +64,7 @@ bool {\bfseries add\+Vertex} (T \&\&item)
 bool \hyperlink{class_graph_ae68a4a6bcb5dacf54f389ec9f28eb9e7}{add\+Edge} (const T \&first, const T \&second)
 \begin{DoxyCompactList}\small\item\em Adds an edge between two vertices. \end{DoxyCompactList}\item 
 bool \hyperlink{class_graph_ab60cdf74dfbd8c7682b760338fb8a952}{remove\+Vertex} (const T \&item)
-\begin{DoxyCompactList}\small\item\em Removes a vertex to the graph. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em Removes a vertex and all its edges from the graph. \end{DoxyCompactList}\item 
 bool \hyperlink{class_graph_afec0f8270f77a9b54f6528a4e7182c84}{remove\+Edge} (const T \&first, const T \&second)
 \begin{DoxyCompactList}\small\item\em Removes an edge between two vertices. \end{DoxyCompactList}\item 
 const std\+::unordered\+\_\+set$<$ T $>$ $\ast$ \hyperlink{class_graph_add90c1bc37771d0bf57515fd30d4c6c4}{get\+Relatives} (const T \&item)
@@ -75,12 +75,20 @@ bool \hyperlink{class_graph_adb8fbcba5e10315bba9e60080d4bac50}{adjacent} (const 
 \begin{DoxyCompactList}\small\item\em Determines whether two vertices are adjacent. \end{DoxyCompactList}\item 
 bool \hyperlink{class_graph_a9e88e1fec0b85da66ea58a39a4fdc652}{contains} (const T \&item)
 \begin{DoxyCompactList}\small\item\em Return existence of item in graph. \end{DoxyCompactList}\item 
-std\+::forward\+\_\+list$<$ T $>$ \hyperlink{class_graph_a30e9323548d265416291e975cfed93db}{get\+Shortest\+Path} (const T \&begin, const T \&end)
+{\footnotesize template$<$typename... Args$>$ }\\std\+::forward\+\_\+list$<$ T $>$ \hyperlink{class_graph_a8d04a41dc37e5d4604f8ae546fbdfca9}{get\+Shortest\+Path} (const T \&start, const T \&finish)
 \begin{DoxyCompactList}\small\item\em Find the shortest path between two items. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename... Args, typename... Arg2s$>$ }\\std\+::forward\+\_\+list$<$ T $>$ \hyperlink{class_graph_a8b2f84e77b6fffbea0c4581524c8d04d}{get\+Shortest\+Path} (const T \&start, const T \&finish, bool($\ast$fcn)(const T \&item, Args...), Arg2s... args)
+\begin{DoxyCompactList}\small\item\em Find the shortest path between two items where all nodes in between start and finish meet a condition specified in fcn. \end{DoxyCompactList}\item 
 size\+\_\+t \hyperlink{class_graph_a98ac5dfc305ed0e31b6bb160503151ba}{size} ()
 \begin{DoxyCompactList}\small\item\em Returns number of vertices in the graph. \end{DoxyCompactList}\item 
 size\+\_\+t \hyperlink{class_graph_a5548064ddb3dfa56bb32347ee47f98dd}{num\+Edges} ()
-\begin{DoxyCompactList}\small\item\em Returns number of edges in the graph. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Returns number of edges in the graph. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_graph_ab7e790b5a83e2cf795adb57ebb92ed96}\label{class_graph_ab7e790b5a83e2cf795adb57ebb92ed96}} 
+{\footnotesize template$<$typename... Args$>$ }\\forward\+\_\+list$<$ T $>$ {\bfseries get\+Shortest\+Path} (const T \&start, const T \&finish)
+\item 
+\mbox{\Hypertarget{class_graph_acd1c78e2297eb288b0ee884fde4ddfe9}\label{class_graph_acd1c78e2297eb288b0ee884fde4ddfe9}} 
+{\footnotesize template$<$typename... Args, typename... Arg2s$>$ }\\forward\+\_\+list$<$ T $>$ {\bfseries get\+Shortest\+Path} (const T \&start, const T \&finish, bool($\ast$fcn)(const T \&item, Args...), Arg2s... args)
+\end{DoxyCompactItemize}
 \subsection*{Private Attributes}
 \begin{DoxyCompactItemize}
 \item 
@@ -117,8 +125,11 @@ Adds an edge between two vertices.
 \begin{DoxyReturn}{Returns}
 true if edge added 
 
-false if edge already exists or first or second is not in the graph 
+false if edge already exists or first or second is not in the graph
 \end{DoxyReturn}
+\begin{DoxyNote}{Note}
+O(1) 
+\end{DoxyNote}
 \mbox{\Hypertarget{class_graph_a0d9a2a945cb00f2600f26ad63a4828d6}\label{class_graph_a0d9a2a945cb00f2600f26ad63a4828d6}} 
 \index{Graph@{Graph}!add\+Vertex@{add\+Vertex}}
 \index{add\+Vertex@{add\+Vertex}!Graph@{Graph}}
@@ -140,8 +151,11 @@ Edges are constructed based on the template function. If no template function is
 \begin{DoxyReturn}{Returns}
 true if the item was inserted 
 
-false if the item was already in the graph 
+false if the item was already in the graph
 \end{DoxyReturn}
+\begin{DoxyNote}{Note}
+O(\+V) if F is specified in template. Otherwise O(1); 
+\end{DoxyNote}
 \mbox{\Hypertarget{class_graph_adb8fbcba5e10315bba9e60080d4bac50}\label{class_graph_adb8fbcba5e10315bba9e60080d4bac50}} 
 \index{Graph@{Graph}!adjacent@{adjacent}}
 \index{adjacent@{adjacent}!Graph@{Graph}}
@@ -163,8 +177,11 @@ Determines whether two vertices are adjacent.
 \begin{DoxyReturn}{Returns}
 true if the two vertices are adjacent 
 
-false if two verticecs are not adjacent or if either vertex is not in the graph 
+false if two verticecs are not adjacent or if either vertex is not in the graph
 \end{DoxyReturn}
+\begin{DoxyNote}{Note}
+O(1) 
+\end{DoxyNote}
 \mbox{\Hypertarget{class_graph_a9e88e1fec0b85da66ea58a39a4fdc652}\label{class_graph_a9e88e1fec0b85da66ea58a39a4fdc652}} 
 \index{Graph@{Graph}!contains@{contains}}
 \index{contains@{contains}!Graph@{Graph}}
@@ -182,8 +199,11 @@ Return existence of item in graph.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-true if the item is in the graph 
+true if the item is in the graph
 \end{DoxyReturn}
+\begin{DoxyNote}{Note}
+O(1) 
+\end{DoxyNote}
 \mbox{\Hypertarget{class_graph_aaab69d9804f13918c7fe260b86a40d91}\label{class_graph_aaab69d9804f13918c7fe260b86a40d91}} 
 \index{Graph@{Graph}!get\+Relative\+Count@{get\+Relative\+Count}}
 \index{get\+Relative\+Count@{get\+Relative\+Count}!Graph@{Graph}}
@@ -203,8 +223,11 @@ Returns the number of vertices adjacent to a particular item.
 \begin{DoxyReturn}{Returns}
 int number of vertices adjacent to item 
 
--\/1 if item is not in the graph 
+-\/1 if item is not in the graph
 \end{DoxyReturn}
+\begin{DoxyNote}{Note}
+O(1) 
+\end{DoxyNote}
 \mbox{\Hypertarget{class_graph_add90c1bc37771d0bf57515fd30d4c6c4}\label{class_graph_add90c1bc37771d0bf57515fd30d4c6c4}} 
 \index{Graph@{Graph}!get\+Relatives@{get\+Relatives}}
 \index{get\+Relatives@{get\+Relatives}!Graph@{Graph}}
@@ -224,14 +247,18 @@ Retrieves a set of vertices adjacent to a particular item.
 \begin{DoxyReturn}{Returns}
 const std\+::unordered\+\_\+set$<$\+T$>$$\ast$ vertices in the graph that are adjacent to item. 
 
-nullptr if item is not in the graph 
+nullptr if item is not in the graph
 \end{DoxyReturn}
-\mbox{\Hypertarget{class_graph_a30e9323548d265416291e975cfed93db}\label{class_graph_a30e9323548d265416291e975cfed93db}} 
+\begin{DoxyNote}{Note}
+O(1) 
+\end{DoxyNote}
+\mbox{\Hypertarget{class_graph_a8d04a41dc37e5d4604f8ae546fbdfca9}\label{class_graph_a8d04a41dc37e5d4604f8ae546fbdfca9}} 
 \index{Graph@{Graph}!get\+Shortest\+Path@{get\+Shortest\+Path}}
 \index{get\+Shortest\+Path@{get\+Shortest\+Path}!Graph@{Graph}}
-\subsubsection{\texorpdfstring{get\+Shortest\+Path()}{getShortestPath()}}
-{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F$>$ \\
-forward\+\_\+list$<$ T $>$ \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::get\+Shortest\+Path (\begin{DoxyParamCaption}\item[{const T \&}]{begin,  }\item[{const T \&}]{end }\end{DoxyParamCaption})}
+\subsubsection{\texorpdfstring{get\+Shortest\+Path()}{getShortestPath()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F = nullptr$>$ \\
+template$<$typename... Args$>$ \\
+std\+::forward\+\_\+list$<$T$>$ \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::get\+Shortest\+Path (\begin{DoxyParamCaption}\item[{const T \&}]{start,  }\item[{const T \&}]{finish }\end{DoxyParamCaption})}
 
 
 
@@ -239,14 +266,44 @@ Find the shortest path between two items.
 
 
 \begin{DoxyParams}{Parameters}
-{\em begin} & the starting vertex \\
+{\em start} & the starting vertex \\
 \hline
-{\em end} & the ending vertex \\
+{\em finish} & the ending vertex \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-std\+::forward\+\_\+list$<$\+T$>$ a list starting with start and ending with end that indicating the shortest path between the two. If there are multiple paths of the shortest length, any of them can be returned. Returns empty list if there is no path or if begin or end are not in the graph. 
+std\+::forward\+\_\+list$<$\+T$>$ a list starting with start and ending with finish that indicating the shortest path between the two. If there are multiple paths of the shortest length, any of them can be returned. Returns empty list if there is no path or if begin or end are not in the graph.
 \end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Worst case O(\+V) 
+\end{DoxyNote}
+\mbox{\Hypertarget{class_graph_a8b2f84e77b6fffbea0c4581524c8d04d}\label{class_graph_a8b2f84e77b6fffbea0c4581524c8d04d}} 
+\index{Graph@{Graph}!get\+Shortest\+Path@{get\+Shortest\+Path}}
+\index{get\+Shortest\+Path@{get\+Shortest\+Path}!Graph@{Graph}}
+\subsubsection{\texorpdfstring{get\+Shortest\+Path()}{getShortestPath()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T, bool($\ast$)(const T \&, const T \&) F = nullptr$>$ \\
+template$<$typename... Args, typename... Arg2s$>$ \\
+std\+::forward\+\_\+list$<$T$>$ \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::get\+Shortest\+Path (\begin{DoxyParamCaption}\item[{const T \&}]{start,  }\item[{const T \&}]{finish,  }\item[{bool($\ast$)(const T \&item, Args...)}]{fcn,  }\item[{Arg2s...}]{args }\end{DoxyParamCaption})}
+
+
+
+Find the shortest path between two items where all nodes in between start and finish meet a condition specified in fcn. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em start} & the starting vertex \\
+\hline
+{\em finish} & the ending vertex \\
+\hline
+{\em fcn} & a function specifying a condition that all nodes on the path between start and finish must meet \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+std\+::forward\+\_\+list$<$\+T$>$ a list starting with start and ending with finish indicating the shortest path between the two. If there are multiple paths of the shortest length, any of them can be returned. Returns empty list if there is no path or if begin or end are not in the graph.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Worst case O(\+V) 
+\end{DoxyNote}
 \mbox{\Hypertarget{class_graph_a5548064ddb3dfa56bb32347ee47f98dd}\label{class_graph_a5548064ddb3dfa56bb32347ee47f98dd}} 
 \index{Graph@{Graph}!num\+Edges@{num\+Edges}}
 \index{num\+Edges@{num\+Edges}!Graph@{Graph}}
@@ -285,8 +342,11 @@ Removes an edge between two vertices.
 \begin{DoxyReturn}{Returns}
 true if edge removed 
 
-false if edge did not exist or first or second is not in the graph 
+false if edge did not exist or first or second is not in the graph
 \end{DoxyReturn}
+\begin{DoxyNote}{Note}
+O(1) 
+\end{DoxyNote}
 \mbox{\Hypertarget{class_graph_ab60cdf74dfbd8c7682b760338fb8a952}\label{class_graph_ab60cdf74dfbd8c7682b760338fb8a952}} 
 \index{Graph@{Graph}!remove\+Vertex@{remove\+Vertex}}
 \index{remove\+Vertex@{remove\+Vertex}!Graph@{Graph}}
@@ -296,7 +356,7 @@ bool \hyperlink{class_graph}{Graph}$<$ T, F $>$\+::remove\+Vertex (\begin{DoxyPa
 
 
 
-Removes a vertex to the graph. 
+Removes a vertex and all its edges from the graph. 
 
 
 \begin{DoxyParams}{Parameters}
@@ -306,8 +366,11 @@ Removes a vertex to the graph.
 \begin{DoxyReturn}{Returns}
 true if the item was removed 
 
-false if the item was not in the graph 
+false if the item was not in the graph
 \end{DoxyReturn}
+\begin{DoxyNote}{Note}
+O(\+V) 
+\end{DoxyNote}
 \mbox{\Hypertarget{class_graph_a98ac5dfc305ed0e31b6bb160503151ba}\label{class_graph_a98ac5dfc305ed0e31b6bb160503151ba}} 
 \index{Graph@{Graph}!size@{size}}
 \index{size@{size}!Graph@{Graph}}

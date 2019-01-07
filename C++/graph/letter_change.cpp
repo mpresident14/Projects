@@ -86,7 +86,9 @@ int main(int argc, char** args)
   }
 
   // Print the shortest path with and without an E
+  cout << "No restrictions: " << endl;
   printPath(g.getShortestPath(first, second));
+  cout << "No Es in any words along path: " << endl;
   printPath(g.getShortestPath(first, second, hasNoneOf, 'E'));
   
   return 0;
