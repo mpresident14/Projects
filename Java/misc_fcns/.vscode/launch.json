@@ -1,0 +1,16 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "CodeLens (Launch) - FermatFactorization",
+      "request": "launch",
+      "mainClass": "FermatFactorization"
+    },
+    {
+      "type": "java",
+      "name": "CodeLens (Launch) - NewtonsMethod",
+      "request": "launch",
+      "mainClass": "NewtonsMethod"
+    }
+  ]
+}
