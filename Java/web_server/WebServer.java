@@ -8,33 +8,13 @@ import java.lang.StringBuilder;
 
 public class WebServer {
 
-	private static String fileToString(String filename) {
-		try (BufferedReader bufReader = 
-				new BufferedReader(
-						new FileReader((filename)))) {	
-			
-			String line = bufReader.readLine(); 
-			StringBuilder sb = new StringBuilder(); 
-			while(line != null){ 
-				sb.append(line).append("\n"); 
-				line = bufReader.readLine(); 
-			} 
-			String fileAsString = sb.toString();
-			return fileAsString;
-		} catch (IOException e) {
-			System.out.println("File not found.");
-		}
-
-		return null;
-	}
-
 	public static void main(String[] args) throws IOException {
 		int port = 33333;
 		ServerSocket listen = null;
 		Socket server = null;
 		while (true) {
 			try {
-				
+				System.out.println("\n-------------------------------\n");
 				/* ******************************
 				 * Set up TCP socket connection 
 				 * ******************************/
@@ -63,7 +43,7 @@ public class WebServer {
 				}
 				
 				// Print the rest of the request data
-				while (!line.isEmpty()) {
+				while (line != null && !line.isEmpty()) {
 					System.out.println(line);
 					line = bufReader.readLine();
 				}
@@ -73,13 +53,34 @@ public class WebServer {
 				 * Get contents of file and send http response 
 				 ***********************************************/
 				DataOutputStream outToClient = new DataOutputStream(server.getOutputStream());
-				String fileContents = WebServer.fileToString(filename);
-				if (fileContents == null) {
-					fileContents = WebServer.fileToString("notfound.html");
+				outToClient.writeUTF("HTTP/1.1 200 OK\r\n\r\n");
+				
+				if (filename == null) {
+					continue;
 				}
 
-				outToClient.writeUTF("HTTP/1.1 200 OK\r\n\r\n" + fileContents);
-				System.out.println("File sent.");
+				FileInputStream fileStream = null;
+				try {
+					System.out.println("File not found.");
+					fileStream = new FileInputStream(filename);
+				}
+				catch (IOException e) {
+					fileStream = new FileInputStream("notfound.html");
+				}
+
+				try (BufferedInputStream bufStream = new BufferedInputStream(fileStream)) {	
+					byte[] bytes = new byte[500];
+					int nread = bufStream.read(bytes, 0, bytes.length);
+					
+					while (nread != -1) {
+						outToClient.write(bytes, 0, nread);
+						nread = bufStream.read(bytes, 0, bytes.length);
+					}				
+					System.out.println("File sent.");
+				} 
+				catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 			catch (SocketTimeoutException st) {
 					System.out.println("Socket timed out!");
