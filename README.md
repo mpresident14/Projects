@@ -1,3 +1,3 @@
 # Projects
 
-A list of projects, most of which have been completed.
+This is what I do when I'm bored.
