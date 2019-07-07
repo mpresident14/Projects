@@ -1,4 +1,5 @@
 import random
+import sys
 
 def listToString(L):
         """converts list to String"""
@@ -141,10 +142,15 @@ def solve(numLetters):
     if count == numLetters:
         print('SOLVED!')
 
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Input the length of the word the computer will guess.")
+        sys.exit()
         
+    solve(int(sys.argv[1]))
 
         
-
+# TODO
 # don't always pick most common choice, pick a percentage of the time equivalent to commonness
 # dictionary only goes up to 8 letter words
         
