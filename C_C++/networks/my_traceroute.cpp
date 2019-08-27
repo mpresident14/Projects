@@ -14,7 +14,14 @@
 
 using namespace std;
 
-int ping(const char* dst_ip, int sd, struct sockaddr_in& sin, struct sockaddr_in& recv_sin, struct icmphdr& send_packet, struct ip_icmp& recv_packet, int ttl);
+int ping(
+    const char* dst_ip,
+    int sd,
+    struct sockaddr_in& sin,
+    struct sockaddr_in& recv_sin,
+    struct icmphdr& send_packet,
+    struct ip_icmp& recv_packet,
+    int ttl);
 void fill_icmp_header(struct icmphdr* icmp_header);
 unsigned short in_cksum(unsigned short *ptr, int nbytes);
 
@@ -33,7 +40,7 @@ void run_traceroute(const char* dst_ip)
     return;
   }
 
-  /* Configure socket destination */
+  /* Configure sockaddr strutures with destination. ICMP does not have a port. */
   // struct sockaddr_in {
   //   sa_family_t    sin_family; /* address family: AF_INET */
   //   in_port_t      sin_port;   /* port in network byte order */
@@ -50,12 +57,14 @@ void run_traceroute(const char* dst_ip)
   sin.sin_addr.s_addr = inet_addr(dst_ip);
   struct sockaddr_in recv_sin;
 
+  /* Build ICMP packet */
   struct icmphdr send_packet;
   fill_icmp_header(&send_packet);
   struct ip_icmp recv_packet;
 
   unsigned char ttl = 1;
-  while (ttl <= 64 && ping(dst_ip, sd, sin, recv_sin, send_packet, recv_packet, ttl) != ICMP_ECHOREPLY) {
+  while (ttl <= 64 && 
+      ping(dst_ip, sd, sin, recv_sin, send_packet, recv_packet, ttl) != ICMP_ECHOREPLY) {
     ++ttl;
   }
 
@@ -67,17 +76,26 @@ void run_traceroute(const char* dst_ip)
 }
 
 
-int ping(const char* dst_ip, int sd, struct sockaddr_in& sin, struct sockaddr_in& recv_sin, struct icmphdr& send_packet, struct ip_icmp& recv_packet, int ttl)
+int ping(
+    const char* dst_ip,
+    int sd,
+    struct sockaddr_in& sin,
+    struct sockaddr_in& recv_sin,
+    struct icmphdr& send_packet,
+    struct ip_icmp& recv_packet,
+    int ttl)
 {
   /* Set socket options */
-
   // Set time-to-live in the IP header
   if (setsockopt(sd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0) {
     cerr << "Error setting socket options: " << strerror(errno) << endl;
     return -1;
   }  
 
-  /* Send packet */
+  /* 
+   * Send packet. We only need to send the ICMP part since we specified IPPROTO_ICMP 
+   * during socket creation. 
+   */
   if (sendto(
       sd, 
       &send_packet,
