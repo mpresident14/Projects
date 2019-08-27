@@ -5,6 +5,12 @@
 #include <string.h> 
 #include <arpa/inet.h>
 
+
+/** 
+ * Issues a request to the DNS server to resolve a hostname using built-in
+ * operations. 
+ */
+
 /* Defined in header
 struct addrinfo {
    int              ai_flags;

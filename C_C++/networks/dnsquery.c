@@ -9,6 +9,11 @@
 
 #define A 1
 
+/** 
+ * Issues a request to the DNS server to resolve a hostname using manual
+ * socket operations. 
+ */
+
 struct dns_header {
 	unsigned short id;
 	unsigned short flags;
@@ -33,12 +38,13 @@ int findOffsetOfByte(unsigned char* start, char byte, unsigned length)
 
 int main(int argc, char** argv)
 {
-	if (argc != 2) {
-		fprintf(stderr, "Needs an argument.\n");
+	if (argc != 3) {
+		fprintf(stderr, "Pass DNS server IP and host name.\n");
 		exit(1);
 	}
 
-	char* domain = argv[1];
+	char* dns_server_ip = argv[1];
+	char* domain = argv[2];
 	int len = strlen(domain);
 
 	// Extra length byte at beginning and 00 byte at the end (see below)
@@ -88,7 +94,7 @@ int main(int argc, char** argv)
 	struct sockaddr_in dns_addr;
 	dns_addr.sin_family = AF_INET;
 	dns_addr.sin_port = htons(53); // Random port
-	inet_pton(AF_INET, "192.168.254.254", &(dns_addr.sin_addr)); // Convert DNS IP to network format
+	inet_pton(AF_INET, dns_server_ip, &(dns_addr.sin_addr)); // Convert DNS IP to network format
 	
 
 	int sd;
