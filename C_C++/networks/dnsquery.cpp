@@ -10,6 +10,7 @@
 #include <string>
 #include <fstream>
 #include <memory>
+#include <vector>
 
 using namespace std;
 
@@ -46,7 +47,7 @@ unique_ptr<string> get_dns_server()
 {
 	string nameserver = "nameserver ";
 	ifstream infile("/etc/resolv.conf");
-	unique_ptr<string> line = make_unique<string>();
+	unique_ptr<string> line{make_unique<string>()};
 	while(getline(infile, *line)) {
 		if (line->find(nameserver) == 0) {
 			*line = line->substr(nameserver.size());
@@ -57,21 +58,17 @@ unique_ptr<string> get_dns_server()
 	return unique_ptr<string>(nullptr);
 }
 
-int main(int argc, char** argv)
+unique_ptr<vector<string>> resolve_host(const char* domain)
 {
-	if (argc != 2) {
-		fprintf(stderr, "Pass host name.\n");
-		exit(1);
-	}
-	
-	unique_ptr<string> dns_ip_str = get_dns_server();
+	unique_ptr<vector<string>> resolved_ips{make_unique<vector<string>>()};
+
+	unique_ptr<string> dns_ip_str{get_dns_server()};
 	if (!dns_ip_str) {
 		fprintf(stderr, "Could not find DNS server.\n");
-		exit(1);
+		return unique_ptr<vector<string>>(nullptr);
 	}
 
 	const char* dns_server_ip = dns_ip_str->data();
-	const char* domain = argv[1];
 	int len = strlen(domain);
 
 	// Extra length byte at beginning and 00 byte at the end (see below)
@@ -136,7 +133,7 @@ int main(int argc, char** argv)
 				(const struct sockaddr*) &dns_addr, 
 				sizeof(struct sockaddr)) < 0) {
 		perror("sendto");
-		exit(1);
+		return unique_ptr<vector<string>>(nullptr);
 	}
 
 	/* *****************************
@@ -148,7 +145,7 @@ int main(int argc, char** argv)
 	int bytes_received = 0;
 	if ((bytes_received = recvfrom(sd, buffer, 250, 0, NULL, NULL)) < 0) {
 		perror("recvfrom");
-		exit(1);
+		return unique_ptr<vector<string>>(nullptr);
 	}
 
 	close(sd);
@@ -197,12 +194,33 @@ int main(int argc, char** argv)
 			char ip_bytes[4];
 			char ip_addr[INET_ADDRSTRLEN];
 			memcpy(ip_bytes, buffer + buf_index, 4);
-			printf("IP: %s\n", inet_ntop(AF_INET, ip_bytes, ip_addr, INET_ADDRSTRLEN));
+			resolved_ips->push_back(move(ip_addr));
 		}
 		buf_index += ntohs(*length);		
 	}
 
 	delete[] data;
 	dns_ip_str.reset();
+
+	return resolved_ips;
+}
+
+int main(int argc, char** argv)
+{
+	if (argc != 2) {
+		fprintf(stderr, "Pass host name.\n");
+		exit(1);
+	}
+
+	unique_ptr<vector<string>> resolved_ips{resolve_host(argv[1])};
+	if (!resolved_ips) {
+		fprintf(stderr, "Could not resolve host name.\n");
+		exit(1);
+	}
+
+	for (auto iter = resolved_ips->begin(); iter != resolved_ips->end(); ++iter) {
+		printf("%s\n", iter->c_str());
+	}
+	
 	return 0;
 }
