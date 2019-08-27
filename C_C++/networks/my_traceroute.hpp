@@ -3,36 +3,18 @@
 
 #include <vector>
 #include <memory>
+// https://en.wikipedia.org/wiki/IPv4#Packet_structure
+// https://unix.superglobalmegacorp.com/Net2/newsrc/netinet/ip.h.html
+#include <netinet/ip.h>
+// https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Datagram_structure
+// https://www.cymru.com/Documents/ip_icmp.h
+#include <netinet/ip_icmp.h>
 
-
-struct ip_header {
-  unsigned char      ip_hl:4, ip_ver:4; // Colons specify # bits
-  unsigned char      ip_dscp:6, ip_ecn:2;
-  unsigned short     ip_len;
-  unsigned short     ip_id;
-  unsigned short     ip_frag;
-  unsigned char      ip_ttl;
-  unsigned char      ip_protocol;
-  unsigned short     ip_sum;
-  unsigned int       ip_src;
-  unsigned int       ip_dst;
-} __attribute__((packed));
-
-struct icmp_header {
-  unsigned char icmp_type;
-  unsigned char icmp_code;
-  unsigned short  icmp_checksum;
-  unsigned short  icmp_id;
-  unsigned short  icmp_seqnum;
+struct ip_icmp {
+	struct ip ip_header;
+	struct icmphdr icmp_header;
 };
 
-class MyTraceroute {
-	public:
-		std::unique_ptr<std::vector<std::string>> run_traceroute(const char* dst_ip) const;
-	private:
-		int ping(const char* dst_ip, unsigned port, int ttl) const;
-		void fill_ip_header(struct ip_header* iphdr, const char* dst_ip, unsigned char ttl) const;
-		void fill_icmp_header(struct icmp_header* icmphdr) const;
-};
+void run_traceroute(const char* dst_ip);
 
 #endif
