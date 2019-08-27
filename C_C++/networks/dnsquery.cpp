@@ -7,6 +7,12 @@
 #include <string.h> 
 #include <arpa/inet.h>
 
+#include <string>
+#include <fstream>
+#include <memory>
+
+using namespace std;
+
 #define A 1
 
 /** 
@@ -36,21 +42,42 @@ int findOffsetOfByte(unsigned char* start, char byte, unsigned length)
 	return -1;
 }
 
+unique_ptr<string> get_dns_server()
+{
+	string nameserver = "nameserver ";
+	ifstream infile("/etc/resolv.conf");
+	unique_ptr<string> line = make_unique<string>();
+	while(getline(infile, *line)) {
+		if (line->find(nameserver) == 0) {
+			*line = line->substr(nameserver.size());
+			return line;
+		}
+	}
+
+	return unique_ptr<string>(nullptr);
+}
+
 int main(int argc, char** argv)
 {
-	if (argc != 3) {
-		fprintf(stderr, "Pass DNS server IP and host name.\n");
+	if (argc != 2) {
+		fprintf(stderr, "Pass host name.\n");
+		exit(1);
+	}
+	
+	unique_ptr<string> dns_ip_str = get_dns_server();
+	if (!dns_ip_str) {
+		fprintf(stderr, "Could not find DNS server.\n");
 		exit(1);
 	}
 
-	char* dns_server_ip = argv[1];
-	char* domain = argv[2];
+	const char* dns_server_ip = dns_ip_str->data();
+	const char* domain = argv[1];
 	int len = strlen(domain);
 
 	// Extra length byte at beginning and 00 byte at the end (see below)
 	// plus 2 bytes for each of Type and Class (total of 6)
 	unsigned question_len = len + 6;
-	unsigned char* data = malloc(sizeof(struct dns_header) + question_len);
+	unsigned char* data = new unsigned char[sizeof(struct dns_header) + question_len];
 
 	struct dns_header* hdr = (struct dns_header*) data;
 	hdr->id = htons(0x1234);
@@ -85,9 +112,9 @@ int main(int argc, char** argv)
 
 	/* Type A assumed (hostname), Class IN assumed */
 	unsigned short* type = (unsigned short *) (question + i + 2);
-	unsigned short* class = (unsigned short *) (question + i + 4);
+	unsigned short* dnsclass = (unsigned short *) (question + i + 4);
 	*type = htons(1);
-	*class = htons(1);
+	*dnsclass = htons(1);
 
 	/* Put DNS query as data in UDP packet and send */
 
@@ -153,8 +180,8 @@ int main(int argc, char** argv)
 		// printf("Type: %d\n", ntohs(*type));
 		buf_index += 2;
 
-		// unsigned short* class = (unsigned short*) (buffer + buf_index);
-		// printf("Class: %d\n", ntohs(*class));
+		// unsigned short* dnsclass = (unsigned short*) (buffer + buf_index);
+		// printf("Class: %d\n", ntohs(*dnsclass));
 		buf_index += 2;
 
 		// unsigned int* ttl = (unsigned int*) (buffer + buf_index);
@@ -175,8 +202,7 @@ int main(int argc, char** argv)
 		buf_index += ntohs(*length);		
 	}
 
-
-
-	free(data);
+	delete[] data;
+	dns_ip_str.reset();
 	return 0;
 }
