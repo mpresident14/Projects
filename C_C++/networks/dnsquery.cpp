@@ -1,3 +1,5 @@
+#include "dnsquery.hpp"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -51,6 +53,7 @@ unique_ptr<string> get_dns_server()
 	while(getline(infile, *line)) {
 		if (line->find(nameserver) == 0) {
 			*line = line->substr(nameserver.size());
+			printf("DNS server: %s\n", line->data());
 			return line;
 		}
 	}
@@ -191,10 +194,10 @@ unique_ptr<vector<string>> resolve_host(const char* domain)
 
 		// Check if answer is type A (hostname)
 		if (ntohs(*type) == A && ntohs(*length) == 4) {
-			char ip_bytes[4];
 			char ip_addr[INET_ADDRSTRLEN];
-			memcpy(ip_bytes, buffer + buf_index, 4);
-			resolved_ips->push_back(move(ip_addr));
+			// Convert ip_bytes to "a.b.c.d" ip_addr
+			inet_ntop(AF_INET, buffer + buf_index, ip_addr, INET_ADDRSTRLEN);
+			resolved_ips->emplace_back(ip_addr);
 		}
 		buf_index += ntohs(*length);		
 	}
@@ -205,22 +208,22 @@ unique_ptr<vector<string>> resolve_host(const char* domain)
 	return resolved_ips;
 }
 
-int main(int argc, char** argv)
-{
-	if (argc != 2) {
-		fprintf(stderr, "Pass host name.\n");
-		exit(1);
-	}
+// int main(int argc, char** argv)
+// {
+// 	if (argc != 2) {
+// 		fprintf(stderr, "Pass host name.\n");
+// 		exit(1);
+// 	}
 
-	unique_ptr<vector<string>> resolved_ips{resolve_host(argv[1])};
-	if (!resolved_ips) {
-		fprintf(stderr, "Could not resolve host name.\n");
-		exit(1);
-	}
+// 	unique_ptr<vector<string>> resolved_ips{resolve_host(argv[1])};
+// 	if (!resolved_ips) {
+// 		fprintf(stderr, "Could not resolve host name.\n");
+// 		exit(1);
+// 	}
 
-	for (auto iter = resolved_ips->begin(); iter != resolved_ips->end(); ++iter) {
-		printf("%s\n", iter->c_str());
-	}
+// 	for (auto iter = resolved_ips->begin(); iter != resolved_ips->end(); ++iter) {
+// 		printf("%s\n", iter->c_str());
+// 	}
 	
-	return 0;
-}
+// 	return 0;
+// }

@@ -7,7 +7,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	if (argc != 2) {
-		cerr << "Enter an IP address" << endl;
+		cerr << "Enter a hostname." << endl;
 		return 1;
 	}
 	

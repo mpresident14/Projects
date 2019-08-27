@@ -1,6 +1,8 @@
 #ifndef MY_TRACEROUTE_HPP_INCLUDED
 #define MY_TRACEROUTE_HPP_INCLUDED 1
 
+#include "dnsquery.hpp"
+
 #include <vector>
 #include <memory>
 // https://en.wikipedia.org/wiki/IPv4#Packet_structure

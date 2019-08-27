@@ -7,10 +7,14 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <sys/time.h>
+
 #include <iostream>
 
 #define IP_HDR_SIZE sizeof(struct ip)
 #define ICMP_HDR_SIZE sizeof(struct icmphdr)
+#define MAX_TTL 20
+#define TIMEOUT_SEC 5
 
 using namespace std;
 
@@ -25,8 +29,13 @@ int ping(
 void fill_icmp_header(struct icmphdr* icmp_header);
 unsigned short in_cksum(unsigned short *ptr, int nbytes);
 
-void run_traceroute(const char* dst_ip)
+void run_traceroute(const char* hostname)
 {
+  unique_ptr<vector<string>> resolved_ips{resolve_host(hostname)};
+  if (!resolved_ips || resolved_ips->size() == 0) {
+    cerr << "Could not resolve hostname."  << endl;
+  }
+  const char* dst_ip = resolved_ips->front().c_str();
   /* Create the socket descriptor */
 
   // domain: AF_INET specifies IPv4
@@ -37,6 +46,15 @@ void run_traceroute(const char* dst_ip)
   int sd;
   if ((sd = socket(AF_INET, SOCK_RAW , IPPROTO_ICMP)) < 0) {
     cerr << "Error creating socket descriptor: " << strerror(errno) << endl;
+    return;
+  }
+
+  // Set receive timeout
+  struct timeval recv_timeout;
+  recv_timeout.tv_sec = TIMEOUT_SEC;
+  recv_timeout.tv_usec = 0;
+  if (setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(struct timeval)) < 0) {
+    cerr << "Error setting socket options: " << strerror(errno) << endl;
     return;
   }
 
@@ -63,13 +81,13 @@ void run_traceroute(const char* dst_ip)
   struct ip_icmp recv_packet;
 
   unsigned char ttl = 1;
-  while (ttl <= 64 && 
+  while (ttl <= MAX_TTL && 
       ping(dst_ip, sd, sin, recv_sin, send_packet, recv_packet, ttl) != ICMP_ECHOREPLY) {
     ++ttl;
   }
 
-  if (ttl > 64) {
-    cerr << "Could not find " << dst_ip << endl;
+  if (ttl > MAX_TTL) {
+    cerr << "Could not find " << hostname << " (" << dst_ip << ")" << endl;
   }
 
   close(sd);
@@ -90,7 +108,7 @@ int ping(
   if (setsockopt(sd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0) {
     cerr << "Error setting socket options: " << strerror(errno) << endl;
     return -1;
-  }  
+  }
 
   /* 
    * Send packet. We only need to send the ICMP part since we specified IPPROTO_ICMP 
@@ -118,7 +136,11 @@ int ping(
           0, 
           (struct sockaddr*) &recv_sin, 
           &addr_len)) < 0) {
-    cerr << "Error receiving packet: " << strerror(errno) << endl;
+    if (errno == EWOULDBLOCK || recv_nbytes == EAGAIN) {
+      cout << "Request timed out." << endl; 
+    } else {
+      cerr << "Error receiving packet: " << strerror(errno) << endl;
+    }
     return -1;
   }
 
