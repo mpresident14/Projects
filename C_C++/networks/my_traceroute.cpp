@@ -70,6 +70,7 @@ void run_traceroute(const char* hostname)
   recv_timeout.tv_usec = 0;
   if (setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(struct timeval)) < 0) {
     cerr << "Error setting socket options: " << strerror(errno) << endl;
+    close(sd);
     return;
   }
 
@@ -86,6 +87,8 @@ void run_traceroute(const char* hostname)
 
   struct sockaddr_in sin;
   sin.sin_family = AF_INET;
+  // ICMP has no concept of port
+  sin.sin_port = 0;
   // inet_addr converts "a.b.c.d" to network byte order
   sin.sin_addr.s_addr = inet_addr(dst_ip);
   struct sockaddr_in recv_sin;

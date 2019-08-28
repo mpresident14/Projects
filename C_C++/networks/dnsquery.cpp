@@ -127,7 +127,7 @@ vector<string> resolve_host(const char* domain)
 	int sd;
 	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("socket");
-		exit(1);
+		return resolved_ips;
 	}
 	if (sendto(sd, 
 				data, 
@@ -136,6 +136,7 @@ vector<string> resolve_host(const char* domain)
 				(const struct sockaddr*) &dns_addr, 
 				sizeof(struct sockaddr)) < 0) {
 		perror("sendto");
+		close(sd);
 		return resolved_ips;
 	}
 
@@ -148,6 +149,7 @@ vector<string> resolve_host(const char* domain)
 	int bytes_received = 0;
 	if ((bytes_received = recvfrom(sd, buffer, 250, 0, NULL, NULL)) < 0) {
 		perror("recvfrom");
+		close(sd);
 		return resolved_ips;
 	}
 
