@@ -36,7 +36,7 @@ struct dns_header {
 // Returns -1 if no occurence within "length" bytes
 int findOffsetOfByte(unsigned char* start, char byte, unsigned length)
 {
-	int i;
+	unsigned i;
 	for (i = 0; i < length; ++i) {
 		if (start[i] == byte) {
 			return i;

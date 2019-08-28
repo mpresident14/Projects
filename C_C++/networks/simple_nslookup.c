@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h> 
 #include <arpa/inet.h>
+#include <stdlib.h>
 
 
 /** 
@@ -32,7 +33,8 @@ struct addrinfo {
 int main(int argc, char** argv)
 {
 	if (argc != 2) {
-		fprintf(stderr, "Needs an argument.\n");
+		fprintf(stderr, "Enter a hostname.\n");
+		exit(1);
 	}
 
 	struct addrinfo hints;
