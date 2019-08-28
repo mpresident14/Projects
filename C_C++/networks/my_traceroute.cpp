@@ -42,12 +42,11 @@ unsigned short in_cksum(unsigned short *ptr, int nbytes);
 
 void run_traceroute(const char* hostname)
 {
-  vector<string> resolved_ips{resolve_host(hostname)};
-  if (resolved_ips.empty()) {
+  const char* dst_ip{get_ip(hostname).c_str()};
+  if (strlen(dst_ip) == 0) {
     cerr << "Could not resolve hostname."  << endl;
     return;
   }
-  const char* dst_ip = resolved_ips.front().c_str();
 
   cout << "Finding route to " << dst_ip << '\n' << endl;
   

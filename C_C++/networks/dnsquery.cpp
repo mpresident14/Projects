@@ -62,7 +62,7 @@ string get_dns_server()
 	return string{};
 }
 
-vector<string> resolve_host(const char* domain)
+vector<string> get_all_ips(const char* domain)
 {
 	vector<string> resolved_ips;
 
@@ -207,6 +207,16 @@ vector<string> resolve_host(const char* domain)
 	delete[] data;
 
 	return resolved_ips;
+}
+
+string get_ip(const char* domain)
+{
+	vector<string> resolved_ips{get_all_ips(domain)};
+	if (resolved_ips.empty()) {
+		return string{};
+	}
+
+	return resolved_ips.front();
 }
 
 // int main(int argc, char** argv)

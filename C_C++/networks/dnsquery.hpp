@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
-std::vector<std::string> resolve_host(const char* domain);
+std::vector<std::string> get_all_ips(const char* domain);
+std::string get_ip(const char* domain);
+
 
 #endif
