@@ -45,33 +45,33 @@ int findOffsetOfByte(unsigned char* start, char byte, unsigned length)
 	return -1;
 }
 
-unique_ptr<string> get_dns_server()
+string get_dns_server()
 {
 	string nameserver = "nameserver ";
 	ifstream infile("/etc/resolv.conf");
-	unique_ptr<string> line{make_unique<string>()};
-	while(getline(infile, *line)) {
-		if (line->find(nameserver) == 0) {
-			*line = line->substr(nameserver.size());
-			printf("DNS server: %s\n", line->data());
+	string line;
+	while(getline(infile, line)) {
+		if (line.find(nameserver) == 0) {
+			line = line.substr(nameserver.size());
+			printf("DNS server: %s\n", line.data());
 			return line;
 		}
 	}
 
-	return unique_ptr<string>(nullptr);
+	fprintf(stderr, "Could not find DNS server.\n");
+	return string{};
 }
 
-unique_ptr<vector<string>> resolve_host(const char* domain)
+vector<string> resolve_host(const char* domain)
 {
-	unique_ptr<vector<string>> resolved_ips{make_unique<vector<string>>()};
+	vector<string> resolved_ips;
 
-	unique_ptr<string> dns_ip_str{get_dns_server()};
-	if (!dns_ip_str) {
-		fprintf(stderr, "Could not find DNS server.\n");
-		return unique_ptr<vector<string>>(nullptr);
+	string dns_ip_str{get_dns_server()};
+	if (dns_ip_str.empty()) {
+		return resolved_ips;
 	}
 
-	const char* dns_server_ip = dns_ip_str->data();
+	const char* dns_server_ip = dns_ip_str.data();
 	int len = strlen(domain);
 
 	// Extra length byte at beginning and 00 byte at the end (see below)
@@ -136,7 +136,7 @@ unique_ptr<vector<string>> resolve_host(const char* domain)
 				(const struct sockaddr*) &dns_addr, 
 				sizeof(struct sockaddr)) < 0) {
 		perror("sendto");
-		return unique_ptr<vector<string>>(nullptr);
+		return resolved_ips;
 	}
 
 	/* *****************************
@@ -148,7 +148,7 @@ unique_ptr<vector<string>> resolve_host(const char* domain)
 	int bytes_received = 0;
 	if ((bytes_received = recvfrom(sd, buffer, 250, 0, NULL, NULL)) < 0) {
 		perror("recvfrom");
-		return unique_ptr<vector<string>>(nullptr);
+		return resolved_ips;
 	}
 
 	close(sd);
@@ -197,13 +197,12 @@ unique_ptr<vector<string>> resolve_host(const char* domain)
 			char ip_addr[INET_ADDRSTRLEN];
 			// Convert ip_bytes to "a.b.c.d" ip_addr
 			inet_ntop(AF_INET, buffer + buf_index, ip_addr, INET_ADDRSTRLEN);
-			resolved_ips->emplace_back(ip_addr);
+			resolved_ips.emplace_back(ip_addr);
 		}
 		buf_index += ntohs(*length);		
 	}
 
 	delete[] data;
-	dns_ip_str.reset();
 
 	return resolved_ips;
 }

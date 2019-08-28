@@ -8,15 +8,26 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <sys/time.h>
+// https://en.wikipedia.org/wiki/IPv4#Packet_structure
+// https://unix.superglobalmegacorp.com/Net2/newsrc/netinet/ip.h.html
+#include <netinet/ip.h>
+// https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Datagram_structure
+// https://www.cymru.com/Documents/ip_icmp.h
+#include <netinet/ip_icmp.h>
 
 #include <iostream>
 
 #define IP_HDR_SIZE sizeof(struct ip)
 #define ICMP_HDR_SIZE sizeof(struct icmphdr)
-#define MAX_TTL 20
+#define MAX_TTL 64
 #define TIMEOUT_SEC 5
 
 using namespace std;
+
+struct ip_icmp {
+  struct ip ip_header;
+  struct icmphdr icmp_header;
+};
 
 int ping(
     const char* dst_ip,
@@ -31,11 +42,15 @@ unsigned short in_cksum(unsigned short *ptr, int nbytes);
 
 void run_traceroute(const char* hostname)
 {
-  unique_ptr<vector<string>> resolved_ips{resolve_host(hostname)};
-  if (!resolved_ips || resolved_ips->size() == 0) {
+  vector<string> resolved_ips{resolve_host(hostname)};
+  if (resolved_ips.empty()) {
     cerr << "Could not resolve hostname."  << endl;
+    return;
   }
-  const char* dst_ip = resolved_ips->front().c_str();
+  const char* dst_ip = resolved_ips.front().c_str();
+
+  cout << "Finding route to " << dst_ip << '\n' << endl;
+  
   /* Create the socket descriptor */
 
   // domain: AF_INET specifies IPv4
