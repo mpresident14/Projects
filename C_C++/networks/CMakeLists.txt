@@ -19,6 +19,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 # The following folder will be included
 include_directories("${PROJECT_SOURCE_DIR}")
 
-add_executable(my_traceroute ${PROJECT_SOURCE_DIR}/dnsquery.cpp my_traceroute.cpp main.cpp)
-add_executable(simple_nslookup ${PROJECT_SOURCE_DIR}/simple_nslookup.c)
-# add_exectuable(portscan ${PROJECT_SOURCE_DIR}/simple_nslookup.cpp)
+add_executable(simple_nslookup simple_nslookup.c)
+add_executable(dns dnsquery.cpp maindns.cpp)
+add_executable(my_traceroute dnsquery.cpp my_traceroute.cpp)
+add_executable(port_scan dnsquery.cpp port_scan.cpp)

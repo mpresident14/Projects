@@ -1,4 +1,4 @@
-#include "my_traceroute.hpp"
+#include "dnsquery.hpp"
 
 #include <iostream>
 
@@ -10,8 +10,12 @@ int main(int argc, char** argv)
 		cerr << "Enter a hostname." << endl;
 		return 1;
 	}
+
+	vector<string> ips{get_all_ips(argv[1])};
 	
-	run_traceroute(argv[1]);
+	for (auto& ip : ips) {
+		cout << ip << endl;
+	}
 
 	return 0;
 }
