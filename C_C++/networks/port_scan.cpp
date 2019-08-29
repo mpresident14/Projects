@@ -4,6 +4,7 @@
 #include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <string.h>
@@ -43,6 +44,12 @@ struct cksumbuf {
 	// Normally data included also, but SYN has no data
 };
 
+// We receive both the IP header and the dataless TCP segment
+struct ip_tcp {
+	struct ip iphdr;
+	struct tcphdr tcphdr;
+};
+
 unsigned short in_cksum(unsigned short *ptr, int nbytes);
 void construct_syn(struct tcphdr* tcp);
 
@@ -51,8 +58,38 @@ void handle_error(const char* fn)
 	cerr << fn << ": " << strerror(errno) << endl;
 }
 
-void port_scan(const char* hostname)
+void port_scan(const char* server)
 {
+	/* Configure sockaddr strutures with destination. ICMP does not have a port. */
+	// struct sockaddr_in {
+	//   sa_family_t    sin_family; /* address family: AF_INET */
+	//   in_port_t      sin_port;   /* port in network byte order */
+	//   struct in_addr sin_addr;   /* internet address */
+	// };
+
+	// struct in_addr {
+	//   uint32_t       s_addr;     /* address in network byte order */
+	// };
+
+	struct sockaddr_in servaddr;
+	servaddr.sin_family = AF_INET;
+
+	// Try to convert to network byte IP. If it cannot, assume it is a hostname and try
+	// to resolve it.
+	const char* dst_ip;
+	// inet_pton converts "a.b.c.d" to network byte order and stores it in dst
+	if (inet_pton(AF_INET, server, &(servaddr.sin_addr)) != 1) {
+		dst_ip = get_ip(server).c_str();
+		if (strlen(dst_ip) == 0) {
+	    cerr << "Could not resolve hostname."  << endl;
+	    return;
+	  }
+	  inet_pton(AF_INET, dst_ip, &(servaddr.sin_addr));
+	} else {
+		dst_ip = server;
+	}
+	cout << "Scanning " << dst_ip << endl;
+
 	/* Create socket */
 	// SOCK_RAW specifies I am providing the network layer datagram (i.e. the IP layer data) 
 	int sd;
@@ -77,39 +114,11 @@ void port_scan(const char* hostname)
 		return handle_error("setsockopt");
 	}
 
-	/* Configure sockaddr strutures with destination. ICMP does not have a port. */
-	// struct sockaddr_in {
-	//   sa_family_t    sin_family; /* address family: AF_INET */
-	//   in_port_t      sin_port;   /* port in network byte order */
-	//   struct in_addr sin_addr;   /* internet address */
-	// };
-
-	// struct in_addr {
-	//   uint32_t       s_addr;     /* address in network byte order */
-	// };
-
-	const char* dst_ip{get_ip(hostname).c_str()};
-  if (strlen(dst_ip) == 0) {
-    cerr << "Could not resolve hostname."  << endl;
-    close(sd);
-    return;
-  }
-
-  cout << "Scanning " << dst_ip << endl;
-  in_port_t dst_port = htons(80);
-
-	struct sockaddr_in servaddr;
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_port = dst_port;
-
-	in_addr_t inet_dst_ip = inet_addr(dst_ip);
-	servaddr.sin_addr.s_addr = inet_dst_ip;
-
 	struct cksumbuf cksumbuf;
 
 	struct cksumbuf::tcp_pseudo* tcpps = &(cksumbuf.tcp_pseudo);
 	tcpps->tps_src = inet_addr(MYIP);
-	tcpps->tps_dest = inet_dst_ip;
+	tcpps->tps_dest = servaddr.sin_addr.s_addr;
 	tcpps->tps_reserved = 0;
 	tcpps->tps_protocol = IPPROTO_TCP;
 	// No tcp data for SYN packet, so size of segment is just the length of the header
@@ -117,13 +126,15 @@ void port_scan(const char* hostname)
 
 	struct tcphdr* tcp_header = &(cksumbuf.tcphdr);
 	construct_syn(tcp_header);
-	struct tcphdr recv_tcphdr;
+
+	struct ip_tcp recv_pkt;
 	// Only using this to validate that this is the address we sent the packet to
 	struct sockaddr_in recv_sockaddr;
 	socklen_t len = sizeof(struct sockaddr_in);
 
 	for (in_port_t port = 79; port < 82; port++) {
 		// Increment port and recompute checksum
+		servaddr.sin_port = htons(port);
 		tcp_header->th_dport = htons(port);
 		tcp_header->th_sum = 0;
 		tcp_header->th_sum = in_cksum((unsigned short*) &cksumbuf, sizeof(cksumbuf));
@@ -133,7 +144,7 @@ void port_scan(const char* hostname)
 			continue;
 		}
 		
-		if (recvfrom(sd, &recv_tcphdr, sizeof(struct tcphdr), 0, (struct sockaddr*) &recv_sockaddr, &len) < 0) {
+		if (recvfrom(sd, &recv_pkt, sizeof(recv_pkt), 0, (struct sockaddr*) &recv_sockaddr, &len) < 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				cout << "Destination unreachable" << endl;
 			} else {
@@ -148,13 +159,12 @@ void port_scan(const char* hostname)
 			continue;
 		}
 
-		cout << "ACK num=" << hex << ntohl(recv_tcphdr.th_ack) << endl;
 		cout << "Port " << port << ": ";
 
-		uint8_t flags = ntohs(recv_tcphdr.th_flags);
+		uint8_t flags = recv_pkt.tcphdr.th_flags;
 		if ((flags & TH_SYN) && (flags & TH_ACK)) {
 			cout << "Accepting TCP" << endl;
-		} else if (recv_tcphdr.th_flags & TH_RST) {
+		} else if (flags & TH_RST) {
 			cout << "Not listening for TCP" << endl;
 		} else {
 			cout << "Unexpected flags: " << bitset<8>(flags) << endl;

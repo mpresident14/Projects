@@ -30,7 +30,6 @@ struct ip_icmp {
 };
 
 int ping(
-    const char* dst_ip,
     int sd,
     struct sockaddr_in& sin,
     struct sockaddr_in& recv_sin,
@@ -40,16 +39,40 @@ int ping(
 void fill_icmp_header(struct icmphdr* icmp_header);
 unsigned short in_cksum(unsigned short *ptr, int nbytes);
 
-void run_traceroute(const char* hostname)
+void run_traceroute(const char* server)
 {
-  const char* dst_ip{get_ip(hostname).c_str()};
-  if (strlen(dst_ip) == 0) {
-    cerr << "Could not resolve hostname."  << endl;
-    return;
-  }
+  /* Configure sockaddr strutures with destination. ICMP does not have a port. */
+  // struct sockaddr_in {
+  //   sa_family_t    sin_family; /* address family: AF_INET */
+  //   in_port_t      sin_port;   /* port in network byte order */
+  //   struct in_addr sin_addr;   /* internet address */
+  // };
 
+  // struct in_addr {
+  //   uint32_t       s_addr;     /* address in network byte order */
+  // };
+
+  struct sockaddr_in sin;
+  sin.sin_family = AF_INET;
+  // ICMP has no concept of port
+  sin.sin_port = 0;
+
+  // Try to convert to network byte IP. If it cannot, assume it is a hostname and try
+  // to resolve it.
+  const char* dst_ip;
+  if (inet_pton(AF_INET, server, &(sin.sin_addr)) != 1) {
+    // inet_addr converts "a.b.c.d" to network byte order
+    dst_ip = get_ip(server).c_str();
+    if (strlen(dst_ip) == 0) {
+      cerr << "Could not resolve hostname."  << endl;
+      return;
+    }
+    inet_pton(AF_INET, dst_ip, &(sin.sin_addr));
+  } else {
+    dst_ip = server;
+  }
   cout << "Finding route to " << dst_ip << '\n' << endl;
-  
+
   /* Create the socket descriptor */
 
   // domain: AF_INET specifies IPv4
@@ -71,24 +94,8 @@ void run_traceroute(const char* hostname)
     cerr << "Error setting socket options: " << strerror(errno) << endl;
     close(sd);
     return;
-  }
-
-  /* Configure sockaddr strutures with destination. ICMP does not have a port. */
-  // struct sockaddr_in {
-  //   sa_family_t    sin_family; /* address family: AF_INET */
-  //   in_port_t      sin_port;   /* port in network byte order */
-  //   struct in_addr sin_addr;   /* internet address */
-  // };
-
-  // struct in_addr {
-  //   uint32_t       s_addr;     /* address in network byte order */
-  // };
-
-  struct sockaddr_in sin;
-  sin.sin_family = AF_INET;
-  // ICMP has no concept of port
-  sin.sin_port = 0;
-  // inet_addr converts "a.b.c.d" to network byte order
+  }  
+  
   sin.sin_addr.s_addr = inet_addr(dst_ip);
   struct sockaddr_in recv_sin;
 
@@ -99,12 +106,12 @@ void run_traceroute(const char* hostname)
 
   unsigned char ttl = 1;
   while (ttl <= MAX_TTL && 
-      ping(dst_ip, sd, sin, recv_sin, send_packet, recv_packet, ttl) != ICMP_ECHOREPLY) {
+      ping(sd, sin, recv_sin, send_packet, recv_packet, ttl) != ICMP_ECHOREPLY) {
     ++ttl;
   }
 
   if (ttl > MAX_TTL) {
-    cerr << "Could not find " << hostname << " (" << dst_ip << ")" << endl;
+    cerr << "Could not find " << server << " (" << dst_ip << ")" << endl;
   }
 
   close(sd);
@@ -112,7 +119,6 @@ void run_traceroute(const char* hostname)
 
 
 int ping(
-    const char* dst_ip,
     int sd,
     struct sockaddr_in& sin,
     struct sockaddr_in& recv_sin,
