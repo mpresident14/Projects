@@ -1,4 +1,5 @@
 #include "port_scan.hpp"
+#include "netutils.hpp"
 
 // https://en.wikipedia.org/wiki/Transmission_Control_Protocol#TCP_segment_structure
 #include <netinet/tcp.h>
@@ -14,7 +15,6 @@
 #include <string>
 #include <bitset>
 
-#define MYIP "10.0.2.15"
 #define MYPORT 24543
 
 using namespace std;
@@ -53,12 +53,7 @@ struct ip_tcp {
 unsigned short in_cksum(unsigned short *ptr, int nbytes);
 void construct_syn(struct tcphdr* tcp);
 
-void handle_error(const char* fn)
-{
-	cerr << fn << ": " << strerror(errno) << endl;
-}
-
-void port_scan(const char* server)
+void port_scan(const char* server, u_short startport, u_short endport)
 {
 	/* Configure sockaddr strutures with destination. ICMP does not have a port. */
 	// struct sockaddr_in {
@@ -117,7 +112,10 @@ void port_scan(const char* server)
 	struct cksumbuf cksumbuf;
 
 	struct cksumbuf::tcp_pseudo* tcpps = &(cksumbuf.tcp_pseudo);
-	tcpps->tps_src = inet_addr(MYIP);
+	tcpps->tps_src = get_my_ip();
+	if (tcpps->tps_src == (in_addr_t) -1) {
+		return handle_error("get_my_ip");
+	}
 	tcpps->tps_dest = servaddr.sin_addr.s_addr;
 	tcpps->tps_reserved = 0;
 	tcpps->tps_protocol = IPPROTO_TCP;
@@ -132,7 +130,9 @@ void port_scan(const char* server)
 	struct sockaddr_in recv_sockaddr;
 	socklen_t len = sizeof(struct sockaddr_in);
 
-	for (in_port_t port = 79; port < 82; port++) {
+	for (u_short port = startport; port < endport + 1; port++) {
+		cout << "Port " << port << ": ";
+
 		// Increment port and recompute checksum
 		servaddr.sin_port = htons(port);
 		tcp_header->th_dport = htons(port);
@@ -158,8 +158,6 @@ void port_scan(const char* server)
 			cerr << "Invalid source address" << endl;
 			continue;
 		}
-
-		cout << "Port " << port << ": ";
 
 		uint8_t flags = recv_pkt.tcphdr.th_flags;
 		if ((flags & TH_SYN) && (flags & TH_ACK)) {
@@ -223,10 +221,10 @@ unsigned short in_cksum(unsigned short *ptr, int nbytes)
 
 int main(int argc, char** argv)
 {
-	if (argc != 2) {
-		cerr << "Enter a hostname" << endl;
+	if (argc != 4) {
+		cerr << "Enter a hostname, a start port, an end port" << endl;
 		return 1;
 	}
 
-	port_scan(argv[1]);
+	port_scan(argv[1], atoi(argv[2]), atoi(argv[3]));
 }

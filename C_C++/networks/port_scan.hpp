@@ -3,6 +3,6 @@
 
 #include "dnsquery.hpp"
 
-void port_scan(const char* hostname);
+void port_scan(const char* hostname, u_short startport, u_short endport);
 
 #endif

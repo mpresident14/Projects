@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 #include <string>
 #include <iostream>
@@ -18,7 +19,11 @@ using namespace std;
 // loopback interface, return its IP address.
 in_addr_t get_my_ip()
 {
-	int sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	int sd;
+	if ((sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+		handle_error("socket");
+		return -1;
+	}
 	struct ifreq ipreq;
 	int err;
 	int index = 1;
@@ -29,6 +34,7 @@ in_addr_t get_my_ip()
 		// Get device flags based on device name
 		if (ioctl(sd, SIOCGIFFLAGS, &ipreq) == -1) {
 			handle_error("ioctl get flags");
+			close(sd);
 			continue;
 		}
 		uint16_t flags = ipreq.ifr_flags;
@@ -41,26 +47,22 @@ in_addr_t get_my_ip()
 
 	if (err == -1) {
 		handle_error("ioctl get if name");
+		close(sd);
 		return -1;
 	}
 	
 	// Get device IP address based on device name
 	if (ioctl(sd, SIOCGIFADDR, &ipreq) < 0) {
 		handle_error("ioctl");
+		close(sd);
 		return -1;
 	}
 
+	close(sd);
 	return ((struct sockaddr_in*) &ipreq.ifr_addr)->sin_addr.s_addr;
 }
 
 void handle_error(const char* fn)
 {
 	cerr << fn << ": " << strerror(errno) << endl;
-}
-
-int main()
-{
-	struct in_addr addr;
-	addr.s_addr = get_my_ip();
-	cout << inet_ntoa(addr) << endl;
 }
