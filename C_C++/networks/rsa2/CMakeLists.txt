@@ -21,4 +21,5 @@ include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("/usr/local/include/boost_1_71_0")
 
 # add_executable(main rsa_encrypter.cpp rsa_decrypter.cpp rsa_utils.cpp server.cpp user.cpp main.cpp)
-add_executable(util rsa_utils.cpp)
+# add_executable(util rsa_utils.cpp)
+add_executable(keygen keygen.cpp)

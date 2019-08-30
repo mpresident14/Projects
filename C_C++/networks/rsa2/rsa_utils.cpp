@@ -2,7 +2,7 @@
 
 using namespace std;
 
-uint512_t computePowerModM(uint512_t base, uint512_t exp, uint512_t mod)
+uint512_t computePowerModM(const uint512_t& base, const uint512_t& exp, const uint512_t& mod)
 {
     uint1024_t result = 1;
     // Grab greatest power of 2
@@ -25,7 +25,7 @@ uint512_t computePowerModM(uint512_t base, uint512_t exp, uint512_t mod)
 }
 
 // Returns 0 if n == 0
-uint512_t  greatestPowerOf2(uint512_t n)
+uint512_t greatestPowerOf2(uint512_t n)
 {
     if (n == 0) {
         return 0;
