@@ -1,34 +1,35 @@
 #include "keygen.hpp"
 
-#include <boost/random.hpp> 
+#include <boost/random.hpp>
 
 #include <stack>
 #include <memory>
 #include <chrono>
+#include <cassert>
 
 using namespace std;
 
-using boost::multiprecision::int1024_t;
-using generator512 = boost::random::independent_bits_engine<mt19937, 512, uint512_t>;
+using generator512 = boost::random::independent_bits_engine<mt19937, 512, cpp_int>;
 
-#define FAIL uint512_t(-1)
+#define FAIL cpp_int(-1)
 
 unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 
 /* 
  * Checks if (D, phi(N)) == 1 and if so, finds E s.t. DE - phi(N)F = 1 
- * Returns uint512_t(-1) if (D, phi(N)) != 1 
+ * Returns cpp_int(-1) if (D, phi(N)) != 1 
  * Undefined behavior if d <= 1 or phi <= 1
  */
-uint512_t findE(uint512_t d, uint512_t phi)
+cpp_int findE(cpp_int d, cpp_int phi)
 {
     // Going to lose phi's value while doing Euclidean Alg, and might need it later.
-    uint512_t phi_copy{phi};
+    cpp_int phi_copy{phi};
+    cpp_int d_copy{phi}; // TESTING ONLY, REMOVE WHEN DONE
 
     // Let a be the greater of d and phi, b be the lesser
     bool d_greater;
-    uint512_t* a;
-    uint512_t* b;
+    cpp_int* a;
+    cpp_int* b;
     if (d > phi) {
         a = &d;
         b = &phi;
@@ -38,17 +39,17 @@ uint512_t findE(uint512_t d, uint512_t phi)
         b = &d;
         d_greater = false;
     }
-    uint512_t mod;
-    uint512_t* modptr = &mod;
+    cpp_int mod;
+    cpp_int* modptr = &mod;
 
     /* Euclidean alg: (a, b) = (b, a mod b). Store quotients in stack */
-    stack<uint512_t> qStack;
+    stack<cpp_int> quotients;
     while (*b != 0){
-        qStack.emplace(*a / *b);
+        quotients.emplace(*a / *b);
         *modptr = *a % *b;
 
         // Reuse these 3 
-        uint512_t* tmp = a;
+        cpp_int* tmp = a;
         a = b;
         b = modptr;
         modptr = tmp;
@@ -62,23 +63,23 @@ uint512_t findE(uint512_t d, uint512_t phi)
     /* Reverse Euclidean alg to find x,y s.t. ax + by = gcd(a,b) = 1 */
 
     // Pop last quotient, we don't need it
-    qStack.pop(); 
+    quotients.pop(); 
 
     // To figure out which # goes with a and which goes with b (see below)
-    bool even_size = qStack.size() % 2 == 0 ? true : false; 
+    bool even_size = quotients.size() % 2 == 0 ? true : false; 
 
     // Accumulate x and y by adding -quotient on top of stack times x or y
-    int1024_t x{1};
-    int1024_t y{-1};
-    x *= qStack.top();
-    qStack.pop();
+    cpp_int x{1};
+    cpp_int y{-1};
+    x *= quotients.top();
+    quotients.pop();
 
-    while(!qStack.empty()){
-        x += -y * qStack.top();
-        qStack.pop();
-        if (!qStack.empty()){
-            y += -x * qStack.top();
-            qStack.pop();
+    while(!quotients.empty()){
+        x += -y * quotients.top();
+        quotients.pop();
+        if (!quotients.empty()){
+            y += -x * quotients.top();
+            quotients.pop();
         }
     }
 
@@ -97,31 +98,38 @@ uint512_t findE(uint512_t d, uint512_t phi)
 
     bool e_positive = even_size ^ d_greater;
     if (e_positive) {
-        return uint512_t(x);
+        cout << "f=" << y << endl;
+        cpp_int gcd = (d_copy * x) - (y * phi_copy);
+        assert(gcd == 1);
+        return x;
     }
 
-    return uint512_t(y + phi_copy);
+    cout << "f=" << (x - d_copy) << endl;
+    cpp_int gcd = (d_copy * (y + phi_copy)) - ((x - d_copy) * phi_copy);
+    assert(gcd == 1);
+    return y + phi_copy;
 }
 
 // Private key d first, public key e second
-array<uint512_t, 2> generate_keys(const uint512_t& phi)
+array<cpp_int, 2> generate_keys(const cpp_int& phi)
 {
     generator512 gen{seed};
 
-    uint512_t d{gen()};
-    uint512_t e;
+    cpp_int d{gen()};
+    cpp_int e{findE(d, phi)};
 
-    while ((e = findE(d, phi)) == FAIL) {
+    while (e == FAIL) {
         d = gen();
+        e = findE(d, phi);
     }
 
-    return array<uint512_t, 2> {{move(d), move(e)}};
+    return array<cpp_int, 2> {{move(d), move(e)}};
 }
 
-int main(int argc, char** argv)
-{
-    auto keys = generate_keys(atoi(argv[1]));
+// int main(int argc, char** argv)
+// {
+//     auto keys = generate_keys(atoi(argv[1]));
 
-    cout << "d=" << keys[0] << endl;
-    cout << "e=" << keys[1] << endl;
-}
+//     cout << "d=" << keys[0] << endl;
+//     cout << "e=" << keys[1] << endl;
+// }

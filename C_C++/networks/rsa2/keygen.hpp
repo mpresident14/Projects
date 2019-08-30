@@ -3,9 +3,9 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
-using boost::multiprecision::uint512_t;
+using boost::multiprecision::cpp_int;
 
 // Private key d first, public key e second
-std::array<uint512_t, 2> generate_keys(const uint512_t& phi);
+std::array<cpp_int, 2> generate_keys(const cpp_int& phi);
 
 #endif
