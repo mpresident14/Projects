@@ -7,6 +7,9 @@
 #include <chrono>
 #include <cassert>
 
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
+
 using namespace std;
 
 using generator512 = boost::random::independent_bits_engine<mt19937, 512, cpp_int>;
@@ -24,7 +27,7 @@ cpp_int findE(cpp_int d, cpp_int phi)
 {
     // Going to lose phi's value while doing Euclidean Alg, and might need it later.
     cpp_int phi_copy{phi};
-    cpp_int d_copy{phi}; // TESTING ONLY, REMOVE WHEN DONE
+    cpp_int d_copy{d}; // TESTING ONLY, REMOVE WHEN DONE
 
     // Let a be the greater of d and phi, b be the lesser
     bool d_greater;
@@ -66,12 +69,12 @@ cpp_int findE(cpp_int d, cpp_int phi)
     quotients.pop(); 
 
     // To figure out which # goes with a and which goes with b (see below)
-    bool even_size = quotients.size() % 2 == 0 ? true : false; 
+    bool even_size = quotients.size() % 2 == 0; 
 
     // Accumulate x and y by adding -quotient on top of stack times x or y
     cpp_int x{1};
-    cpp_int y{-1};
-    x *= quotients.top();
+    cpp_int y{-quotients.top()};
+
     quotients.pop();
 
     while(!quotients.empty()){
@@ -83,43 +86,63 @@ cpp_int findE(cpp_int d, cpp_int phi)
         }
     }
 
+    cout << "x=" << x << endl;
+    cout << "y=" << y << endl;
+
     // We start the reverse alg with 1 = 1(a) - 1(b), so x is positive and y is negative.
-    // If even, we finish with ax + by = 1
-    // If odd, we finish with ay + bx = 1
+    // If even, we finish with ay + bx = 1
+    // If odd, we finish with ax + by = 1
     // If d > phi, then a = d & b = phi
     // If d < phi, then a = phi & b = d
 
     // Therefore:
-    // 1) even & dGreater -> dx + phi(y)
-    // 2) even & phiGreater -> phi(x) + dy
-    // 3) odd & dGreater -> dy + phi(x)
-    // 4) odd & phiGreater -> phi(y) + dx
-    // Since 1) == 4) & 2) == 3), we can just xor even and dGreater.
+    // 1) even & dGreater -> dy + phi(x)
+    // 2) even & phiGreater -> phi(y) + dx
+    // 3) odd & dGreater -> dx + phi(y)
+    // 4) odd & phiGreater -> phi(x) + dy
+    // Since 1) == 4) & 2) == 3), we can just xor even and dGreater
+    // to find out if e is x or y.
+    cout << "dx + phi(y) == " << d_copy*x + phi_copy*y << endl;
+    cout << "dy + phi(x) == " << d_copy*y + phi_copy*x << endl;
 
-    bool e_positive = even_size ^ d_greater;
-    if (e_positive) {
-        cout << "f=" << y << endl;
-        cpp_int gcd = (d_copy * x) - (y * phi_copy);
+    bool e_is_x = even_size ^ d_greater;
+    if (e_is_x) {
+
+        cpp_int e{x};
+        cpp_int f{y};
+        cout << "d=" << d_copy << endl;
+        cout << "e=" << e << endl;
+        cout << "f=" << f << endl;
+
+        cpp_int gcd = (d_copy * e) + (f * phi_copy);
         assert(gcd == 1);
+
         return x;
     }
 
-    cout << "f=" << (x - d_copy) << endl;
-    cpp_int gcd = (d_copy * (y + phi_copy)) - ((x - d_copy) * phi_copy);
+    cpp_int e{y + phi_copy};
+    cpp_int f{x - d_copy};
+    cout << "d=" << d_copy << endl;
+    cout << "e=" << e << endl;
+    cout << "f=" << f << endl;
+
+    cpp_int gcd = (d_copy * e) + (f * phi_copy);
     assert(gcd == 1);
+
     return y + phi_copy;
 }
 
 // Private key d first, public key e second
 array<cpp_int, 2> generate_keys(const cpp_int& phi)
 {
-    generator512 gen{seed};
+    // generator512 gen{seed};
+    srand (time(NULL));
 
-    cpp_int d{gen()};
+    cpp_int d{rand() % 100};
     cpp_int e{findE(d, phi)};
 
     while (e == FAIL) {
-        d = gen();
+        d = rand() % 100;
         e = findE(d, phi);
     }
 

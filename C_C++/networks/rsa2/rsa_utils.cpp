@@ -5,6 +5,9 @@
 #include <cstring>
 #include <cstddef>
 
+#define P "35201546659608842026088328007565866231962578784643756647773109869245232364730066609837018108561065242031153677"
+#define Q "499490918065850301921197603564081112780623690273420984342968690594064612108591217229304461006005170865294466527166368851"
+
 using namespace std;
 using boost::multiprecision::cpp_int;
 using boost::multiprecision::limb_type;
@@ -14,6 +17,9 @@ void printByteVec(const vector<uint8_t>& vec);
 char* decrypt_msg(const cpp_int& c, const cpp_int& d, const cpp_int& n)
 {
     cpp_int decryption{power_mod(c, d, n)};
+    cout << "decryption=" << hex << decryption << dec << endl;
+
+
     size_t cpp_size = decryption.backend().size();
     size_t msg_size = cpp_size * sizeof(limb_type);
 
@@ -29,7 +35,9 @@ cpp_int encrypt_msg(const char* msg, const cpp_int& e, const cpp_int& n)
     vector<uint8_t> byte_vec{};
     size_t msg_len = strlen(msg);
 
-    for (size_t i = 0; i < msg_len; i++) {
+    // cpp_int_backend stores the bytes in reverse order, so we reverse the 
+    // bytes before we deliver them to the cpp_int
+    for (size_t i = msg_len - 1; i != size_t(-1); i--) {
         byte_vec.push_back(msg[i]);
     }
 
@@ -46,6 +54,8 @@ cpp_int encrypt_msg(const char* msg, const cpp_int& e, const cpp_int& n)
         ++p;
     }
     cout << endl;
+
+    cout << "plaintext=" << hex << test << dec << endl;
 
 
     return power_mod(cpp_int{byte_vec}, e, n);
@@ -129,16 +139,14 @@ void printByteVec(const vector<uint8_t>& vec)
 
 int main(int argc, char** argv)
 {
-    unsigned p = 71;
-    unsigned q = 83;
-    unsigned n = p * q;
-    unsigned phi = (p - 1) * (q - 1);
-    cout << "n=" << endl;
+    cpp_int p{P};
+    cpp_int q{Q};
+    cpp_int n = p * q;
+    cpp_int phi = (p - 1) * (q - 1);
+    cout << "n=" << hex << n << dec << endl;
     cout << "phi=" << phi << endl;
 
     array<cpp_int, 2> keys = generate_keys(phi);
-    cout << "d=" << keys[0] << endl;
-    cout << "e=" << keys[1] << endl;
 
     cpp_int c{encrypt_msg(argv[1], keys[1], n)};
     cout << "ciphertext: " << hex << c << dec << endl;
