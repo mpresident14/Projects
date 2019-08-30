@@ -1,4 +1,5 @@
-#include <boost/multiprecision/cpp_int.hpp>
+#include "keygen.hpp"
+
 #include <boost/random.hpp> 
 
 #include <stack>
@@ -7,7 +8,6 @@
 
 using namespace std;
 
-using boost::multiprecision::uint512_t;
 using boost::multiprecision::int1024_t;
 using generator512 = boost::random::independent_bits_engine<mt19937, 512, uint512_t>;
 
@@ -107,15 +107,15 @@ uint512_t findE(uint512_t d, uint512_t phi)
 array<uint512_t, 2> generate_keys(const uint512_t& phi)
 {
     generator512 gen{seed};
-    auto keys = array<uint512_t, 2> {{gen()}};
 
-    keys[0] = gen();
+    uint512_t d{gen()};
+    uint512_t e;
 
-    while ((keys[1] = findE(keys[0], phi)) == FAIL) {
-        keys[0] = gen();
+    while ((e = findE(d, phi)) == FAIL) {
+        d = gen();
     }
 
-    return keys;
+    return array<uint512_t, 2> {{move(d), move(e)}};
 }
 
 int main(int argc, char** argv)
