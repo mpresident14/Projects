@@ -1,15 +1,26 @@
-#include <boost/multiprecision/cpp_int.hpp> 
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/random.hpp> 
 
 #include <stack>
+#include <memory>
 
 using namespace std;
+
 using boost::multiprecision::uint512_t;
 using boost::multiprecision::int1024_t;
+using generator512 = boost::random::independent_bits_engine<mt19937, 512, uint512_t>;
 
-/* Checks if (D, phi(N)) == 1 and if so, finds E,F s.t. DE-phi(N)F = 1 using Euclidean Algorithm */
-/* a & b correspond to D and PHI(N), in any order & a >= b */
+#define FAIL uint512_t(-1)
+
+/* 
+ * Checks if (D, phi(N)) == 1 and if so, finds E s.t. DE - phi(N)F = 1 
+ * Returns uint512_t(-1) if (D, phi(N)) != 1 
+ */
 uint512_t findE(uint512_t d, uint512_t phi)
 {
+    // Going to lose phi's value while doing Euclidean Alg, and might need it later.
+    uint512_t phi_copy{phi};
+
     // Let a be the greater of d and phi, b be the lesser
     bool d_greater;
     uint512_t* a;
@@ -30,30 +41,28 @@ uint512_t findE(uint512_t d, uint512_t phi)
     stack<uint512_t> qStack;
     while (*b != 0){
         qStack.emplace(*a / *b);
-        mod = *a % *b;
+        *modptr = *a % *b;
 
         // Reuse these 3 
         uint512_t* tmp = a;
         a = b;
         b = modptr;
         modptr = tmp;
-        cout << "a=" << *a << endl;
-        cout << "b=" << *b << endl;
     }
 
     // a now equals gcd(a,b)
     // Return uint521_t(-1) upon failure. We need gcd(d, phi(N)) == 1
     if (*a != 1){
-        return -1;
+        cout << FAIL << endl;
+        cout << "ran" << endl;
+        return FAIL;
     }
 
     // Reverse Euclidean alg to find x,y s.t. ax + by = gcd(a,b)
     // x and y correspond to e and f in 
     qStack.pop(); // Pop last quotient, we don't need it
 
-    // To figure out which # goes with a and which goes with b
-    // If even, ax + by = g
-    // If odd, ay + bx = g
+    // To figure out which # goes with a and which goes with b (see below)
     bool even_size = qStack.size() % 2 == 0 ? true : false; 
 
     // Accumulate x and y by adding -quotient on top of stack times x or y
@@ -71,39 +80,50 @@ uint512_t findE(uint512_t d, uint512_t phi)
         }
     }
 
-    cout << "x=" << x << endl;
-    cout << "y=" << y << endl;
+    // We start the reverse alg with 1 = 1(a) - 1(b), so x is positive and y is negative.
+    // If even, we finish with ax + by = 1
+    // If odd, we finish with ay + bx = 1
+    // If d > phi, then a = d & b = phi
+    // If d < phi, then a = phi & b = d
 
-    // We want de - phi(f) = 1 -> de + phi(-f) = 1.
-    // If d > phi
-    //   If e > 0: e = e
-    //   If e < 0: e += phi
-    // If d < phi:
-    //   If 
+    // Therefore:
+    // 1) even & dGreater -> dx + phi(y)
+    // 2) even & phiGreater -> phi(x) + dy
+    // 3) odd & dGreater -> dy + phi(x)
+    // 4) odd & phiGreater -> phi(y) + dx
+    // Since 1) == 4) & 2) == 3), we can just xor even and dGreater.
 
     bool e_positive = even_size ^ d_greater;
     if (e_positive) {
-        return x > 0 ? uint512_t(x) : uint512_t(y);
+        return uint512_t(x);
     }
 
-    return x < 0 ? uint512_t(x + phi) : uint512_t(y + phi);
-
-
-    // Organize s.t. x(max{a,b}) + y(min{a,b}) = gcd(a,b)
-    // int* xAndY = new int[2];
-    // if (evenSize){
-    //     xAndY[0] = y;
-    //     xAndY[1] = x;
-    // }
-    // else{
-    //     xAndY[0] = x;
-    //     xAndY[1] = y;
-    // }
-
-    // return xAndY;
+    return uint512_t(y + phi_copy);
 }
 
-int main()
+// Private key d first, public key e second
+unique_ptr<uint512_t[]> generate_keys(const uint512_t& phi)
 {
-    cout << findE(8, 5) << endl;
+    auto keys = std::make_unique<uint512_t[]>(2);
+    generator512 gen;
+
+    uint512_t d{gen()};
+    uint512_t e;
+
+    while ((e = findE(d, phi)) != FAIL) {
+        d = gen();
+    }
+
+    keys[0] = d;
+    keys[1] = e;
+    return keys;
+}
+
+TODO: FIX GENERATING SAME NUMBERS EVERY TIME
+int main(int argc, char** argv)
+{
+    auto keys = generate_keys(atoi(argv[1]));
+
+    cout << "d=" << keys[0] << endl;
+    cout << "e=" << keys[1] << endl;
 }
