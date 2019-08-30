@@ -3,6 +3,7 @@
 
 #include <stack>
 #include <memory>
+#include <chrono>
 
 using namespace std;
 
@@ -12,9 +13,12 @@ using generator512 = boost::random::independent_bits_engine<mt19937, 512, uint51
 
 #define FAIL uint512_t(-1)
 
+unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+
 /* 
  * Checks if (D, phi(N)) == 1 and if so, finds E s.t. DE - phi(N)F = 1 
  * Returns uint512_t(-1) if (D, phi(N)) != 1 
+ * Undefined behavior if d <= 1 or phi <= 1
  */
 uint512_t findE(uint512_t d, uint512_t phi)
 {
@@ -37,7 +41,7 @@ uint512_t findE(uint512_t d, uint512_t phi)
     uint512_t mod;
     uint512_t* modptr = &mod;
 
-    // Euclidean alg: (a, b) = (b, a mod b). Store quotients in stack
+    /* Euclidean alg: (a, b) = (b, a mod b). Store quotients in stack */
     stack<uint512_t> qStack;
     while (*b != 0){
         qStack.emplace(*a / *b);
@@ -50,17 +54,15 @@ uint512_t findE(uint512_t d, uint512_t phi)
         modptr = tmp;
     }
 
-    // a now equals gcd(a,b)
-    // Return uint521_t(-1) upon failure. We need gcd(d, phi(N)) == 1
+    // a now equals gcd(d, phi(N)). If a != 1, we need to try again.
     if (*a != 1){
-        cout << FAIL << endl;
-        cout << "ran" << endl;
         return FAIL;
     }
 
-    // Reverse Euclidean alg to find x,y s.t. ax + by = gcd(a,b)
-    // x and y correspond to e and f in 
-    qStack.pop(); // Pop last quotient, we don't need it
+    /* Reverse Euclidean alg to find x,y s.t. ax + by = gcd(a,b) = 1 */
+
+    // Pop last quotient, we don't need it
+    qStack.pop(); 
 
     // To figure out which # goes with a and which goes with b (see below)
     bool even_size = qStack.size() % 2 == 0 ? true : false; 
@@ -102,24 +104,20 @@ uint512_t findE(uint512_t d, uint512_t phi)
 }
 
 // Private key d first, public key e second
-unique_ptr<uint512_t[]> generate_keys(const uint512_t& phi)
+array<uint512_t, 2> generate_keys(const uint512_t& phi)
 {
-    auto keys = std::make_unique<uint512_t[]>(2);
-    generator512 gen;
+    generator512 gen{seed};
+    auto keys = array<uint512_t, 2> {{gen()}};
 
-    uint512_t d{gen()};
-    uint512_t e;
+    keys[0] = gen();
 
-    while ((e = findE(d, phi)) != FAIL) {
-        d = gen();
+    while ((keys[1] = findE(keys[0], phi)) == FAIL) {
+        keys[0] = gen();
     }
 
-    keys[0] = d;
-    keys[1] = e;
     return keys;
 }
 
-TODO: FIX GENERATING SAME NUMBERS EVERY TIME
 int main(int argc, char** argv)
 {
     auto keys = generate_keys(atoi(argv[1]));
