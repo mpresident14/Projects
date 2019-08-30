@@ -19,4 +19,4 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -pthread")
 # The following folder will be included
 include_directories("${PROJECT_SOURCE_DIR}")
 
-add_executable(rsa_encrypter.cpp rsa_decrypter.cpp rsa_utils.cpp server.cpp user.cpp main.cpp)
+add_executable(main rsa_encrypter.cpp rsa_decrypter.cpp rsa_utils.cpp server.cpp user.cpp main.cpp)
