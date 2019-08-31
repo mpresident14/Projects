@@ -10,7 +10,7 @@ User::User(const cpp_int& public_key, const cpp_int& n)
 }
 
 
-void User::send_msg(const char* msg, Server& server)
+void User::send_msg(const char* msg, Server& server) const
 {
     vector<cpp_int> encrypted_chunks{encrypt_msg(msg, e_, n_)};
     server.recv_msg(encrypted_chunks);

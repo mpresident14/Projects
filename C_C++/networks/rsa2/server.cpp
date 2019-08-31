@@ -2,12 +2,15 @@
 #include "rsa_utils.hpp"
 #include "keygen.hpp"
 
+#include <thread>
+
 #define P "35201546659608842026088328007565866231962578784643756647773109869245232364730066609837018108561065242031153677"
 #define Q "499490918065850301921197603564081112780623690273420984342968690594064612108591217229304461006005170865294466527166368851"
 
 using namespace std;
 
 Server::Server()
+    : is_stopped_{false}, thr_{&Server::process_msgs, this}
 {
    cpp_int p{P};
    cpp_int q{Q};
@@ -19,7 +22,18 @@ Server::Server()
 
 void Server::recv_msg(const vector<cpp_int>& encrypted_msg)
 {
-    cout << "Server received: " << decrypt_msg(encrypted_msg, d_, n_) << endl;;
+    buffer_.push(encrypted_msg);
+    // cout << "Server received: " << decrypt_msg(encrypted_msg, d_, n_) << endl;;
+}
+
+void Server::process_msgs()
+{
+    vector<cpp_int> msg;
+    while (!is_stopped_.load()) {
+        if (buffer_.try_pull(msg) == boost::concurrent::queue_op_status::success) {
+            cout << "Server received: " << decrypt_msg(msg, d_, n_) << endl;
+        }
+    }
 }
 
 const cpp_int& Server::get_public_key()
@@ -86,16 +100,8 @@ const cpp_int& Server::get_n()
 //     return decrypter_.getEncrypter();
 // }
 
-// void Server::stop(vector<thread>& threads)
-// {
-//     // Wait for all user threads to put their message in the queue.
-//     for (auto& thr : threads) {
-//         thr.join();
-//     } 
-
-//     // Server may be stuck in conditional loop because queue is empty, so notify it and set 
-//     // isRunning to false to break the loop.
-//     cv_.notify_all();
-//     isRunning = false;
-//     printThread_.join();
-// }
+void Server::stop()
+{
+    is_stopped_.store(true);
+    thr_.join();
+}

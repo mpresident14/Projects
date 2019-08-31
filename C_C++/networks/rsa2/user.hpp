@@ -13,7 +13,7 @@ class User {
         // User(cpp_int&& public_key);
         ~User() = default;
         // User(const User& other) = default;
-        void send_msg(const char* msg, Server& server);
+        void send_msg(const char* msg, Server& server) const;
 
     private:
         // RSAEncrypter& requestEncrypterFromServer();

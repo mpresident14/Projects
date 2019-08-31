@@ -1,24 +1,27 @@
 #include "user.hpp"
+#include "server.hpp"
+
 #include <vector>
 #include <string>
+#include <thread>
 
 using namespace std;
 
-// void sendMessages(Server* server, size_t num)
-// {
-//     User user{*server};
-//     for (int i = 1; i < 51; ++i) {
-//         string msg = "This is secure message #" + to_string(i) + " from user #" + to_string(num);
-//         user.sendMessage(msg.c_str());
-//     }
-// }
+void send_messages(const User& user, Server& server, size_t usernum)
+{
+    for (int i = 1; i < 5; ++i) {
+        ostringstream str_stream;
+        str_stream << "This is secure message #" << i << " from user #" << usernum;
+        user.send_msg(str_stream.str().c_str(), server);
+    }
+}
 
 // TODO: mutex for encryption printing?
 // TODO: the user threads should be joined in Server::stop
 int main(int argc, char** argv)
 {
     // srand(unsigned(time(NULL)));
-    // size_t numUsers = 10;
+    size_t numUsers = 5;
     // std::vector<std::thread> threads;
     // Server server;
 
@@ -28,8 +31,21 @@ int main(int argc, char** argv)
 
     // server.stop(threads);
     Server server;
-    User user{server.get_public_key(), server.get_n()};
-    user.send_msg(argv[1], server);
+    const cpp_int& e = server.get_public_key();
+    const cpp_int& n = server.get_n();
+
+    vector<std::thread> threads;
+    for (size_t i = 0; i < numUsers; ++i) {
+        threads.emplace_back(send_messages, User{e, n}, ref(server), i);
+    }
+
+    // User user{e, n};
+    // user.send_msg("Hello", server);
+
+    for (auto& thr : threads) {
+        thr.join();
+    }
+    server.stop();
 }
 
 // int main()
