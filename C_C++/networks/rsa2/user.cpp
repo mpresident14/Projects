@@ -3,18 +3,15 @@
 
 using namespace std;
 
-User::User(Server& server)
-    : server_{server}
+User::User(const cpp_int& public_key, const cpp_int& n)
+    : e_{public_key}, n_{n}
 {
     // Nothing to do
 }
 
-cpp_int User::requestPublicKey(Server& server)
-{
-    // return server_.sendEncrypter();
-}
 
-void User::sendToServer(ushort* encryptedMsg, size_t msgArrLen)
+void User::send_msg(const char* msg, Server& server)
 {
-    server_.receiveMessage(encryptedMsg, msgArrLen);
+    vector<cpp_int> encrypted_chunks{encrypt_msg(msg, e_, n_)};
+    server.recv_msg(encrypted_chunks);
 }
