@@ -10,8 +10,7 @@ using boost::multiprecision::cpp_int;
 class User {
     public:
         User(const cpp_int& public_key, const cpp_int& n);
-        ~User() = default;
-        // User(const User& other) = delete;
+        // Compiler generated special member fcns are ok
         void send_msg(const char* msg, Server& server) const;
 
     private:

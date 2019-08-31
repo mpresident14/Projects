@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     vector<std::thread> threads;
     for (size_t i = 0; i < numUsers; ++i) {
         User user{e, n};
-        // We move the user to prevent thread from caling the deleted copy constructor.
+        // We move the user to avoid a copy of its data members.
         //   We cannot pass by reference because the local user will go out of scope.
         // We pass server by reference to prevent thread from calling the deleted copy
         //   constructor. We cannot move it because we still need the server for future calls.
@@ -45,26 +45,3 @@ int main(int argc, char** argv)
     }
     server.stop();
 }
-
-// int main()
-// {
-//     srand(unsigned(time(NULL)));
-//     // srand(1);
-
-//     string msg;
-//     Server server;
-//     User user{server};
-
-//     cout << "Enter message: ";
-//     getline(cin, msg);
-
-//     while (msg.compare("-exit") != 0) {
-//         user.sendMessage(msg.c_str());
-//         cout << "Enter message: ";
-//         getline(cin, msg);
-//     }
-  
-//     user.endSession();
-
-//     return 0;
-// }
