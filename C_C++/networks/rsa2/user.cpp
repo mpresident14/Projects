@@ -1,4 +1,5 @@
 #include "user.hpp"
+#include "rsa_utils.hpp"
 
 using namespace std;
 
@@ -8,17 +9,9 @@ User::User(Server& server)
     // Nothing to do
 }
 
-void User::sendMessage(const char* msg)
+cpp_int User::requestPublicKey(Server& server)
 {
-    RSAEncrypter& encrypter = requestEncrypterFromServer();
-    size_t msgArrLen = encrypter.calculateMsgArrLen(msg);
-    ushort* encryptedMsg = encrypter.encryptMessage(msg, msgArrLen);
-    sendToServer(encryptedMsg, msgArrLen);
-}
-
-RSAEncrypter& User::requestEncrypterFromServer()
-{
-    return server_.sendEncrypter();
+    // return server_.sendEncrypter();
 }
 
 void User::sendToServer(ushort* encryptedMsg, size_t msgArrLen)
