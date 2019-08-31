@@ -5,7 +5,6 @@
 #include <stack>
 #include <memory>
 #include <chrono>
-#include <cassert>
 
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
@@ -27,7 +26,6 @@ cpp_int findE(cpp_int d, cpp_int phi)
 {
     // Going to lose phi's value while doing Euclidean Alg, and might need it later.
     cpp_int phi_copy{phi};
-    cpp_int d_copy{d}; // TESTING ONLY, REMOVE WHEN DONE
 
     // Let a be the greater of d and phi, b be the lesser
     bool d_greater;
@@ -86,9 +84,6 @@ cpp_int findE(cpp_int d, cpp_int phi)
         }
     }
 
-    cout << "x=" << x << endl;
-    cout << "y=" << y << endl;
-
     // We start the reverse alg with 1 = 1(a) - 1(b), so x is positive and y is negative.
     // If even, we finish with ay + bx = 1
     // If odd, we finish with ax + by = 1
@@ -102,33 +97,11 @@ cpp_int findE(cpp_int d, cpp_int phi)
     // 4) odd & phiGreater -> phi(x) + dy
     // Since 1) == 4) & 2) == 3), we can just xor even and dGreater
     // to find out if e is x or y.
-    cout << "dx + phi(y) == " << d_copy*x + phi_copy*y << endl;
-    cout << "dy + phi(x) == " << d_copy*y + phi_copy*x << endl;
 
     bool e_is_x = even_size ^ d_greater;
     if (e_is_x) {
-
-        cpp_int e{x};
-        cpp_int f{y};
-        cout << "d=" << d_copy << endl;
-        cout << "e=" << e << endl;
-        cout << "f=" << f << endl;
-
-        cpp_int gcd = (d_copy * e) + (f * phi_copy);
-        assert(gcd == 1);
-
         return x;
     }
-
-    cpp_int e{y + phi_copy};
-    cpp_int f{x - d_copy};
-    cout << "d=" << d_copy << endl;
-    cout << "e=" << e << endl;
-    cout << "f=" << f << endl;
-
-    cpp_int gcd = (d_copy * e) + (f * phi_copy);
-    assert(gcd == 1);
-
     return y + phi_copy;
 }
 
