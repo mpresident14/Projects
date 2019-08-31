@@ -1,30 +1,36 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP 1
 
-#include "rsa_decrypter.hpp"
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/thread/sync_queue.hpp>
+
 #include <queue>
 #include <vector>
 #include <thread>
 #include <condition_variable>
+#include <atomic>
+
+using boost::multiprecision::cpp_int;
 
 class Server {
     public:
         Server();
         ~Server() = default;
-        Server(const Server& other) = default;
-        void receiveMessage(ushort* encryptedMsg, size_t msgArrLen);
-        void printNextMessage();
-        RSAEncrypter& sendEncrypter();
-        void stop(std::vector<std::thread>& threads);
+        Server(const Server& other) = delete;
+        void stop();
+        void recv_msg(const std::vector<cpp_int>& encrypted_msg);
+        const cpp_int& get_public_key();
+        const cpp_int& get_n();
 
     private:    
-        bool isRunning;
-        RSADecrypter decrypter_;
-        std::queue<std::pair<ushort*, size_t>> q_; // Each pair maps msg to length of array
-        std::mutex queueMutex_;
-        // std::mutex printMutex_;
-        std::condition_variable cv_;
-        std::thread printThread_;
+        void process_msgs();
+
+        cpp_int e_; // public key
+        cpp_int n_; // P * Q
+        cpp_int d_; // private key
+        boost::sync_queue<std::vector<cpp_int>> buffer_;
+        std::atomic_bool is_stopped_;
+        std::thread thr_;
 };
 
 #endif

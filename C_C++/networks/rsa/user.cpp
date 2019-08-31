@@ -1,27 +1,17 @@
 #include "user.hpp"
+#include "rsa_utils.hpp"
 
 using namespace std;
 
-User::User(Server& server)
-    : server_{server}
+User::User(const cpp_int& public_key, const cpp_int& n)
+    : e_{public_key}, n_{n}
 {
     // Nothing to do
 }
 
-void User::sendMessage(const char* msg)
-{
-    RSAEncrypter& encrypter = requestEncrypterFromServer();
-    size_t msgArrLen = encrypter.calculateMsgArrLen(msg);
-    ushort* encryptedMsg = encrypter.encryptMessage(msg, msgArrLen);
-    sendToServer(encryptedMsg, msgArrLen);
-}
 
-RSAEncrypter& User::requestEncrypterFromServer()
+void User::send_msg(const char* msg, Server& server) const
 {
-    return server_.sendEncrypter();
-}
-
-void User::sendToServer(ushort* encryptedMsg, size_t msgArrLen)
-{
-    server_.receiveMessage(encryptedMsg, msgArrLen);
+    vector<cpp_int> encrypted_chunks{encrypt_msg(msg, e_, n_)};
+    server.recv_msg(encrypted_chunks);
 }
