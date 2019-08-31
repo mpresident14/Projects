@@ -6,9 +6,6 @@
 #include <memory>
 #include <chrono>
 
-#include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
-
 using namespace std;
 
 using generator512 = boost::random::independent_bits_engine<mt19937, 512, cpp_int>;
@@ -49,7 +46,7 @@ cpp_int findE(cpp_int d, cpp_int phi)
         quotients.emplace(*a / *b);
         *modptr = *a % *b;
 
-        // Reuse these 3 
+        // Reuse these 3 cpp_ints
         cpp_int* tmp = a;
         a = b;
         b = modptr;
@@ -108,24 +105,15 @@ cpp_int findE(cpp_int d, cpp_int phi)
 // Private key d first, public key e second
 array<cpp_int, 2> generate_keys(const cpp_int& phi)
 {
-    // generator512 gen{seed};
-    srand (time(NULL));
+    generator512 gen{seed};
 
-    cpp_int d{rand() % 100};
+    cpp_int d{gen()};
     cpp_int e{findE(d, phi)};
 
     while (e == FAIL) {
-        d = rand() % 100;
+        d = gen();
         e = findE(d, phi);
     }
 
     return array<cpp_int, 2> {{move(d), move(e)}};
 }
-
-// int main(int argc, char** argv)
-// {
-//     auto keys = generate_keys(atoi(argv[1]));
-
-//     cout << "d=" << keys[0] << endl;
-//     cout << "e=" << keys[1] << endl;
-// }

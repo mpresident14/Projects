@@ -109,17 +109,3 @@ void printByteVec(const vector<uint8_t>& vec)
     }
     cout << dec << endl;
 }
-
-// int main(int argc, char** argv)
-// {
-//     cpp_int p{P};
-//     cpp_int q{Q};
-//     cpp_int n = p * q;
-//     cpp_int phi = (p - 1) * (q - 1);
-
-//     array<cpp_int, 2> keys = generate_keys(phi);
-
-//     vector<cpp_int> chunks{encrypt_msg(argv[1], keys[1], n)};
-
-//     cout << decrypt_msg(chunks, keys[0], n) << endl;
-// }

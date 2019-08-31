@@ -10,8 +10,6 @@ set(PROJECT_BINARY_DIR ${PROJECT_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 
-# Note: Used "EXPORT CXX=$(which clang++)" to specify clang compiler
-
 # Set compilation flags
 add_compile_options(-Wall)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -pthread")

@@ -4,11 +4,15 @@
 #include <vector>
 #include <string>
 #include <thread>
+#include <chrono>
+#include <random>
+#include <time.h>
 
 using namespace std;
 
-void send_messages(const User& user, Server& server, size_t usernum)
-{
+void send_messages(User user, Server& server, size_t usernum)
+{ 
+    this_thread::sleep_for(chrono::milliseconds(rand() % 3000));
     for (int i = 1; i < 5; ++i) {
         ostringstream str_stream;
         str_stream << "This is secure message #" << i << " from user #" << usernum;
@@ -16,31 +20,25 @@ void send_messages(const User& user, Server& server, size_t usernum)
     }
 }
 
-// TODO: mutex for encryption printing?
-// TODO: the user threads should be joined in Server::stop
 int main(int argc, char** argv)
 {
-    // srand(unsigned(time(NULL)));
+    srand(time(NULL));
+
     size_t numUsers = 5;
-    // std::vector<std::thread> threads;
-    // Server server;
 
-    // for (size_t i = 0; i < numUsers; ++i) {
-    //     threads.push_back(thread(sendMessages, &server, i));
-    // }   
-
-    // server.stop(threads);
     Server server;
     const cpp_int& e = server.get_public_key();
     const cpp_int& n = server.get_n();
 
     vector<std::thread> threads;
     for (size_t i = 0; i < numUsers; ++i) {
-        threads.emplace_back(send_messages, User{e, n}, ref(server), i);
+        User user{e, n};
+        // We move the user to prevent thread from caling the deleted copy constructor.
+        //   We cannot pass by reference because the local user will go out of scope.
+        // We pass server by reference to prevent thread from calling the deleted copy
+        //   constructor. We cannot move it because we still need the server for future calls.
+        threads.emplace_back(thread{send_messages, move(user), ref(server), i});
     }
-
-    // User user{e, n};
-    // user.send_msg("Hello", server);
 
     for (auto& thr : threads) {
         thr.join();
