@@ -1,14 +1,13 @@
 #include "graph.hpp"
-#include "../testing_program/testing-program.hpp"
-#include <string>
-#include <unordered_set>
-#include <unordered_map>
 #include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include "../testing_program/testing-program.hpp"
 
 using namespace std;
 
-bool oneLetterDifferent(const string& s, const string& t)
-{
+bool oneLetterDifferent(const string& s, const string& t) {
   size_t size = s.size();
   if (size != t.size()) {
     return false;
@@ -36,11 +35,11 @@ bool hasNoneOf(const string& s, char c) {
   return true;
 }
 
-// Because template is lazily instantiated, but we want to explicitly test everything
+// Because template is lazily instantiated, but we want to explicitly test
+// everything
 template class Graph<string, oneLetterDifferent>;
 
-void test_oneLetterDifferent()
-{
+void test_oneLetterDifferent() {
   TestingProgram tester{"One Letter Different"};
 
   affirm(oneLetterDifferent("make", "mate"));
@@ -48,8 +47,7 @@ void test_oneLetterDifferent()
   affirm(!oneLetterDifferent("meat", "mate"));
 }
 
-void test_defaultConstructor()
-{
+void test_defaultConstructor() {
   TestingProgram tester{"Default Constructor"};
 
   Graph<string, oneLetterDifferent> g;
@@ -58,8 +56,7 @@ void test_defaultConstructor()
   TestingProgram::printResults();
 }
 
-void test_copyConstructor()
-{
+void test_copyConstructor() {
   TestingProgram tester{"Copy Constructor"};
 
   Graph<string, oneLetterDifferent> g;
@@ -68,13 +65,12 @@ void test_copyConstructor()
   h.addVertex("bay");
 
   affirm(g.getRelatives("bay") == nullptr);
-  affirm(*(h.getRelatives("bay")) == unordered_set<string>( {"day"} ));
+  affirm(*(h.getRelatives("bay")) == unordered_set<string>({"day"}));
 
   TestingProgram::printResults();
 }
 
-void test_moveConstructor()
-{
+void test_moveConstructor() {
   TestingProgram tester{"Move Constructor"};
 
   Graph<string, oneLetterDifferent> g;
@@ -82,13 +78,12 @@ void test_moveConstructor()
   Graph<string, oneLetterDifferent> h{std::move(g)};
   h.addVertex("bay");
 
-  affirm(*(h.getRelatives("bay")) == unordered_set<string>( {"day"} ));
+  affirm(*(h.getRelatives("bay")) == unordered_set<string>({"day"}));
 
   TestingProgram::printResults();
 }
 
-void test_assignmentOperator()
-{
+void test_assignmentOperator() {
   TestingProgram tester{"Assignment Operator"};
 
   Graph<string, oneLetterDifferent> g;
@@ -98,13 +93,12 @@ void test_assignmentOperator()
   h.addVertex("bay");
 
   affirm(g.getRelatives("bay") == nullptr);
-  affirm(*(h.getRelatives("bay")) == unordered_set<string>( {"day"} ));
+  affirm(*(h.getRelatives("bay")) == unordered_set<string>({"day"}));
 
   TestingProgram::printResults();
 }
 
-void test_addVertex_lvalue()
-{
+void test_addVertex_lvalue() {
   TestingProgram tester{"Add Vertex lValue"};
 
   string str1 = "make";
@@ -112,7 +106,7 @@ void test_addVertex_lvalue()
   string str3 = "mite";
   string str4 = "cool";
   Graph<string, oneLetterDifferent> g;
-  
+
   g.addVertex(str1);
   g.addVertex(str2);
   g.addVertex(str3);
@@ -128,8 +122,7 @@ void test_addVertex_lvalue()
   TestingProgram::printResults();
 }
 
-void test_addVertex_lvalue_noAdjFcn()
-{
+void test_addVertex_lvalue_noAdjFcn() {
   TestingProgram tester{"Add Vertex lValue no adj fcn"};
 
   string str1 = "make";
@@ -137,7 +130,7 @@ void test_addVertex_lvalue_noAdjFcn()
   string str3 = "mite";
   string str4 = "cool";
   Graph<string> g;
-  
+
   g.addVertex(str1);
   g.addVertex(str2);
   g.addVertex(str3);
@@ -153,8 +146,7 @@ void test_addVertex_lvalue_noAdjFcn()
   TestingProgram::printResults();
 }
 
-void test_addVertex_rvalue()
-{
+void test_addVertex_rvalue() {
   TestingProgram tester{"Add Vertex rValue"};
 
   string str1 = "make";
@@ -162,7 +154,7 @@ void test_addVertex_rvalue()
   string str3 = "mite";
   string str4 = "cool";
   Graph<string, oneLetterDifferent> g;
-  
+
   g.addVertex("make");
   g.addVertex("mate");
   g.addVertex("mite");
@@ -178,12 +170,11 @@ void test_addVertex_rvalue()
   TestingProgram::printResults();
 }
 
-void test_addVertex_rvalue_noAdjFcn()
-{
+void test_addVertex_rvalue_noAdjFcn() {
   TestingProgram tester{"Add Vertex rValue no adj fcn"};
 
   Graph<string> g;
-  
+
   g.addVertex("a");
   g.addVertex("b");
   g.addVertex("c");
@@ -199,8 +190,7 @@ void test_addVertex_rvalue_noAdjFcn()
   TestingProgram::printResults();
 }
 
-void test_addEdge()
-{
+void test_addEdge() {
   TestingProgram tester{"Add Edge"};
 
   Graph<string> g;
@@ -225,8 +215,7 @@ void test_addEdge()
   TestingProgram::printResults();
 }
 
-void test_removeVertex()
-{
+void test_removeVertex() {
   TestingProgram tester{"Remove Vertex"};
 
   Graph<string, oneLetterDifferent> g;
@@ -248,8 +237,7 @@ void test_removeVertex()
   TestingProgram::printResults();
 }
 
-void test_removeEdge()
-{
+void test_removeEdge() {
   TestingProgram tester{"Remove Edge"};
 
   Graph<string, oneLetterDifferent> g;
@@ -276,8 +264,7 @@ void test_removeEdge()
   TestingProgram::printResults();
 }
 
-void test_getRelatives()
-{
+void test_getRelatives() {
   TestingProgram tester{"Get Relatives"};
 
   Graph<string, oneLetterDifferent> g;
@@ -292,17 +279,16 @@ void test_getRelatives()
   g.addVertex(str4);
 
   affirm(g.size() == 4);
-  affirm(*(g.getRelatives(str1)) == unordered_set<string>( {str2, str4} ));
-  affirm(*(g.getRelatives(str2)) == unordered_set<string>( {str1, str3, str4} ));
-  affirm(*(g.getRelatives(str3)) == unordered_set<string>( {str2} ));
-  affirm(*(g.getRelatives(str4)) == unordered_set<string>( {str1, str2} ));
+  affirm(*(g.getRelatives(str1)) == unordered_set<string>({str2, str4}));
+  affirm(*(g.getRelatives(str2)) == unordered_set<string>({str1, str3, str4}));
+  affirm(*(g.getRelatives(str3)) == unordered_set<string>({str2}));
+  affirm(*(g.getRelatives(str4)) == unordered_set<string>({str1, str2}));
   affirm(g.getRelatives("absent") == nullptr);
 
   TestingProgram::printResults();
 }
 
-void test_getRelativeCount()
-{
+void test_getRelativeCount() {
   TestingProgram tester{"Get Relative Count"};
 
   Graph<string, oneLetterDifferent> g;
@@ -325,8 +311,7 @@ void test_getRelativeCount()
   TestingProgram::printResults();
 }
 
-void test_adajacent()
-{
+void test_adajacent() {
   TestingProgram tester{"Adjacent"};
 
   Graph<int> g;
@@ -348,8 +333,7 @@ void test_adajacent()
   TestingProgram::printResults();
 }
 
-void test_contains()
-{
+void test_contains() {
   TestingProgram tester{"Contains"};
 
   Graph<string, oneLetterDifferent> g;
@@ -363,8 +347,7 @@ void test_contains()
   TestingProgram::printResults();
 }
 
-void test_getShortestPath()
-{
+void test_getShortestPath() {
   TestingProgram tester{"Get Shortest Path"};
 
   Graph<string, oneLetterDifferent> g;
@@ -375,7 +358,7 @@ void test_getShortestPath()
   string str4 = "cut";
   string str5 = "but";
   string str6 = "gut";
-  
+
   g.addVertex(str1);
   g.addVertex(str2);
   g.addVertex(str3);
@@ -383,16 +366,16 @@ void test_getShortestPath()
   g.addVertex(str5);
   g.addVertex(str6);
 
-  affirm( g.getShortestPath("day", "cut") 
-      == forward_list<string>( {"day", "bay", "buy", "but", "cut"} ));
-  affirm( g.getShortestPath("cut", "gut") == forward_list<string>( {"cut", "gut"} ));
-  affirm( g.getShortestPath("but", "but") == forward_list<string>( {"but"} ));
+  affirm(g.getShortestPath("day", "cut") ==
+         forward_list<string>({"day", "bay", "buy", "but", "cut"}));
+  affirm(g.getShortestPath("cut", "gut") ==
+         forward_list<string>({"cut", "gut"}));
+  affirm(g.getShortestPath("but", "but") == forward_list<string>({"but"}));
 
   TestingProgram::printResults();
 }
 
-void test_getShortestPath_withCondition()
-{
+void test_getShortestPath_withCondition() {
   TestingProgram tester{"Get Shortest Path with condition"};
 
   Graph<string, oneLetterDifferent> g;
@@ -405,7 +388,7 @@ void test_getShortestPath_withCondition()
   string str6 = "cans";
   string str7 = "bars";
   string str8 = "bans";
-  
+
   g.addVertex(str1);
   g.addVertex(str2);
   g.addVertex(str3);
@@ -415,16 +398,16 @@ void test_getShortestPath_withCondition()
   g.addVertex(str7);
   g.addVertex(str8);
 
-  affirm( g.getShortestPath("hare", "cans") 
-      == forward_list<string>( {"hare", "care", "cane", "cans"} ));
-  affirm( g.getShortestPath("hare", "cans", hasNoneOf, 'e') 
-      == forward_list<string>( {"hare", "hard", "bard", "bars", "bans", "cans"} ));
+  affirm(g.getShortestPath("hare", "cans") ==
+         forward_list<string>({"hare", "care", "cane", "cans"}));
+  affirm(
+      g.getShortestPath("hare", "cans", hasNoneOf, 'e') ==
+      forward_list<string>({"hare", "hard", "bard", "bars", "bans", "cans"}));
 
   TestingProgram::printResults();
 }
 
-void test_size()
-{
+void test_size() {
   TestingProgram tester{"Size"};
 
   Graph<string, oneLetterDifferent> g;
@@ -435,7 +418,7 @@ void test_size()
   string str4 = "cut";
   string str5 = "but";
   string str6 = "gut";
-  
+
   g.addVertex(str1);
   g.addVertex(str2);
   g.addVertex(str3);
@@ -446,8 +429,7 @@ void test_size()
   TestingProgram::printResults();
 }
 
-void test_numEdges()
-{
+void test_numEdges() {
   TestingProgram tester{"Num Edges"};
 
   Graph<int> g;
@@ -466,7 +448,7 @@ void test_numEdges()
   g.addEdge(a, b);
   affirm(g.numEdges() == 1);
   g.addEdge(b, c);
-  g.addEdge(b, c); // repeat
+  g.addEdge(b, c);  // repeat
   affirm(g.numEdges() == 2);
   g.addEdge(c, d);
   affirm(g.numEdges() == 3);
@@ -479,10 +461,9 @@ void test_numEdges()
   TestingProgram::printResults();
 }
 
-void test_begin()
-{
+void test_begin() {
   TestingProgram tester{"Begin"};
-  
+
   Graph<string> g;
   affirm(g.begin() == g.end());
 
@@ -492,8 +473,7 @@ void test_begin()
   TestingProgram::printResults();
 }
 
-void test_end()
-{
+void test_end() {
   TestingProgram tester{"End"};
 
   Graph<string> g;
@@ -517,7 +497,7 @@ void test_IterIncrement() {
   string str2 = "day";
   string str3 = "buy";
   string str4 = "cut";
-  
+
   g.addVertex(str1);
   g.addVertex(str2);
   g.addVertex(str3);
@@ -531,7 +511,7 @@ void test_IterIncrement() {
   affirm(increments == g.size());
 
   TestingProgram::printResults();
-}  
+}
 
 void test_IterDereference() {
   TestingProgram tester{"Iterator *"};
@@ -544,7 +524,7 @@ void test_IterDereference() {
   string str4 = "cut";
   string str5 = "but";
   string str6 = "gut";
-  
+
   g.addVertex(str1);
   g.addVertex(str2);
   g.addVertex(str3);
@@ -557,10 +537,11 @@ void test_IterDereference() {
     traversed.insert(iter->first);
     affirm(iter->second == *g.getRelatives(iter->first));
   }
-  affirm(traversed == unordered_set<string>( {"bay", "day", "buy", "cut", "but", "gut"}));
+  affirm(traversed ==
+         unordered_set<string>({"bay", "day", "buy", "cut", "but", "gut"}));
 
   TestingProgram::printResults();
-}  
+}
 
 void test_IterEquals() {
   TestingProgram tester{"Iterator =="};
@@ -570,20 +551,20 @@ void test_IterEquals() {
   string str1 = "bay";
   string str2 = "day";
   string str3 = "buy";
-  
+
   g.addVertex(str1);
   g.addVertex(str2);
   g.addVertex(str3);
 
   auto iter1 = g.begin();
   auto iter2 = g.begin();
-  
+
   affirm(iter1 == iter2);
   affirm(++iter1 == ++iter2);
   affirm(g.end() == g.end());
 
   TestingProgram::printResults();
-}  
+}
 
 void test_IterNotEquals() {
   TestingProgram tester{"Iterator !="};
@@ -593,23 +574,22 @@ void test_IterNotEquals() {
   string str1 = "bay";
   string str2 = "day";
   string str3 = "buy";
-  
+
   g.addVertex(str1);
   g.addVertex(str2);
   g.addVertex(str3);
 
   auto iter1 = g.begin();
   auto iter2 = ++g.begin();
-  
+
   affirm(iter1 != iter2);
   affirm(++iter1 != ++iter2);
   affirm(iter1 != g.end());
 
   TestingProgram::printResults();
-} 
+}
 
-int main()
-{
+int main() {
   test_oneLetterDifferent();
   test_defaultConstructor();
   test_copyConstructor();

@@ -7,5 +7,4 @@
 std::vector<std::string> get_all_ips(const char* domain);
 std::string get_ip(const char* domain);
 
-
 #endif

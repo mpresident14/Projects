@@ -1,14 +1,13 @@
-#include "graph.hpp"
-#include "../testing_program/testing-program.hpp"
-#include <string>
 #include <fstream>
-#include <vector>
 #include <locale>
+#include <string>
+#include <vector>
+#include "../testing_program/testing-program.hpp"
+#include "graph.hpp"
 
 using namespace std;
 
-bool oneLetterDifferent(const string& s, const string& t)
-{
+bool oneLetterDifferent(const string& s, const string& t) {
   size_t size = s.size();
   if (size != t.size()) {
     return false;
@@ -36,8 +35,7 @@ bool hasNoneOf(const string& s, char c) {
   return true;
 }
 
-void printPath(forward_list<string> path)
-{
+void printPath(forward_list<string> path) {
   if (path.empty()) {
     cout << "NO PATHS" << endl;
     return;
@@ -50,8 +48,7 @@ void printPath(forward_list<string> path)
   cout << endl;
 }
 
-int main(int argc, char** args)
-{
+int main(int argc, char** args) {
   if (argc != 3) {
     printf("Enter 2 words.");
     return 1;
@@ -78,11 +75,11 @@ int main(int argc, char** args)
   ifstream infile("dictionary.txt");
   string word;
 
-  while(getline(infile, word)) {
+  while (getline(infile, word)) {
     // word has an extra '\r' character (carriage return)
     if (word.size() == first.size() + 1) {
       g.addVertex(word.substr(0, word.size() - 1));
-    }  
+    }
   }
 
   // Print the shortest path with and without an E
@@ -90,6 +87,6 @@ int main(int argc, char** args)
   printPath(g.getShortestPath(first, second));
   cout << "No Es in any words along path: " << endl;
   printPath(g.getShortestPath(first, second, hasNoneOf, 'E'));
-  
+
   return 0;
 }

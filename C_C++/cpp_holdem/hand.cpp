@@ -3,13 +3,11 @@
 using namespace std;
 
 Hand::Hand(HandType handType, unsigned long rank, unsigned long otherCards)
-  : handType_{handType}, rank_{rank}, otherCards_{otherCards}
-{
+    : handType_{handType}, rank_{rank}, otherCards_{otherCards} {
   // Nothing to do
 }
 
-short Hand::compareTo(const Hand& other) const
-{
+short Hand::compareTo(const Hand& other) const {
   if (handType_ != other.handType_) {
     return handType_ < other.handType_ ? -1 : 1;
   }
@@ -23,4 +21,4 @@ short Hand::compareTo(const Hand& other) const
   }
 
   return 0;
-} 
+}
