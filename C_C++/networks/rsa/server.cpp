@@ -15,7 +15,7 @@ Server::Server()
    cpp_int p{P};
    cpp_int q{Q};
    n_ = p * q;
-   array<cpp_int, 2> keys = generate_keys((p - 1) * (q - 1));
+   array<cpp_int, 2> keys{generate_keys((p - 1) * (q - 1))};
    d_ = move(keys[0]);
    e_ = move(keys[1]);
 }
@@ -25,10 +25,15 @@ void Server::recv_msg(const vector<cpp_int>& encrypted_msg)
     buffer_.push(encrypted_msg);
 }
 
+void Server::recv_msg(vector<cpp_int>&& encrypted_msg)
+{
+    buffer_.push(move(encrypted_msg));
+}
+
 void Server::process_msgs()
 {
     vector<cpp_int> msg;
-    while (!is_stopped_.load()) {
+    while (!is_stopped_) {
         if (buffer_.try_pull(msg) == boost::concurrent::queue_op_status::success) {
             cout << "Server received: \"" << decrypt_msg(msg, d_, n_) << "\"" << endl;
         }
@@ -52,6 +57,6 @@ const cpp_int& Server::get_n()
 
 void Server::stop()
 {
-    is_stopped_.store(true);
+    is_stopped_ = true;
     thr_.join();
 }

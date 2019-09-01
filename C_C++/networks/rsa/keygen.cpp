@@ -19,7 +19,7 @@ unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
  * Returns cpp_int(-1) if (D, phi(N)) != 1 
  * Undefined behavior if d <= 1 or phi <= 1
  */
-cpp_int findE(cpp_int d, cpp_int phi)
+cpp_int find_e(cpp_int d, cpp_int phi)
 {
     // Going to lose phi's value while doing Euclidean Alg, and might need it later.
     cpp_int phi_copy{phi};
@@ -43,10 +43,10 @@ cpp_int findE(cpp_int d, cpp_int phi)
     /* Euclidean alg: (a, b) = (b, a mod b). Store quotients in stack */
     stack<cpp_int> quotients;
     while (*b != 0){
-        quotients.emplace(*a / *b);
+        quotients.push(*a / *b);
         *modptr = *a % *b;
 
-        // Reuse these 3 cpp_ints
+        // Update and reuse these 3 cpp_ints
         cpp_int* tmp = a;
         a = b;
         b = modptr;
@@ -66,7 +66,7 @@ cpp_int findE(cpp_int d, cpp_int phi)
     // To figure out which # goes with a and which goes with b (see below)
     bool even_size = quotients.size() % 2 == 0; 
 
-    // Accumulate x and y by adding -quotient on top of stack times x or y
+    // Accumulate x and y in alternating fashion until we use all the quotients.
     cpp_int x{1};
     cpp_int y{-quotients.top()};
 
@@ -92,11 +92,16 @@ cpp_int findE(cpp_int d, cpp_int phi)
     // 2) even & phiGreater -> phi(y) + dx
     // 3) odd & dGreater -> dx + phi(y)
     // 4) odd & phiGreater -> phi(x) + dy
-    // Since 1) == 4) & 2) == 3), we can just xor even and dGreater
-    // to find out if e is x or y.
+    // Since 1) == 4) & 2) == 3), we can just xor even and d_greater
+    // to find out if x or y is d's partner. If y is d's partner,
+    // we need to add phi to make it positive:
+    // d(y)   + phi(x)  = 1
+    // d(phi) + phi(-d) = 0
+    // ---------------------------
+    // d(y + phi) + phi(x - d) = 1 
 
-    bool e_is_x = even_size ^ d_greater;
-    if (e_is_x) {
+    bool x_next_to_d = even_size ^ d_greater;
+    if (x_next_to_d) {
         return x;
     }
     return y + phi_copy;
@@ -108,11 +113,12 @@ array<cpp_int, 2> generate_keys(const cpp_int& phi)
     generator512 gen{seed};
 
     cpp_int d{gen()};
-    cpp_int e{findE(d, phi)};
+    cpp_int e{find_e(d, phi)};
 
+    // Keep trying until we get gcd(d, phi) = 1
     while (e == FAIL) {
         d = gen();
-        e = findE(d, phi);
+        e = find_e(d, phi);
     }
 
     return array<cpp_int, 2> {{move(d), move(e)}};
