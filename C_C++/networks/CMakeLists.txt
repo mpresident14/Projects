@@ -21,5 +21,5 @@ include_directories("${PROJECT_SOURCE_DIR}")
 
 add_executable(simple_nslookup simple_nslookup.c)
 add_executable(dns dnsquery.cpp maindns.cpp)
-add_executable(my_traceroute dnsquery.cpp my_traceroute.cpp)
+add_executable(my_traceroute netutils.cpp dnsquery.cpp my_traceroute.cpp)
 add_executable(port_scan dnsquery.cpp netutils.cpp port_scan.cpp)

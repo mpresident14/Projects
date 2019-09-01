@@ -1,4 +1,5 @@
 #include "my_traceroute.hpp"
+#include "netutils.hpp"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -37,7 +38,6 @@ int ping(
     struct ip_icmp& recv_packet,
     int ttl);
 void fill_icmp_header(struct icmphdr* icmp_header);
-unsigned short in_cksum(unsigned short *ptr, int nbytes);
 
 void run_traceroute(const char* server)
 {
@@ -186,39 +186,6 @@ void fill_icmp_header(struct icmphdr* icmp_header)
 
   icmp_header->checksum = 
       in_cksum((unsigned short *) icmp_header, ICMP_HDR_SIZE);
-}
-
-/* Compute checksum for ICMP header */
-unsigned short in_cksum(unsigned short *ptr, int nbytes)
-{
-  long sum;   /* assumes long == 32 bits */
-  u_short oddbyte;
-  u_short answer; /* assumes u_short == 16 bits */
-  /*
-   * Our algorithm is simple, using a 32-bit accumulator (sum),
-   * we add sequential 16-bit words to it, and at the end, fold back
-   * all the carry bits from the top 16 bits into the lower 16 bits.
-   */
-  sum = 0;
-  while (nbytes > 1)
-    {
-      sum += *ptr++;
-      nbytes -= 2;
-    }
-  /* mop up an odd byte, if necessary */
-  if (nbytes == 1)
-    {
-      oddbyte = 0;    /* make sure top half is zero */
-      *((u_char *) & oddbyte) = *(u_char *) ptr;  /* one byte only */
-      sum += oddbyte;
-    }
-  /*
-   * Add back carry outs from top 16 bits to low 16 bits.
-   */
-  sum = (sum >> 16) + (sum & 0xffff); /* add high-16 to low-16 */
-  sum += (sum >> 16);   /* add carry */
-  answer = ~sum;    /* ones-complement, then truncate to 16 bits */
-  return (answer);
 }
 
 int main(int argc, char** argv)
