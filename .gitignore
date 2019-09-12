@@ -1,0 +1,11 @@
+# Extensionless executables
+*
+!*.*
+!*/
+
+*.o
+*.exe
+
+# CMake
+bin/
+build/

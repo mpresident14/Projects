@@ -13,16 +13,13 @@ size_t TestingProgram::totalTests_ = 0;
 bool TestingProgram::alreadyMarkedFailure_ = false;
 
 // Constructor
-TestingProgram::TestingProgram(string name)
-    :testName_{name}
-{
-    // Reset Individual test parameters when a new test is created
-    fails_ = 0;
-    totalChecks_ = 0;
-    alreadyMarkedFailure_ = false;
-    // Increment total number of tests
-    ++totalTests_;
-    // Print the test name
-    cerr << testName_ << endl;
+TestingProgram::TestingProgram(string name) : testName_{name} {
+  // Reset Individual test parameters when a new test is created
+  fails_ = 0;
+  totalChecks_ = 0;
+  alreadyMarkedFailure_ = false;
+  // Increment total number of tests
+  ++totalTests_;
+  // Print the test name
+  cerr << testName_ << endl;
 }
-
