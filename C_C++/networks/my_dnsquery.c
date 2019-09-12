@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
 	/* Parse domain name into dns question format
 	 * Sections separated by dots in domain
-	 * Format is ength of section + section for each section
+	 * Format is length of section + section for each section
 	 * Terminate with null byte
 	 * Example: www.stanford.edu -> 03 (www) 08 (stanford) 03 edu 00
 	 */
@@ -168,8 +168,6 @@ int main(int argc, char** argv)
 		}
 		buf_index += ntohs(*length);		
 	}
-
-
 
 	free(data);
 	return 0;

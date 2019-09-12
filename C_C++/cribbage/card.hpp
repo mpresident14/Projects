@@ -16,8 +16,6 @@ enum Suit
 
 class Card{
     public:
-        
-
         Card() = delete;
         Card(size_t value, Suit suit);
         std::ostream& print(std::ostream& out) const;
