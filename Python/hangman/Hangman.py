@@ -6,15 +6,7 @@ def listToString(L):
         S = ''
         for x in L:
             S += str(x)
-        return S
-
-def viableWord(word, letterPlaces):
-    """returns True if word is a possible solution to LoL letterPlaces"""
-    for i in range(len(letterPlaces)):
-        if letterPlaces[i][1] != word[letterPlaces[i][0]]:
-            return False
-    return True
-    
+        return S  
     
 class Hangman:
     """datatype representing an AI Hangman solver"""
@@ -23,14 +15,14 @@ class Hangman:
         """constructor"""        
         self.numLetters = numLetters
         self.currentBoard = ['_'] * numLetters
-        self.usedLetters = []
+        self.wrongLetters = set()
         self.unusedLetters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
         # Grab list of all words
         f = open('Dictionary.txt')
         text = f.read()
         f.close()
-        self.wordList = filter(lambda word: len(word) == self.numLetters, text.split())
+        self.wordList = list(filter(lambda word: len(word) == self.numLetters, text.split()))
 
     def __repr__(self):
         """string representation for Hangman object"""
@@ -43,7 +35,6 @@ class Hangman:
 
         return S
     
-
     def inputLetter(self, letter, L):
         """input a correctly guessed letter into the correct spaces of list L"""
         if L != []:           
@@ -52,52 +43,51 @@ class Hangman:
                 self.currentBoard[x] = letter  
 
     
-    def findPossibleWords(self):
-        """return a list of all words that fit parameters of the string currentBoard"""
-        numLetters = self.numLetters
-        currentBoard = self.currentBoard
+    def filterPossibleWords(self):
+        """return a list of all words that fit parameters of the string currentBoard"""       
+        filledInSpaces = []
+        for i in range(len(self.currentBoard)):
+            if self.currentBoard[i] != '_':
+                filledInSpaces.append( (i, self.currentBoard[i]) )
         
-        letterPlaces = []
-        for i in range(len(currentBoard)):
-            if currentBoard[i] != '_':
-                letterPlaces += [[i, currentBoard[i]]]
+        self.wordList = list(filter(lambda word: self.viableWord(word, filledInSpaces), self.wordList))
 
-        # Filter list to words of same length
-        sameLengthWords = []
-        for word in self.wordList:
-            if len(word) == numLetters:
-                sameLengthWords += [word]
+    def viableWord(self, word, filledInSpaces):
+        """returns True if word is a possible solution to filledInSpaces.
+        param filledInSpaces : List of (index, letter) representing filled in spaces"""
+        
+        # Check if it fits blanks
+        for (index, letter) in filledInSpaces:
+            if letter != word[index]:
+                return False
 
-        # Now filter sameLengthWords based on currentBoard
-        possibleWords = []
-        for word in sameLengthWords:
-            if viableWord(word, letterPlaces) == True:
-                possibleWords += [word]
+        # Check if it fits unused
+        for letter in word:
+            if letter in self.wrongLetters:
+                return False
 
-        if possibleWords:
-            print(possibleWords)
-        else:
-            print("EMPTY")
-        return possibleWords
+        return True
 
     def nextLetter(self):
         """returns most likely next letter choice based on currentBoard
         and list L of used letters"""
-        possibleWords = self.findPossibleWords()
-        currentBoard = self.currentBoard
+        self.filterPossibleWords()
+        print(self.wordList)
         
         letterCount = len(self.unusedLetters) * [0]
 
         # Count the number of words each letters appears in
-        for word in possibleWords:
+        for word in self.wordList:
             for i in range(len(self.unusedLetters)):
-                if self.unusedLetters[i] not in currentBoard and self.unusedLetters[i] in word:  # don't count letters already discovered
+                # Don't count letters already discovered
+                if self.unusedLetters[i] not in self.currentBoard and self.unusedLetters[i] in word:
                     letterCount[i] += 1
         
         # Determine which letter appeared in the most words
         highCount = max(letterCount)
         highCountIndexes = []
         
+        # Gather all the letters that tied for the highest count
         for j in range(len(letterCount)):
             if letterCount[j] == highCount:
                 highCountIndexes += [j]
@@ -107,7 +97,6 @@ class Hangman:
 
         chosenLetter = self.unusedLetters[choice]
         self.unusedLetters.remove(chosenLetter)
-        self.usedLetters.append(chosenLetter)
         return chosenLetter
 
 def playAgainstComputer(numLetters):
@@ -121,12 +110,13 @@ def playAgainstComputer(numLetters):
         letterPositions = [int(x) for x in input().split()]
 
         if letterPositions == []:
+            h.wrongLetters.add(letter)
             strikes += 1
             
         h.inputLetter(letter, letterPositions)
         print(h)
         print('\n')
-        print(h.usedLetters)
+        print(h.wrongLetters)
         print('Strikes:', strikes)
 
         count = 0
