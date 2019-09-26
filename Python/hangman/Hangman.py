@@ -72,8 +72,7 @@ class Hangman:
         """returns most likely next letter choice based on currentBoard
         and list L of used letters"""
         self.filterPossibleWords()
-        print(self.wordList)
-        
+         
         letterCount = len(self.unusedLetters) * [0]
 
         # Count the number of words each letters appears in
