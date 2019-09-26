@@ -23,7 +23,14 @@ class Hangman:
         """constructor"""        
         self.numLetters = numLetters
         self.currentBoard = ['_'] * numLetters
-        self.data = ['_'] * numLetters
+        self.usedLetters = []
+        self.unusedLetters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+
+        # Grab list of all words
+        f = open('Dictionary.txt')
+        text = f.read()
+        f.close()
+        self.wordList = filter(lambda word: len(word) == self.numLetters, text.split())
 
     def __repr__(self):
         """string representation for Hangman object"""
@@ -32,7 +39,7 @@ class Hangman:
         S += 3*'\n'
         S += '           '
         for i in range(numLetters):
-            S += self.data[i] + ' '
+            S += self.currentBoard[i] + ' '
 
         return S
     
@@ -42,8 +49,7 @@ class Hangman:
         if L != []:           
         
             for x in L:
-                self.data[x] = letter  
-                self.currentBoard[x] = letter 
+                self.currentBoard[x] = letter  
 
     
     def findPossibleWords(self):
@@ -55,49 +61,38 @@ class Hangman:
         for i in range(len(currentBoard)):
             if currentBoard[i] != '_':
                 letterPlaces += [[i, currentBoard[i]]]
-        
-        # Grab list of all words
-        f = open('Dictionary.txt')
-        text = f.read()
-        f.close()
-        wordList = text.split()
 
         # Filter list to words of same length
         sameLengthWords = []
-        for word in wordList:
+        for word in self.wordList:
             if len(word) == numLetters:
                 sameLengthWords += [word]
 
-       
         # Now filter sameLengthWords based on currentBoard
         possibleWords = []
         for word in sameLengthWords:
             if viableWord(word, letterPlaces) == True:
                 possibleWords += [word]
 
+        if possibleWords:
+            print(possibleWords)
+        else:
+            print("EMPTY")
         return possibleWords
 
-    def nextLetter(self, L):
+    def nextLetter(self):
         """returns most likely next letter choice based on currentBoard
         and list L of used letters"""
         possibleWords = self.findPossibleWords()
         currentBoard = self.currentBoard
-
-        # Remove used letters from list
-        allLetters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-
-        for i in range(len(L)):
-            if L[i] in allLetters:
-                allLetters.remove(L[i])
         
-        letterCount = len(allLetters)*[0]
+        letterCount = len(self.unusedLetters) * [0]
 
         # Count the number of words each letters appears in
         for word in possibleWords:
-            for i in range(len(allLetters)):
-                if allLetters[i] not in currentBoard:  # don't count letters already discovered
-                    if allLetters[i] in word:
-                        letterCount[i] += 1
+            for i in range(len(self.unusedLetters)):
+                if self.unusedLetters[i] not in currentBoard and self.unusedLetters[i] in word:  # don't count letters already discovered
+                    letterCount[i] += 1
         
         # Determine which letter appeared in the most words
         highCount = max(letterCount)
@@ -110,18 +105,19 @@ class Hangman:
         # Break any ties randomly
         choice = random.choice(highCountIndexes)
 
-        return allLetters[choice]
+        chosenLetter = self.unusedLetters[choice]
+        self.unusedLetters.remove(chosenLetter)
+        self.usedLetters.append(chosenLetter)
+        return chosenLetter
 
-def solve(numLetters):
+def playAgainstComputer(numLetters):
     h = Hangman(numLetters)
     print(h)
-    L = []
     count = 0
     strikes = 0
     while count != numLetters and strikes != 6:
-        letter = h.nextLetter(L)   
+        letter = h.nextLetter()   
         print(letter)        
-        L += [letter]
         letterPositions = [int(x) for x in input().split()]
 
         if letterPositions == []:
@@ -130,11 +126,11 @@ def solve(numLetters):
         h.inputLetter(letter, letterPositions)
         print(h)
         print('\n')
-        print(L)
+        print(h.usedLetters)
         print('Strikes:', strikes)
 
         count = 0
-        for x in h.data:
+        for x in h.currentBoard:
             if x != '_':
                 count += 1
     if strikes == 6:
@@ -147,9 +143,8 @@ if __name__ == "__main__":
         print("Input the length of the word the computer will guess.")
         sys.exit()
         
-    solve(int(sys.argv[1]))
+    playAgainstComputer(int(sys.argv[1]))
 
-        
 # TODO
 # don't always pick most common choice, pick a percentage of the time equivalent to commonness
 # dictionary only goes up to 8 letter words
