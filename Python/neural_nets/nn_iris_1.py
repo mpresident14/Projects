@@ -107,7 +107,8 @@ def train_model():
 
         # BACKPROPAGATION
         # Output layer
-        # using mean squared error, derivative is sum( (pred_y - actual_y)^2 )
+        # using mean squared error: sum( (pred_y - actual_y)^2 )
+        # derivative is 2 * (pred_y - actual_y)
         dLossDA2 = 2 * (probs - y) # n x 3    
         dA2DZ2 = softmax_deriv(z2) # n x 3
         dLossDZ2 = np.multiply(dLossDA2, dA2DZ2) # n x 3
