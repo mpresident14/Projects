@@ -6,6 +6,8 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <limits.h>
+#include <netdb.h>
 
 #include <bitset>
 #include <iostream>
@@ -13,50 +15,38 @@
 
 using namespace std;
 
-// Iterate through interface indices
-// For each index, get the name, then get its flags. If the device is up and not
-// the loopback interface, return its IP address.
+// Connect to arbitrary address and see which IP address the kernel uses
 in_addr_t get_my_ip() {
+
+  // Create socket
   int sd;
-  if ((sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-    handle_error("socket");
-    return -1;
-  }
-  struct ifreq ipreq;
-  int err;
-  int index = 1;
-  ipreq.ifr_ifindex = index;
-
-  // Get device name based on index
-  while ((err = ioctl(sd, SIOCGIFNAME, &ipreq)) != -1) {
-    // Get device flags based on device name
-    if (ioctl(sd, SIOCGIFFLAGS, &ipreq) == -1) {
-      handle_error("ioctl get flags");
-      close(sd);
-      continue;
-    }
-    uint16_t flags = ipreq.ifr_flags;
-    if ((flags & IFF_UP) && !(flags & IFF_LOOPBACK)) {
-      break;
-    }
-    ipreq.ifr_ifindex = ++index;
-  }
-
-  if (err == -1) {
-    handle_error("ioctl get if name");
-    close(sd);
+  if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    handle_error("socket1");
     return -1;
   }
 
-  // Get device IP address based on device name
-  if (ioctl(sd, SIOCGIFADDR, &ipreq) < 0) {
-    handle_error("ioctl");
-    close(sd);
+  struct sockaddr_in dns_addr;
+  dns_addr.sin_addr.s_addr = inet_addr("8.8.8.8"); // Google DNS addr
+  dns_addr.sin_family = AF_INET;
+  dns_addr.sin_port = 2353;                        // Random port
+
+  if (connect(sd, (const sockaddr*) &dns_addr, sizeof(struct sockaddr)) < 0) {
+    handle_error("connect");
+    return -1;
+  }
+
+  struct sockaddr_in my_addr;
+  socklen_t len;
+  if (getsockname(sd, (sockaddr*) &my_addr, &len) < 0) {
+    handle_error("getsockname");
     return -1;
   }
 
   close(sd);
-  return ((struct sockaddr_in *)&ipreq.ifr_addr)->sin_addr.s_addr;
+
+  char myip_str[INET_ADDRSTRLEN];
+  cout << "My IP address: " << inet_ntop(AF_INET, (const void *) &my_addr.sin_addr.s_addr, myip_str, INET_ADDRSTRLEN) << endl;
+  return my_addr.sin_addr.s_addr;
 }
 
 void handle_error(const char *fn) {

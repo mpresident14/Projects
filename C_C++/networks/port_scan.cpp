@@ -112,8 +112,8 @@ void port_scan(const char* server, u_short startport, u_short endport) {
   }
 
   struct cksumbuf cksumbuf;
-
   struct cksumbuf::tcp_pseudo* tcpps = &(cksumbuf.tcp_pseudo);
+
   tcpps->tps_src = get_my_ip();
   if (tcpps->tps_src == (in_addr_t)-1) {
     return handle_error("get_my_ip");

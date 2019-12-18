@@ -1,3 +1,6 @@
+# Create Makefile with "CC=$(which clang) CXX=$(which clang++) cmake . "
+# Then build executables with "make -j <threads>"
+
 # Specify the minimum version for CMake
 
 cmake_minimum_required(VERSION 2.8)
