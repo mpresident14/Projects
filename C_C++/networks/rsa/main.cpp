@@ -1,3 +1,5 @@
+// Compile with -lboost_system and -lpthread
+
 #include "server.hpp"
 #include "user.hpp"
 

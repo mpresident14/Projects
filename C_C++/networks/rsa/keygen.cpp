@@ -9,7 +9,7 @@
 using namespace std;
 
 using generator512 =
-    boost::random::independent_bits_engine<mt19937, 512, cpp_int>;
+    boost::random::independent_bits_engine<boost::mt19937, 512, cpp_int>;
 
 #define FAIL cpp_int(-1)
 

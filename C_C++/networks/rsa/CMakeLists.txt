@@ -12,13 +12,13 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 
 # Set compilation flags
 add_compile_options(-Wall)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -pthread")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 
 # The following folder will be included
 include_directories("${PROJECT_SOURCE_DIR}")
-include_directories("/usr/local/include/boost_1_71_0")
 
-# add_executable(main rsa_encrypter.cpp rsa_decrypter.cpp rsa_utils.cpp server.cpp user.cpp main.cpp)
-# add_executable(util keygen.cpp rsa_utils.cpp)
-# add_executable(keygen keygen.cpp)
+# Create executable
 add_executable(main rsa_utils.cpp keygen.cpp server.cpp user.cpp main.cpp)
+
+# Specify other library to link
+target_link_libraries(main boost_system pthread)
