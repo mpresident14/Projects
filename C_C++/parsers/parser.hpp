@@ -12,6 +12,7 @@ public:
     Parser(const std::function<std::optional<std::pair<T, std::string>>(const std::string&)>& parseFn);
     Parser(std::function<std::optional<std::pair<T, std::string>>(const std::string&)>&& parseFn);
     Parser(const T& obj);
+    Parser(T&& obj);
     ~Parser() = default;
     Parser(const Parser& other) = default;
     Parser(Parser&& other) = default;
@@ -20,7 +21,7 @@ public:
 
     /* Combinators */
     template<typename R>
-    Parser<R> andThen(std::function<Parser<R>(T&& obj)> pGenFn) const;
+    Parser<R> andThen(std::function<Parser<R>(T&& obj)>&& pGenFn) const;
     template<typename R>
     Parser<std::pair<T,R>> combine(const Parser<R>& next) const;
 

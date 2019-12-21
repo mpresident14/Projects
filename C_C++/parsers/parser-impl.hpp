@@ -32,6 +32,19 @@ Parser<T>::Parser(const T& obj)
 }
 
 template<typename T>
+Parser<T>::Parser(T&& obj)
+    : parseFn_{
+        // Using &obj results in wrong answer
+        [=, obj = move(obj)](const std::string& input)
+        {
+            return std::make_optional(std::make_pair(move(obj), input));
+        }
+    }
+{
+    
+}
+
+template<typename T>
 T Parser<T>::parse(const std::string& input) const
 {
     using namespace std;
@@ -57,7 +70,7 @@ T Parser<T>::parse(const std::string& input) const
 
 template<typename T>
 template<typename R>
-Parser<R> Parser<T>::andThen(std::function<Parser<R>(T&& obj)> pGenFn) const
+Parser<R> Parser<T>::andThen(std::function<Parser<R>(T&& obj)>&& pGenFn) const
 {
     using namespace std;
 
@@ -85,15 +98,22 @@ Parser<std::pair<T,R>> Parser<T>::combine(const Parser<R>& nextParser) const
 {
     using namespace std;
 
-    return andThen(
+    cout << "combine start" << endl;
+    auto p1 = andThen(
         function{[=](T&& obj1)
         {
             cout << "outer lambda start" << endl;
-            return nextParser.andThen(
-                function{[=](R&& obj2)
+            auto p2 = nextParser.andThen(
+                function{[obj1 = move(obj1)](R&& obj2)
                 {
                     cout << "inner lambda start" << endl;
-                    return Parser<pair<T,R>>{pair(obj1, obj2)};
+                    Parser<pair<T,R>> ppair{make_pair(move(obj1), move(obj2))};
+                    cout << "inner lambda end" << endl;
+                    return ppair;
                 }});
+            cout << "outer lambda end" << endl;
+            return p2;
         }});
+    cout << "combine end" << endl;
+    return p1;
 }
