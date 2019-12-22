@@ -19,7 +19,6 @@ public:
     
     Parser(const parse_fn_t&);
     Parser(parse_fn_t&&);
-    Parser(const T&);
     Parser(T&&);
     ~Parser() = default;
     Parser(const Parser&) = default;
@@ -36,7 +35,7 @@ public:
 
     T parse(input_t&) const;
 
-// private:
+private:
     parse_fn_t parseFn_;
 };
 

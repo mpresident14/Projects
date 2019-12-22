@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#define PRINT 0
+#define PRINT 1
 
 class Widget {
 public:
@@ -45,7 +45,7 @@ public:
 
     int getNum()
     {
-        return nums_.empty ? -1 : nums_[0];
+        return nums_.empty() ? -1 : nums_[0];
     }
 
     static Widget createWidget(char c) {

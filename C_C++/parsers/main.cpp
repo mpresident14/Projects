@@ -22,18 +22,14 @@ int main(int argc, char **argv)
             return make_optional(make_pair(Widget::createWidget(input[0]), input.substr(1)));
         }
     };
-
-    Parser<Widget> p1{parseFn};
    
-
     MovableFn<Parser<Widget>, Widget&&> m{
-        [=](Widget&& w){ 
+        [&](Widget&& w){ 
             return Parser<Widget>{parseFn}; 
         }
     };
 
-    // Parser<Widget> p2 = m(Widget{});
-
+    Parser<Widget> p1{parseFn};
     Parser<Widget> p2 = p1.andThen(move(m));
 
     try {
