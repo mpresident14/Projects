@@ -29,7 +29,7 @@ public:
 
     /* Combinators */
     template<typename R>
-    Parser<R> andThen(MovableFn<Parser<R>, T&&>&) const;
+    Parser<R> andThen(MovableFn<Parser<R>, T&&>) const;
 
     template<typename R>
     Parser<std::pair<T,R>> combine(const Parser<R>& nextParser) const;

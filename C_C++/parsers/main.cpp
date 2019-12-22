@@ -12,7 +12,8 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    Parser<Widget> p{
+    auto parseFn = 
+        MovableFn<std::optional<std::pair<Widget, std::string>>, const std::string&>{
         [](const string& input) -> optional<pair<Widget, string>> {
             if (input.empty()) {
                 return {};
@@ -22,16 +23,18 @@ int main(int argc, char **argv)
         }
     };
 
+    Parser<Widget> p1{parseFn};
+   
+
     MovableFn<Parser<Widget>, Widget&&> m{
-        [](Widget&& w){ 
-            cout << "movable fn" << endl;
-            return Parser<Widget> { Widget{"bill"} }; 
+        [=](Widget&& w){ 
+            return Parser<Widget>{parseFn}; 
         }
     };
 
     // Parser<Widget> p2 = m(Widget{});
 
-    Parser<Widget> p2 = p.andThen(m);
+    Parser<Widget> p2 = p1.andThen(move(m));
 
     try {
         Widget w = p2.parse(argv[1]);

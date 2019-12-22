@@ -43,7 +43,10 @@ public:
         return *this;
     };
 
-    int work(int n) const { return n + 3; };
+    int getNum()
+    {
+        return nums_.empty ? -1 : nums_[0];
+    }
 
     static Widget createWidget(char c) {
         Widget w;
