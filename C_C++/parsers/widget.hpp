@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+#define PRINT 0
+
 class Widget {
 public:
     Widget() { info("Default Constructor"); };
@@ -58,7 +60,11 @@ public:
 
 
  private:
-    void info(const char* msg) { std::cout << msg << ": " << this << std::endl; }
+    void info(const char* msg) 
+    { 
+        if (PRINT) 
+            std::cout << msg << ": " << this << std::endl; 
+    }
 
     std::vector<int> nums_;
 };
