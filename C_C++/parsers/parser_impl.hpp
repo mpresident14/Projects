@@ -63,8 +63,10 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
     using namespace std;
     
     return {
+        // Have to capture this by value in case we call andThen with a temporary Parser object (e.g.
+        // with chaining)
         // This must be mutable to call pGenFn's non-const () operator
-        [this, pGenFn = forward<Fn>(pGenFn)](input_t& input) mutable
+        [=, *this, pGenFn = forward<Fn>(pGenFn)](input_t& input) mutable
             -> result_t<is_parser_pt<std::invoke_result_t<Fn, T>>> {
                 // Run first parser
                 result_t<T> optResult = (*parseFn_)(input);
@@ -82,13 +84,16 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
     };
 }
 
+// TODO: expand this to use a tuple instead of a pair (for longer chains)
 template<typename T>
 template<typename R>
-Parser<std::pair<T,R>> Parser<T>::combine(Parser<R>& nextParser)
+Parser<std::pair<T,R>> Parser<T>::combine(const Parser<R>& nextParser) const
 {
     using namespace std;
 
     return andThen(
+        // Parser must be captured by value in case object to which nextParser refers goes out of 
+        // scope
         [nextParser](T&& obj1) {
             return nextParser.andThen(
                 // In order to forward obj1, the lambda must be mutable

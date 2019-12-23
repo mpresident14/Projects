@@ -47,37 +47,35 @@ int main(int argc, char **argv)
     //     cerr << e.what() << endl;
     // }
 
-    Parser<Widget> p1{parseFn};
-    Parser<int> p2{parseIntFn};
-    Parser<pair<Widget, int>> p3 = p1.combine(p2);
-    
-    try {
-        pair<Widget, int> widgets = p3.parse(argv[1]);
-        cout << widgets.first << " " << widgets.second << endl;
-    } catch (invalid_argument& e) {
-        cerr << e.what() << endl;
-    }
-
-    // **************TODO: THIS SEGFAULTS**************
+    //**************
     // Parser<Widget> p1{parseFn};
     // Parser<int> p2{parseIntFn};
-    // Parser<int> p3{parseIntFn};
-    // Parser<pair<pair<Widget, int>, int>> p4 = p1.combine(p2).combine(p3);
-    // cout << "h" << endl;
+    // Parser<pair<Widget, int>> p3 = p1.combine(p2);
     
     // try {
-    //     pair<pair<Widget, int>, int> widgets = p4.parse(argv[1]);
-    //     cout << "h" << endl;
-    //     cout << widgets.first.first << " " << widgets.first.second << " " << widgets.second << endl;
+    //     pair<Widget, int> widgets = p3.parse(argv[1]);
+    //     cout << widgets.first << " " << widgets.second << endl;
     // } catch (invalid_argument& e) {
     //     cerr << e.what() << endl;
     // }
     //**************
 
-    // try {
-    //     pair<char, char> chars = q.parse(argv[1]);
-    //     cout << chars.first << " "  << chars.second << endl;
-    // } catch (invalid_argument& e) {
-    //     cerr << e.what() << endl;
-    // }
+    Parser<Widget> p1{parseFn};
+    Parser<int> p2{parseIntFn};
+    Parser<Widget> p3{parseFn};
+    auto pCombo = p1.combine(p2).combine(p3);
+    try {
+        auto items = pCombo.parse(argv[1]);
+        cout << items.first.first << " " << items.first.second << " " << items.second << endl;
+    } catch (invalid_argument& e) {
+        cerr << e.what() << endl;
+    }
+
+
+    try {
+        auto chars = getSingleChar.combine(getSingleChar).combine(getSingleChar).parse(argv[1]);
+        cout << chars.first.first << " " << chars.first.second << " "  << chars.second << endl;
+    } catch (invalid_argument& e) {
+        cerr << e.what() << endl;
+    }
 }
