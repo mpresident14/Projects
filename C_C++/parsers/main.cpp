@@ -21,13 +21,14 @@ int main(int argc, char **argv)
             return make_optional(make_pair(Widget::createWidget(input[0]), input.substr(1)));
         };
 
+    int n = 6;
     auto parseIntFn = 
-        [](const string& input) -> optional<pair<int, string>> {
+        [&n](const string& input) -> optional<pair<int, string>> {
             if (input.empty()) {
                 return {};
             }
 
-            return make_optional(make_pair(6, input.substr(1)));
+            return make_optional(make_pair(n, input.substr(1)));
         };
    
     // auto pGen{
@@ -56,6 +57,22 @@ int main(int argc, char **argv)
     } catch (invalid_argument& e) {
         cerr << e.what() << endl;
     }
+
+    // **************TODO: THIS SEGFAULTS**************
+    // Parser<Widget> p1{parseFn};
+    // Parser<int> p2{parseIntFn};
+    // Parser<int> p3{parseIntFn};
+    // Parser<pair<pair<Widget, int>, int>> p4 = p1.combine(p2).combine(p3);
+    // cout << "h" << endl;
+    
+    // try {
+    //     pair<pair<Widget, int>, int> widgets = p4.parse(argv[1]);
+    //     cout << "h" << endl;
+    //     cout << widgets.first.first << " " << widgets.first.second << " " << widgets.second << endl;
+    // } catch (invalid_argument& e) {
+    //     cerr << e.what() << endl;
+    // }
+    //**************
 
     // try {
     //     pair<char, char> chars = q.parse(argv[1]);

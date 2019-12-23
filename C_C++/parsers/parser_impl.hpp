@@ -8,9 +8,10 @@ template<typename T>
 template<typename U>
 Parser<U> Parser<T>::createBasic(U&& obj)
 {
+    // Lambda is mutable so we can forward obj
     return Parser<U>{
-        [obj = std::forward<U>(obj)](input_t& input) {
-            return std::make_optional(std::make_pair(obj, input));
+        [obj = std::forward<U>(obj)](input_t& input) mutable {
+            return std::make_optional(std::make_pair(std::forward<U>(obj), input));
         }
     };
 }
@@ -62,7 +63,8 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
     using namespace std;
     
     return {
-        [this, pGenFn = forward<Fn>(pGenFn)](input_t& input) 
+        // This must be mutable to call pGenFn's non-const () operator
+        [this, pGenFn = forward<Fn>(pGenFn)](input_t& input) mutable
             -> result_t<is_parser_pt<std::invoke_result_t<Fn, T>>> {
                 // Run first parser
                 result_t<T> optResult = (*parseFn_)(input);
@@ -82,25 +84,16 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
 
 template<typename T>
 template<typename R>
-Parser<std::pair<T,R>> Parser<T>::combine(const Parser<R>& nextParser) const
+Parser<std::pair<T,R>> Parser<T>::combine(Parser<R>& nextParser)
 {
     using namespace std;
 
-    cout << "combine start" << endl;
-    auto p1 = andThen(
-        // Needs to be a copy in case the object to which nextParser refers goes out of scope
+    return andThen(
         [nextParser](T&& obj1) {
-            cout << "outer lambda start" << endl;
-            auto p2 = nextParser.andThen(
-                [obj1 = forward<T>(obj1)](R&& obj2) {
-                    cout << "inner lambda start" << endl;
-                    auto ppair = Parser::createBasic(make_pair(obj1, obj2)); // TODO: Forward objs??? (need mutable)
-                    cout << "inner lambda end" << endl;
-                    return ppair;
+            return nextParser.andThen(
+                // In order to forward obj1, the lambda must be mutable
+                [obj1 = forward<T>(obj1)](R&& obj2) mutable {
+                    return Parser::createBasic(make_pair(forward<T>(obj1), forward<R>(obj2)));
                 });
-            cout << "outer lambda end" << endl;
-            return p2;
         });
-    cout << "combine end" << endl;
-    return p1;
 }

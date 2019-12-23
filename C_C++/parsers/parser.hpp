@@ -59,7 +59,7 @@ public:
     std::enable_if_t<is_parser_v<Par>, Par> andThen(Fn&& pGenFn) const;
 
     template<typename R>
-    Parser<std::pair<T,R>> combine(const Parser<R>& nextParser) const;
+    Parser<std::pair<T,R>> combine(Parser<R>& nextParser);
 
 
     T parse(input_t&) const;
@@ -67,13 +67,16 @@ public:
 private:    
     struct FnContainerAbstract {
         virtual ~FnContainerAbstract() {}
-        virtual result_t<T> operator()(input_t&) const = 0;
+        virtual result_t<T> operator()(input_t&) = 0;
     };
 
     template<typename Fn>
     struct FnContainer : FnContainerAbstract {
         FnContainer(Fn&& f) : f_{ std::forward<Fn>(f) } {}
-        result_t<T> operator()(input_t& input) const override
+        // Since we have a mutable lambdas (e.g. in createBasic() and combine()), the () operator
+        // can change the variables in the closure (i.e. change f_), so the () operator cannot be
+        // const.
+        result_t<T> operator()(input_t& input) override
         {
             return f_(input);
         }
