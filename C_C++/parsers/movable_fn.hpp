@@ -55,7 +55,6 @@ public:
                 std::invoke_result_t<F, Args...>>
             && !std::is_same_v<std::decay_t<F>, MovableFn>,
             int> = 0>
-    
     MovableFn(F&& f) : fn_{ new FnContainer<F>{std::forward<F>(f)} } {}
     R operator()(Args&& ... args) const
     {

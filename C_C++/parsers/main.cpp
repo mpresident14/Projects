@@ -13,24 +13,22 @@ using namespace std;
 int main(int argc, char **argv)
 {
     auto parseFn = 
-        MovableFn<std::optional<std::pair<Widget, std::string>>, const std::string&>{
         [](const string& input) -> optional<pair<Widget, string>> {
             if (input.empty()) {
                 return {};
             }
 
             return make_optional(make_pair(Widget::createWidget(input[0]), input.substr(1)));
-        }
-    };
+        };
    
-    MovableFn<Parser<Widget>, Widget&&> m{
-        [&](Widget&& w){ 
+    auto pGen{
+        [&parseFn](Widget&& w){ 
             return Parser<Widget>{parseFn}; 
         }
     };
 
     Parser<Widget> p1{parseFn};
-    Parser<Widget> p2 = p1.andThen(move(m));
+    Parser<Widget> p2 = p1.andThen(move(pGen));
 
     try {
         Widget w = p2.parse(argv[1]);
