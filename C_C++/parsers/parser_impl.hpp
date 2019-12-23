@@ -79,22 +79,21 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
                 T& result = get<0>(pairResult);
                 auto nextParser = pGenFn(move(result));
                 // Run the next parser on the rest of the string
-                return (*(nextParser.parseFn_))(get<1>(pairResult));
+                return (*nextParser.parseFn_)(get<1>(pairResult));
         }
     };
 }
 
 // TODO: expand this to use a tuple instead of a pair (for longer chains)
+// Pass nextParser by value since we have to copy it into the lambda anyways.
 template<typename T>
 template<typename R>
-Parser<std::pair<T,R>> Parser<T>::combine(const Parser<R>& nextParser) const
+Parser<std::pair<T,R>> Parser<T>::combine(Parser<R> nextParser) const
 {
     using namespace std;
 
     return andThen(
-        // Parser must be captured by value in case object to which nextParser refers goes out of 
-        // scope
-        [nextParser](T&& obj1) {
+        [nextParser = move(nextParser)](T&& obj1) {
             return nextParser.andThen(
                 // In order to forward obj1, the lambda must be mutable
                 [obj1 = forward<T>(obj1)](R&& obj2) mutable {

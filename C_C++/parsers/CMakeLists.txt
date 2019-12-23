@@ -15,7 +15,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
 # Set compilation flags
-add_compile_options(-Wall -g -O0)
+add_compile_options(-Wall -g -O2)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 # The following folder will be included

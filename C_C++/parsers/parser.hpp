@@ -59,7 +59,7 @@ public:
     std::enable_if_t<is_parser_v<Par>, Par> andThen(Fn&& pGenFn) const;
 
     template<typename R>
-    Parser<std::pair<T,R>> combine(const Parser<R>& nextParser) const;
+    Parser<std::pair<T,R>> combine(Parser<R> nextParser) const;
 
 
     T parse(input_t&) const;
