@@ -1,32 +1,27 @@
 #include <string>
 #include <optional>
 #include <stdexcept>
-#include <iostream>
 #include <utility>
+#include <iostream>
 
 template<typename T>
-template<typename U>
-Parser<U> Parser<T>::createBasic(U&& obj)
-{
-    // Lambda is mutable so we can forward obj
-    return Parser<U>{
-        [obj = std::forward<U>(obj)](input_t& input) mutable {
-            return std::make_optional(std::make_pair(std::forward<U>(obj), input));
-        }
-    };
-}
-
-template<typename T>
-template<typename Fn>
+// template<typename Fn>
 Parser<T>::Parser()
-    : parseFn_{ 
-        std::make_shared<FnContainer<Fn>>(
-            [](input_t& input) -> result_t<T> {
-                return {};
-            }
-        )
-    }
-{}
+    // : parseFn_{ 
+    //     std::make_shared<FnContainer<Fn>(
+    //         [](input_t& input) -> result_t<T> {
+    //             return {};
+    //         }
+    //     )
+    // }
+{
+    auto failFn = 
+        [](input_t& input) -> result_t<T> {
+            return {};
+        };
+    
+    parseFn_ = std::make_shared<FnContainer<decltype(failFn)>>(std::move(failFn));
+}
 
 // Only need to specify default template arg (Void) once (in header file)
 template<typename T>
@@ -84,6 +79,39 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
     };
 }
 
+template<typename T>
+Parser<T> Parser<T>::alt(Parser<T> nextParser) const
+{
+    using namespace std;
+
+    return {
+        [=, *this, nextParser = move(nextParser)](input_t& input) {
+                // Run first parser
+                result_t<T> optResult = (*parseFn_)(input);
+                // If first parser succeeds, return the result
+                if (optResult.has_value()) {
+                    return optResult;
+                }
+
+                // Otherwise, try the next parser on the input
+                return (*nextParser.parseFn_)(input);
+        }
+    };
+}
+
+template<typename T>
+template<typename Fn, typename R>
+Parser<std::decay_t<R>> Parser<T>::andThenMap(Fn&& mapFn) const
+{
+    using namespace std;
+
+    return andThen(
+        [mapFn = forward<Fn>(mapFn)](T&& obj) {
+            return parsers::createBasic(mapFn(forward<T>(obj)));
+        }
+    );
+}
+
 // TODO: expand this to use a tuple instead of a pair (for longer chains)
 // Pass nextParser by value since we have to copy it into the lambda anyways.
 template<typename T>
@@ -97,7 +125,83 @@ Parser<std::pair<T,R>> Parser<T>::combine(Parser<R> nextParser) const
             return nextParser.andThen(
                 // In order to forward obj1, the lambda must be mutable
                 [obj1 = forward<T>(obj1)](R&& obj2) mutable {
-                    return Parser::createBasic(make_pair(forward<T>(obj1), forward<R>(obj2)));
+                    return parsers::createBasic(make_pair(forward<T>(obj1), forward<R>(obj2)));
                 });
         });
+}
+
+template<typename T>
+template<typename Fn, typename Void>
+Parser<T> Parser<T>::verify(Fn&& boolFn) const
+{
+    using namespace std;
+
+    return andThen(
+        [=, *this, boolFn = forward<Fn>(boolFn)](T&& obj) -> Parser<T> {
+            if (!boolFn(forward<T>(obj))) {
+                return {};
+            }
+            return parsers::createBasic(forward<T>(obj));
+        }
+    );
+}
+
+// template<typename T>
+// Parser<std::list<T>> Parser<T>::cons(Parser<std::list<T>> nextParser) const
+// {
+//     using namespace std;
+//     cout << "cons" << endl;
+
+//     return combine(move(nextParser))
+//         .andThenMap(
+//             [](pair<T, list<T>>&& myPair) {
+//                 list<T>& myList = get<1>(myPair);
+//                 myList.push_front(get<0>(myPair));
+//                 return move(myList);
+//             }
+//         );
+// }
+
+template<typename T>
+template<typename U>
+Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many() const
+{
+    using namespace std;
+
+    return Parser<string>{
+        [=, *this](input_t& input) {
+            // Run parser until it fails and put each result in the list
+            unsigned i = 0;
+            // TODO: Really inefficient. Avoid copies of the string (boost::string_view ???)
+            while ((*parseFn_)(input.substr(i)).has_value()) {
+                ++i;
+            }
+
+            return parsers::createReturnObject(input.substr(0, i), input.substr(i));
+        }
+    };
+}
+
+template<typename T>
+template<typename U>
+Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::many() const
+{
+    using namespace std;
+
+    return Parser<vector<T>>{
+        [=, *this](input_t& input) {
+            // Run parser until it fails and put each result in the list
+            vector<T> listResult;
+            const string *restString = &input;
+            result_t<T> optResult = (*parseFn_)(input);
+            while (optResult.has_value()) {
+                pair<T, string>& pairResult = optResult.value();
+                listResult.push_back(move(get<0>(pairResult)));
+                restString = &get<1>(pairResult);
+                optResult = (*parseFn_)(get<1>(pairResult));
+            }
+
+            return parsers::createReturnObject(move(listResult), *restString);
+        }
+    };
 }

@@ -8,6 +8,10 @@
 #include <iostream>
 #include <utility>
 #include <memory>
+#include <vector>
+
+// TODO: perhaps pass input_t by value instead of reference all the time to prevent 
+// unnecessary copies when putting them in pairs. Do a timing test.
 
 template<typename T>
 class Parser;
@@ -32,11 +36,8 @@ using is_parser_pt = typename is_parser<U>::parser_type;
 
 template<typename T>
 class Parser {
-public:
-    template<typename U>
-    static Parser<U> createBasic(U&&);
-    
-    template<typename Fn>
+public:    
+    // template<typename Fn>
     Parser();
     // The "invoke_result" part ensures that the parameter is a function (implements operator()).
     // This ensures that this constructor doesn't interfere with the move and copy constructors.
@@ -58,9 +59,30 @@ public:
     template<typename Fn, typename Par = std::invoke_result_t<Fn, T>>
     std::enable_if_t<is_parser_v<Par>, Par> andThen(Fn&& pGenFn) const;
 
+    Parser<T> alt(Parser<T> nextParser) const;
+
+    template<typename Fn, typename R = std::invoke_result_t<Fn, T>>
+    Parser<std::decay_t<R>> andThenMap(Fn&& mapFn) const;
+
     template<typename R>
     Parser<std::pair<T,R>> combine(Parser<R> nextParser) const;
 
+    template<
+        typename Fn,
+        typename = std::enable_if_t<
+            std::is_convertible_v<bool, std::invoke_result_t<Fn, T>>
+        >
+    >
+    Parser<T> verify(Fn&& boolFn) const;
+
+    // Parser<std::list<T>> cons(Parser<std::list<T>>) const;
+
+    // Hacky method to enable the correct overload depending on whether T is a char. 
+    // https://stackoverflow.com/questions/52077051/sfinae-enable-if-cannot-be-used-to-disable-this-declaration
+    template<typename U = T>
+    Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> many() const;
+    template<typename U = T>
+    Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> many() const;
 
     T parse(input_t&) const;
 
@@ -91,6 +113,20 @@ public:
     std::shared_ptr<FnContainerAbstract> parseFn_;
 };
 
+namespace parsers {
+    extern const Parser<char> anyChar;
+    extern const Parser<int> anyInt;
+    
+    Parser<char> someChar(char c);
+
+    template<typename U>
+    result_t<std::decay_t<U>> createReturnObject(U&&, input_t);
+    
+    template<typename U>
+    Parser<std::decay_t<U>> createBasic(U&&);
+}
+
 #include "parser_impl.hpp"
+#include "parser_util.hpp"
 
 #endif

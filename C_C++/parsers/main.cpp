@@ -1,5 +1,4 @@
 #include "parser.hpp"
-#include "parsers.hpp"
 #include "widget.hpp"
 
 #include <iostream>
@@ -9,6 +8,21 @@
 #include <ctype.h>
 
 using namespace std;
+using namespace parsers;
+
+double div2(int n)
+{
+    return n / 2.0;
+}
+
+template<typename T>
+void printList(vector<T> myList)
+{
+    for (T& item : myList) {
+        cout << item << " ";
+    }
+    cout << endl;
+}
 
 int main(int argc, char **argv)
 {
@@ -18,7 +32,7 @@ int main(int argc, char **argv)
                 return {};
             }
 
-            return make_optional(make_pair(Widget::createWidget(input[0]), input.substr(1)));
+            return createReturnObject(Widget::createWidget(input[0]), input.substr(1));
         };
 
     int n = 6;
@@ -28,7 +42,7 @@ int main(int argc, char **argv)
                 return {};
             }
 
-            return make_optional(make_pair(n, input.substr(1)));
+            return createReturnObject(n, input.substr(1));
         };
    
     // auto pGen{
@@ -72,10 +86,12 @@ int main(int argc, char **argv)
     }
 
 
-    // try {
-    //     auto chars = parsers::getSingleChar.combine(parsers::getSingleChar).combine(parsers::getSingleChar).parse(argv[1]);
-    //     cout << chars.first.first << " " << chars.first.second << " "  << chars.second << endl;
-    // } catch (invalid_argument& e) {
-    //     cerr << e.what() << endl;
-    // }
+    try {
+        auto p = someChar('b').alt(someChar('a')).many().combine(anyInt.many());
+        auto result = p.parse(argv[1]);
+        cout << result.first << endl;
+        printList(result.second);
+    } catch (invalid_argument& e) {
+        cerr << e.what() << endl;
+    }
 }
