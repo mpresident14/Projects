@@ -4,6 +4,7 @@
 #include <utility>
 #include <iostream>
 
+// TODO: Fix this so that failFn is in initialization
 template<typename T>
 // template<typename Fn>
 Parser<T>::Parser()
@@ -106,7 +107,7 @@ Parser<std::decay_t<R>> Parser<T>::andThenMap(Fn&& mapFn) const
     using namespace std;
 
     return andThen(
-        [mapFn = forward<Fn>(mapFn)](T&& obj) {
+        [mapFn = forward<Fn>(mapFn)](T&& obj) mutable {
             return parsers::createBasic(mapFn(forward<T>(obj)));
         }
     );
@@ -137,7 +138,7 @@ Parser<T> Parser<T>::verify(Fn&& boolFn) const
     using namespace std;
 
     return andThen(
-        [=, *this, boolFn = forward<Fn>(boolFn)](T&& obj) -> Parser<T> {
+        [=, *this, boolFn = forward<Fn>(boolFn)](T&& obj) mutable -> Parser<T> {
             if (!boolFn(forward<T>(obj))) {
                 return {};
             }
@@ -196,6 +197,8 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
             result_t<T> optResult = (*parseFn_)(input);
             while (optResult.has_value()) {
                 pair<T, string>& pairResult = optResult.value();
+                cout << "Object: " << get<0>(pairResult) << endl;
+                cout << "Rest: " << get<1>(pairResult) << endl;
                 listResult.push_back(move(get<0>(pairResult)));
                 restString = &get<1>(pairResult);
                 optResult = (*parseFn_)(get<1>(pairResult));
@@ -204,4 +207,43 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
             return parsers::createReturnObject(move(listResult), *restString);
         }
     };
+}
+
+template<typename T>
+Parser<std::nullptr_t> Parser<T>::ignore() const
+{
+    return andThenMap(
+        [](T&&) {
+            return nullptr;
+        }
+    );
+}
+
+template<typename T>
+template<typename R>
+Parser<R> Parser<T>::ignoreAndThen(Parser<R> nextParser) const
+{
+    using namespace std;
+
+    return andThen(
+        [nextParser = move(nextParser)](T&&) {
+            return nextParser; // TODO: move ???
+        }
+    );
+}
+
+template<typename T>
+template<typename R>
+Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const
+{
+    using namespace std;
+
+    return andThen(
+        [nextParser = move(nextParser)](T&& obj1) {
+            return nextParser.andThenMap(
+                // In order to forward obj1, the lambda must be mutable
+                [obj1 = forward<T>(obj1)](R&&) mutable {
+                    return forward<T>(obj1);
+                });
+        });
 }

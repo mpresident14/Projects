@@ -13,11 +13,14 @@ public:
 
     ~Widget() { info("Destructor"); };
 
-    Widget(const Widget& other) : nums_{other.nums_} { 
+    Widget(const Widget& other) 
+    : nums_{other.nums_} 
+    { 
         info("Copy Constructor"); 
     }
 
-    Widget& operator=(const Widget& other) {
+    Widget& operator=(const Widget& other) 
+    {
         if (this != &other) {
             nums_ = other.nums_;
         }
@@ -26,35 +29,27 @@ public:
         return *this;
     };
 
-    Widget(Widget&& other) : nums_{std::move(other.nums_)} {
+    Widget(Widget&& other) 
+    : nums_{std::move(other.nums_)} 
+    {
         info("Move Constructor");
     }
 
-    Widget(std::string str)
-        :nums_{(int) str[0]}
+    Widget& operator=(Widget&& other) 
     {
-        info("String Constructor");
-    }
-
-    Widget& operator=(Widget&& other) {
         nums_ = std::move(other.nums_);
 
         info("Move Assignment");
         return *this;
     };
 
-    int getNum()
+    void store(int n)
     {
-        return nums_.empty() ? -1 : nums_[0];
+        nums_.push_back(n);
     }
 
-    static Widget createWidget(char c) {
-        Widget w;
-        w.nums_.push_back((int) c);
-        return w;
-    }
-
-    friend std::ostream &operator<<(std::ostream &output, const Widget &w) { 
+    friend std::ostream &operator<<(std::ostream &output, const Widget &w) 
+    { 
         for (unsigned i = 0; i < w.nums_.size(); i++){
             output << w.nums_[i] << ", ";
         }

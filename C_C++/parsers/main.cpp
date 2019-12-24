@@ -5,7 +5,8 @@
 #include <optional>
 #include <string>
 #include <stdexcept>
-#include <ctype.h>
+#include <list>
+#include <cctype>
 
 using namespace std;
 using namespace parsers;
@@ -24,74 +25,82 @@ void printList(vector<T> myList)
     cout << endl;
 }
 
+template<typename T>
+void printElements(list<T> myList)
+{
+    for (T& item : myList) {
+        cout << item << endl;
+    }
+}
+
+
 int main(int argc, char **argv)
 {
-    auto parseFn = 
-        [](const string& input) -> optional<pair<Widget, string>> {
-            if (input.empty()) {
-                return {};
+    const auto arrowParser = 
+        skipws(thisChar('-'))
+        .thenIgnore(thisChar('>'));
+
+    const auto intParser = 
+        skipws(anyInt)
+        .thenIgnore(skipws(thisChar(',')));
+    
+    const auto widgetParser = 
+        skipws(thisChar('{'))
+        .ignoreAndThen(intParser.many())
+        .combine(skipws(anyInt))
+        .thenIgnore(skipws(thisChar('}')))
+        .thenIgnore(whitespace)
+        .andThenMap(
+            [](pair<vector<int>, int>&& myPair) {
+                Widget w;
+                vector<int>& nums = get<0>(myPair);
+                for_each(nums.begin(), nums.end(), [&w](int &n){ w.store(n); });
+                w.store(get<1>(myPair));
+                return w;
             }
+        );
 
-            return createReturnObject(Widget::createWidget(input[0]), input.substr(1));
-        };
+    auto linkedWidgetParser = 
+        widgetParser
+        .thenIgnore(arrowParser)
+        .many();
+        // .combine(widgetParser)
+        // .andThenMap(
+        //     [](pair<vector<Widget>, Widget>&& myPair) {
+        //         vector<Widget>& widgets = get<0>(myPair);
+        //         list<Widget> myList{widgets.begin(), widgets.end()};
+        //         myList.push_back(get<1>(myPair));
+        //         return myList;
+        //     }
+        // );
 
-    int n = 6;
-    auto parseIntFn = 
-        [&n](const string& input) -> optional<pair<int, string>> {
-            if (input.empty()) {
-                return {};
-            }
-
-            return createReturnObject(n, input.substr(1));
-        };
-   
-    // auto pGen{
-    //     [&parseIntFn](const Widget&){ 
-    //         return Parser<int>{parseIntFn}; 
-    //     }
-    // };
-
-    // Parser<Widget> p1{parseFn};
-    // Parser<int> p2 = p1.andThen(move(pGen));
-
-    // try {
-    //     int w = p2.parse(argv[1]);
-    //     cout << w << endl;
-    // } catch (invalid_argument& e) {
-    //     cerr << e.what() << endl;
-    // }
-
-    //**************
-    // Parser<Widget> p1{parseFn};
-    // Parser<int> p2{parseIntFn};
-    // Parser<pair<Widget, int>> p3 = p1.combine(p2);
     
     // try {
-    //     pair<Widget, int> widgets = p3.parse(argv[1]);
-    //     cout << widgets.first << " " << widgets.second << endl;
+    //     auto widgets = linkedWidgetParser.parse(argv[1]);
+    //     printElements(widgets);
     // } catch (invalid_argument& e) {
     //     cerr << e.what() << endl;
     // }
-    //**************
 
-    Parser<Widget> p1{parseFn};
-    Parser<int> p2{parseIntFn};
-    Parser<Widget> p3{parseFn};
-    auto pCombo = p1.combine(p2).combine(p3);
     try {
-        auto items = pCombo.parse(argv[1]);
-        cout << items.first.first << " " << items.first.second << " " << items.second << endl;
+        auto widgets = linkedWidgetParser.parse(argv[1]);
+        // cout << widgets << endl;
+        printList(widgets);
     } catch (invalid_argument& e) {
         cerr << e.what() << endl;
     }
 
 
-    try {
-        auto p = someChar('b').alt(someChar('a')).many().combine(anyInt.many());
-        auto result = p.parse(argv[1]);
-        cout << result.first << endl;
-        printList(result.second);
-    } catch (invalid_argument& e) {
-        cerr << e.what() << endl;
-    }
+    // try {
+    //     auto p = 
+    //         thisChar('b')
+    //         .alt(thisChar('a'))
+    //         .many()
+    //         .thenIgnore(anyInt.many());
+    //     auto result = p.parse(argv[1]);
+    //     cout << result << endl;
+    //     // printList(result);
+    // } catch (invalid_argument& e) {
+    //     cerr << e.what() << endl;
+    // }
 }

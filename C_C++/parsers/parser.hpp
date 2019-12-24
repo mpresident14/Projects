@@ -61,6 +61,7 @@ public:
 
     Parser<T> alt(Parser<T> nextParser) const;
 
+    // mapFn must accept an rvalue reference
     template<typename Fn, typename R = std::invoke_result_t<Fn, T>>
     Parser<std::decay_t<R>> andThenMap(Fn&& mapFn) const;
 
@@ -83,6 +84,14 @@ public:
     Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> many() const;
     template<typename U = T>
     Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> many() const;
+
+    Parser<std::nullptr_t> ignore() const;
+
+    template<typename R>
+    Parser<R> ignoreAndThen(Parser<R> nextParser) const;
+
+    template<typename R>
+    Parser<T> thenIgnore(Parser<R> nextParser) const;
 
     T parse(input_t&) const;
 
@@ -116,8 +125,12 @@ public:
 namespace parsers {
     extern const Parser<char> anyChar;
     extern const Parser<int> anyInt;
+    extern const Parser<std::string> whitespace;
     
-    Parser<char> someChar(char c);
+    Parser<char> thisChar(char c);
+
+    template<typename U>
+    Parser<U> skipws(Parser<U>);
 
     template<typename U>
     result_t<std::decay_t<U>> createReturnObject(U&&, input_t);
