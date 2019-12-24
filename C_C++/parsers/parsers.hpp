@@ -4,7 +4,9 @@
 #include "parser.hpp"
 
 // extern const Parser<char> getSingleChar;
-extern const Parser<char> getSingleChar;
-extern const Parser<int> getSingleInt;
+namespace parsers {
+    extern const Parser<char> getSingleChar;
+    extern const Parser<int> getSingleInt;
+}
 
 #endif

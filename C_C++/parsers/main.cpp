@@ -72,10 +72,10 @@ int main(int argc, char **argv)
     }
 
 
-    try {
-        auto chars = getSingleChar.combine(getSingleChar).combine(getSingleChar).parse(argv[1]);
-        cout << chars.first.first << " " << chars.first.second << " "  << chars.second << endl;
-    } catch (invalid_argument& e) {
-        cerr << e.what() << endl;
-    }
+    // try {
+    //     auto chars = parsers::getSingleChar.combine(parsers::getSingleChar).combine(parsers::getSingleChar).parse(argv[1]);
+    //     cout << chars.first.first << " " << chars.first.second << " "  << chars.second << endl;
+    // } catch (invalid_argument& e) {
+    //     cerr << e.what() << endl;
+    // }
 }

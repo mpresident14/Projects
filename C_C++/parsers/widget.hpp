@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#define PRINT 0
+#define PRINT 1
 
 class Widget {
 public:

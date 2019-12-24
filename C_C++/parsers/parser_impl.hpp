@@ -63,7 +63,7 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
     using namespace std;
     
     return {
-        // Have to capture this by value in case we call andThen with a temporary Parser object (e.g.
+        // Have to capture "this" by value in case we call andThen with a temporary Parser object (e.g.
         // with chaining)
         // This must be mutable to call pGenFn's non-const () operator
         [=, *this, pGenFn = forward<Fn>(pGenFn)](input_t& input) mutable
