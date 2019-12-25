@@ -1,28 +1,9 @@
-#include <string>
-#include <optional>
-#include <stdexcept>
-#include <utility>
-#include <iostream>
-
-// TODO: Fix this so that failFn is in initialization
 template<typename T>
-// template<typename Fn>
-Parser<T>::Parser()
-    // : parseFn_{ 
-    //     std::make_shared<FnContainer<Fn>(
-    //         [](input_t& input) -> result_t<T> {
-    //             return {};
-    //         }
-    //     )
-    // }
-{
-    auto failFn = 
+const Parser<T> Parser<T>::fail = Parser<T>{
         [](input_t& input) -> result_t<T> {
             return {};
-        };
-    
-    parseFn_ = std::make_shared<FnContainer<decltype(failFn)>>(std::move(failFn));
-}
+        }
+    };
 
 // Only need to specify default template arg (Void) once (in header file)
 template<typename T>
@@ -32,19 +13,21 @@ Parser<T>::Parser(Fn&& f)
 {}
 
 template<typename T>
-T Parser<T>::parse(input_t& input) const
+T Parser<T>::parse(const std::string& input) const
 {
     using namespace std;
 
-    result_t<T> optResult = (*parseFn_)(input);
+    string_view inputView = input;
+
+    result_t<T> optResult = (*parseFn_)(inputView);
     if (!optResult.has_value()) {
         throw invalid_argument("No parse for input \"" + input + "\"");
     }
 
-    pair<T, string>& pairResult = optResult.value();
-    string& rest = get<1>(pairResult);
+    pair<T, string_view>& pairResult = optResult.value();
+    string_view& rest = get<1>(pairResult);
     if (!rest.empty()) {
-        throw invalid_argument("No parse: \"" + rest + "\" remained.");
+        throw invalid_argument("No parse: \"" + string(rest) + "\" remained.");
     }
     
     // Need "move" since the parsed object is inside the pair.
@@ -63,7 +46,7 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
         // with chaining)
         // This must be mutable to call pGenFn's non-const () operator
         [=, *this, pGenFn = forward<Fn>(pGenFn)](input_t& input) mutable
-            -> result_t<is_parser_pt<std::invoke_result_t<Fn, T>>> {
+            -> result_t<is_parser_pt<Par>> {
                 // Run first parser
                 result_t<T> optResult = (*parseFn_)(input);
                 // If first parser fails, fail entire thing
@@ -71,7 +54,7 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
                     return {};
                 }
 
-                pair<T, string>& pairResult = optResult.value();
+                pair<T, string_view>& pairResult = optResult.value();
                 T& result = get<0>(pairResult);
                 auto nextParser = pGenFn(move(result));
                 // Run the next parser on the rest of the string
@@ -113,7 +96,8 @@ Parser<std::decay_t<R>> Parser<T>::andThenMap(Fn&& mapFn) const
     );
 }
 
-// TODO: expand this to use a tuple instead of a pair (for longer chains)
+// TODO: expand this to use a tuple instead of a pair (for longer chains) (use varargs)
+
 // Pass nextParser by value since we have to copy it into the lambda anyways.
 template<typename T>
 template<typename R>
@@ -140,28 +124,12 @@ Parser<T> Parser<T>::verify(Fn&& boolFn) const
     return andThen(
         [=, *this, boolFn = forward<Fn>(boolFn)](T&& obj) mutable -> Parser<T> {
             if (!boolFn(forward<T>(obj))) {
-                return {};
+                return Parser<T>::fail;
             }
             return parsers::createBasic(forward<T>(obj));
         }
     );
 }
-
-// template<typename T>
-// Parser<std::list<T>> Parser<T>::cons(Parser<std::list<T>> nextParser) const
-// {
-//     using namespace std;
-//     cout << "cons" << endl;
-
-//     return combine(move(nextParser))
-//         .andThenMap(
-//             [](pair<T, list<T>>&& myPair) {
-//                 list<T>& myList = get<1>(myPair);
-//                 myList.push_front(get<0>(myPair));
-//                 return move(myList);
-//             }
-//         );
-// }
 
 template<typename T>
 template<typename U>
@@ -173,17 +141,15 @@ Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many()
         [=, *this](input_t& input) {
             // Run parser until it fails and put each result in the list
             unsigned i = 0;
-            // TODO: Really inefficient. Avoid copies of the string (boost::string_view ???)
             while ((*parseFn_)(input.substr(i)).has_value()) {
                 ++i;
             }
 
-            return parsers::createReturnObject(input.substr(0, i), input.substr(i));
+            return parsers::createReturnObject(string(input.substr(0, i)), input.substr(i));
         }
     };
 }
 
-// So many string copies !!!
 template<typename T>
 template<typename U>
 Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::many() const
@@ -194,16 +160,16 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
         [=, *this](input_t& input) {
             // Run parser until it fails and put each result in the list
             vector<T> listResult;
-            string restString = input;
+            unsigned i = 0;
             result_t<T> optResult = (*parseFn_)(input);
             while (optResult.has_value()) {
-                pair<T, string>& pairResult = optResult.value();
+                pair<T, string_view>& pairResult = optResult.value();
                 listResult.push_back(move(get<0>(pairResult)));
-                restString = get<1>(pairResult);
+                i = input.size() - get<1>(pairResult).size();
                 optResult = (*parseFn_)(get<1>(pairResult));
             }
 
-            return parsers::createReturnObject(move(listResult), restString);
+            return parsers::createReturnObject(move(listResult), input.substr(i));
         }
     };
 }
@@ -226,7 +192,7 @@ Parser<R> Parser<T>::ignoreAndThen(Parser<R> nextParser) const
 
     return andThen(
         [nextParser = move(nextParser)](T&&) {
-            return nextParser; // TODO: move ???
+            return move(nextParser);
         }
     );
 }

@@ -9,17 +9,16 @@
 #include <utility>
 #include <memory>
 #include <vector>
+#include <string_view>
 
-// TODO: perhaps pass input_t by value instead of reference all the time to prevent 
-// unnecessary copies when putting them in pairs. Do a timing test.
 
 template<typename T>
 class Parser;
 
 // TODO: This might not be good practice for header files.
 template<typename T>
-using result_t   = std::optional<std::pair<T, std::string>>;
-using input_t    = const std::string;
+using result_t   = std::optional<std::pair<T, std::string_view>>;
+using input_t    = const std::string_view;
 
 // These templates allow detection of a Parser of any type and get the type of the Parser.
 template<typename>
@@ -36,9 +35,28 @@ using is_parser_pt = typename is_parser<U>::parser_type;
 
 template<typename T>
 class Parser {
+private:  
+    static const Parser<T> fail;
+
+    struct FnContainerAbstract {
+        virtual ~FnContainerAbstract() {}
+        virtual result_t<T> operator()(input_t&) = 0;
+    };
+
+    template<typename Fn>
+    struct FnContainer : FnContainerAbstract {
+        FnContainer(Fn&& f) : f_{ std::forward<Fn>(f) } {}
+        // Since we have a mutable lambdas (e.g. in createBasic() and combine()), the () operator
+        // can change the variables in the closure (i.e. change f_), so the () operator cannot be
+        // const.
+        result_t<T> operator()(input_t& input) override { return f_(input); }
+
+        Fn f_;
+    };
+    
 public:    
-    // template<typename Fn>
-    Parser();
+    // Unneccesary, but I like to be explicit
+    Parser() = delete;
     // The "invoke_result" part ensures that the parameter is a function (implements operator()).
     // This ensures that this constructor doesn't interfere with the move and copy constructors.
     template<
@@ -76,8 +94,6 @@ public:
     >
     Parser<T> verify(Fn&& boolFn) const;
 
-    // Parser<std::list<T>> cons(Parser<std::list<T>>) const;
-
     // Hacky method to enable the correct overload depending on whether T is a char. 
     // https://stackoverflow.com/questions/52077051/sfinae-enable-if-cannot-be-used-to-disable-this-declaration
     template<typename U = T>
@@ -93,30 +109,8 @@ public:
     template<typename R>
     Parser<T> thenIgnore(Parser<R> nextParser) const;
 
-    T parse(input_t&) const;
+    T parse(const std::string&) const;
 
-private:    
-    struct FnContainerAbstract {
-        virtual ~FnContainerAbstract() {}
-        virtual result_t<T> operator()(input_t&) = 0;
-    };
-
-    template<typename Fn>
-    struct FnContainer : FnContainerAbstract {
-        FnContainer(Fn&& f) : f_{ std::forward<Fn>(f) } {}
-        // Since we have a mutable lambdas (e.g. in createBasic() and combine()), the () operator
-        // can change the variables in the closure (i.e. change f_), so the () operator cannot be
-        // const.
-        result_t<T> operator()(input_t& input) override
-        {
-            return f_(input);
-        }
-
-        Fn f_;
-    };
-
-// TODO: Figure out how to make this private
-public:  
     // Shared pointer makes a Parser copyable. If did not care about
     // that, we could use a unique pointer instead.
     std::shared_ptr<FnContainerAbstract> parseFn_;

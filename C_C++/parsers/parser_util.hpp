@@ -6,9 +6,9 @@ namespace parsers {
     using namespace std;
 
     template<typename U>
-    result_t<decay_t<U>> createReturnObject(U&& obj, input_t rest)
+    result_t<decay_t<U>> createReturnObject(U&& obj, input_t input)
     {
-        return make_optional(make_pair(forward<U>(obj), move(rest)));
+        return make_optional(make_pair(forward<U>(obj), input));
     }
 
     template<typename U>
@@ -23,7 +23,7 @@ namespace parsers {
     }
 
     const Parser<char> anyChar{
-        [](const string& input) -> optional<pair<char, string>>
+        [](input_t& input) -> result_t<char>
         {
             if (input.empty()) {
                 return {};
