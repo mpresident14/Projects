@@ -7,9 +7,12 @@
 #include <stdexcept>
 #include <list>
 #include <cctype>
+#include <ctime>
+#include <chrono>
 
 using namespace std;
 using namespace parsers;
+using namespace std::chrono;
 
 double div2(int n)
 {
@@ -33,7 +36,7 @@ void printElements(list<T> myList)
     }
 }
 
-
+// "{1 ,2,3}->{4,5,6}->{4,334,-2}-> { -3,-4544,5,6,4,6,4, -73} ->    {4,233,235,23,-23} -> {4543,242, -525  ,  -463, -234 }->  { 53, 2, 45, -2}"
 int main(int argc, char **argv)
 {
     const auto arrowParser = 
@@ -63,44 +66,33 @@ int main(int argc, char **argv)
     auto linkedWidgetParser = 
         widgetParser
         .thenIgnore(arrowParser)
-        .many();
-        // .combine(widgetParser)
-        // .andThenMap(
-        //     [](pair<vector<Widget>, Widget>&& myPair) {
-        //         vector<Widget>& widgets = get<0>(myPair);
-        //         list<Widget> myList{widgets.begin(), widgets.end()};
-        //         myList.push_back(get<1>(myPair));
-        //         return myList;
-        //     }
-        // );
+        .many()
+        .combine(widgetParser)
+        .andThenMap(
+            [](pair<vector<Widget>, Widget>&& myPair) {
+                vector<Widget>& widgets = get<0>(myPair);
+                list<Widget> myList{widgets.begin(), widgets.end()};
+                myList.push_back(get<1>(myPair));
+                return myList;
+            }
+        );
 
-    
-    // try {
-    //     auto widgets = linkedWidgetParser.parse(argv[1]);
-    //     printElements(widgets);
-    // } catch (invalid_argument& e) {
-    //     cerr << e.what() << endl;
-    // }
+    auto start = clock();
+    auto start_chr = high_resolution_clock::now();
 
-    try {
-        auto widgets = linkedWidgetParser.parse(argv[1]);
-        // cout << widgets << endl;
-        printList(widgets);
-    } catch (invalid_argument& e) {
-        cerr << e.what() << endl;
+    for (int i = 0; i < 10000; ++i) {
+        try {
+            auto widgets = linkedWidgetParser.parse(argv[1]);
+            // printElements(widgets);
+        } catch (invalid_argument& e) {
+            cerr << e.what() << endl;
+        }
     }
 
+    auto stop = clock();
+    auto stop_chr = high_resolution_clock::now();
 
-    // try {
-    //     auto p = 
-    //         thisChar('b')
-    //         .alt(thisChar('a'))
-    //         .many()
-    //         .thenIgnore(anyInt.many());
-    //     auto result = p.parse(argv[1]);
-    //     cout << result << endl;
-    //     // printList(result);
-    // } catch (invalid_argument& e) {
-    //     cerr << e.what() << endl;
-    // }
+    cout << "Chrono: Took " << duration<double, milli>(stop_chr - start_chr).count() / 1000 << " seconds" << endl;
+    cout << "Clock: Took " << (stop - start) * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
+
 }

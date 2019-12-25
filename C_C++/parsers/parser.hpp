@@ -124,6 +124,8 @@ public:
 
 namespace parsers {
     extern const Parser<char> anyChar;
+    extern const Parser<unsigned> anyDigit;
+    extern const Parser<unsigned> anyUnsigned;
     extern const Parser<int> anyInt;
     extern const Parser<std::string> whitespace;
     

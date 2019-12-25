@@ -183,6 +183,7 @@ Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many()
     };
 }
 
+// So many string copies !!!
 template<typename T>
 template<typename U>
 Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::many() const
@@ -193,18 +194,16 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
         [=, *this](input_t& input) {
             // Run parser until it fails and put each result in the list
             vector<T> listResult;
-            const string *restString = &input;
+            string restString = input;
             result_t<T> optResult = (*parseFn_)(input);
             while (optResult.has_value()) {
                 pair<T, string>& pairResult = optResult.value();
-                cout << "Object: " << get<0>(pairResult) << endl;
-                cout << "Rest: " << get<1>(pairResult) << endl;
                 listResult.push_back(move(get<0>(pairResult)));
-                restString = &get<1>(pairResult);
+                restString = get<1>(pairResult);
                 optResult = (*parseFn_)(get<1>(pairResult));
             }
 
-            return parsers::createReturnObject(move(listResult), *restString);
+            return parsers::createReturnObject(move(listResult), restString);
         }
     };
 }
