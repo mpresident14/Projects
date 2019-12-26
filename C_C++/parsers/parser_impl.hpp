@@ -42,13 +42,12 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
     using namespace std;
     
     return {
-        // Have to capture "this" by value in case we call andThen with a temporary Parser object (e.g.
-        // with chaining)
         // This must be mutable to call pGenFn's non-const () operator
-        [=, *this, pGenFn = forward<Fn>(pGenFn)](input_t& input) mutable
+        [parseFn = isThisRValue() ? move(parseFn_) : parseFn_, pGenFn = forward<Fn>(pGenFn)]
+        (input_t& input) mutable
             -> result_t<is_parser_pt<Par>> {
                 // Run first parser
-                result_t<T> optResult = (*parseFn_)(input);
+                result_t<T> optResult = (*parseFn)(input);
                 // If first parser fails, fail entire thing
                 if (!optResult.has_value()) {
                     return {};
@@ -69,9 +68,10 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const
     using namespace std;
 
     return {
-        [=, *this, nextParser = move(nextParser)](input_t& input) {
+        [parseFn = isThisRValue() ? move(parseFn_) : parseFn_, nextParser = move(nextParser)]
+        (input_t& input) {
                 // Run first parser
-                result_t<T> optResult = (*parseFn_)(input);
+                result_t<T> optResult = (*parseFn)(input);
                 // If first parser succeeds, return the result
                 if (optResult.has_value()) {
                     return optResult;
@@ -122,7 +122,7 @@ Parser<T> Parser<T>::verify(Fn&& boolFn) const
     using namespace std;
 
     return andThen(
-        [=, *this, boolFn = forward<Fn>(boolFn)](T&& obj) mutable -> Parser<T> {
+        [boolFn = forward<Fn>(boolFn)](T&& obj) mutable -> Parser<T> {
             if (!boolFn(forward<T>(obj))) {
                 return Parser<T>::fail;
             }
@@ -138,10 +138,10 @@ Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many()
     using namespace std;
 
     return Parser<string>{
-        [=, *this](input_t& input) {
+        [parseFn = isThisRValue() ? move(parseFn_) : parseFn_](input_t& input) {
             // Run parser until it fails and put each result in the list
             unsigned i = 0;
-            while ((*parseFn_)(input.substr(i)).has_value()) {
+            while ((*parseFn)(input.substr(i)).has_value()) {
                 ++i;
             }
 
@@ -157,16 +157,16 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
     using namespace std;
 
     return Parser<vector<T>>{
-        [=, *this](input_t& input) {
+        [parseFn = isThisRValue() ? move(parseFn_) : parseFn_](input_t& input) {
             // Run parser until it fails and put each result in the list
             vector<T> listResult;
             unsigned i = 0;
-            result_t<T> optResult = (*parseFn_)(input);
+            result_t<T> optResult = (*parseFn)(input);
             while (optResult.has_value()) {
                 pair<T, string_view>& pairResult = optResult.value();
                 listResult.push_back(move(get<0>(pairResult)));
                 i = input.size() - get<1>(pairResult).size();
-                optResult = (*parseFn_)(get<1>(pairResult));
+                optResult = (*parseFn)(get<1>(pairResult));
             }
 
             return parsers::createReturnObject(move(listResult), input.substr(i));

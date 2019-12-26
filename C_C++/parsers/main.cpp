@@ -39,6 +39,11 @@ void printElements(list<T> myList)
 // "{1 ,2,3}->{4,5,6}->{4,334,-2}-> { -3,-4544,5,6,4,6,4, -73} ->    {4,233,235,23,-23} -> {4543,242, -525  ,  -463, -234 }->  { 53, 2, 45, -2}"
 int main(int argc, char **argv)
 {
+    if (argc != 2) {
+        cerr << "Enter a string to parse." << endl;
+        return 1;
+    }
+
     const auto arrowParser = 
         skipws(thisChar('-'))
         .thenIgnore(thisChar('>'));
@@ -80,10 +85,10 @@ int main(int argc, char **argv)
     auto start = clock();
     auto start_chr = high_resolution_clock::now();
 
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 1; ++i) {
         try {
             auto widgets = linkedWidgetParser.parse(argv[1]);
-            // printElements(widgets);
+            printElements(widgets);
         } catch (invalid_argument& e) {
             cerr << e.what() << endl;
         }

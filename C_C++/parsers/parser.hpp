@@ -53,9 +53,11 @@ private:
 
         Fn f_;
     };
+
+    constexpr bool isThisRValue() const { return std::is_rvalue_reference_v<decltype((this))>; }
     
 public:    
-    // Unneccesary, but I like to be explicit
+    // Unneccesary, but being explicit never hurts
     Parser() = delete;
     // The "invoke_result" part ensures that the parameter is a function (implements operator()).
     // This ensures that this constructor doesn't interfere with the move and copy constructors.
@@ -80,7 +82,7 @@ public:
     Parser<T> alt(Parser<T> nextParser) const;
 
     // mapFn must accept an rvalue reference
-    template<typename Fn, typename R = std::invoke_result_t<Fn, T>>
+    template<typename Fn, typename R = std::invoke_result_t<Fn, T&&>>
     Parser<std::decay_t<R>> andThenMap(Fn&& mapFn) const;
 
     template<typename R>
