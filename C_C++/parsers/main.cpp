@@ -99,5 +99,4 @@ int main(int argc, char **argv)
 
     cout << "Chrono: Took " << duration<double, milli>(stop_chr - start_chr).count() / 1000 << " seconds" << endl;
     cout << "Clock: Took " << (stop - start) * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
-
 }

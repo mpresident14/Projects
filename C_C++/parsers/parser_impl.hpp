@@ -17,9 +17,7 @@ T Parser<T>::parse(const std::string& input) const
 {
     using namespace std;
 
-    string_view inputView = input;
-
-    result_t<T> optResult = (*parseFn_)(inputView);
+    result_t<T> optResult = (*parseFn_)(input);
     if (!optResult.has_value()) {
         throw invalid_argument("No parse for input \"" + input + "\"");
     }
