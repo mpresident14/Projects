@@ -42,10 +42,35 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const
     return {
         // This must be mutable to call pGenFn's non-const () operator
         [parseFn = isThisRValue() ? move(parseFn_) : parseFn_, pGenFn = forward<Fn>(pGenFn)]
-        (input_t& input) mutable
-            -> result_t<is_parser_pt<Par>> {
+        (input_t& input) mutable -> result_t<is_parser_pt<Par>> {
                 // Run first parser
                 result_t<T> optResult = (*parseFn)(input);
+                // If first parser fails, fail entire thing
+                if (!optResult.has_value()) {
+                    return {};
+                }
+
+                pair<T, string_view>& pairResult = optResult.value();
+                T& result = get<0>(pairResult);
+                auto nextParser = pGenFn(move(result));
+                // Run the next parser on the rest of the string
+                return (*nextParser.parseFn_)(get<1>(pairResult));
+        }
+    };
+}
+
+template<typename T>
+template<typename Fn, typename Par>
+std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThenRef(Fn&& pGenFn) const
+{
+    using namespace std;
+    
+    return {
+        // This must be mutable to call pGenFn's non-const () operator
+        [this, pGenFn = forward<Fn>(pGenFn)]
+        (input_t& input) mutable -> result_t<is_parser_pt<Par>> {
+                // Run first parser
+                result_t<T> optResult = (*parseFn_)(input);
                 // If first parser fails, fail entire thing
                 if (!optResult.has_value()) {
                     return {};
@@ -67,6 +92,27 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const
 
     return {
         [parseFn = isThisRValue() ? move(parseFn_) : parseFn_, nextParser = move(nextParser)]
+        (input_t& input) {
+                // Run first parser
+                result_t<T> optResult = (*parseFn)(input);
+                // If first parser succeeds, return the result
+                if (optResult.has_value()) {
+                    return optResult;
+                }
+
+                // Otherwise, try the next parser on the input
+                return (*nextParser.parseFn_)(input);
+        }
+    };
+}
+
+template<typename T>
+Parser<T> Parser<T>::altRef(const Parser<T>& nextParser) const
+{
+    using namespace std;
+
+    return {
+        [parseFn = isThisRValue() ? move(parseFn_) : parseFn_, &nextParser]
         (input_t& input) {
                 // Run first parser
                 result_t<T> optResult = (*parseFn)(input);
@@ -106,6 +152,22 @@ Parser<std::pair<T,R>> Parser<T>::combine(Parser<R> nextParser) const
     return andThen(
         [nextParser = move(nextParser)](T&& obj1) {
             return nextParser.andThen(
+                // In order to forward obj1, the lambda must be mutable
+                [obj1 = forward<T>(obj1)](R&& obj2) mutable {
+                    return parsers::createBasic(make_pair(forward<T>(obj1), forward<R>(obj2)));
+                });
+        });
+}
+
+template<typename T>
+template<typename R>
+Parser<std::pair<T,R>> Parser<T>::combineRef(const Parser<R>& nextParser) const
+{
+    using namespace std;
+
+    return andThen(
+        [&nextParser](T&& obj1) {
+            return nextParser.andThenRef(
                 // In order to forward obj1, the lambda must be mutable
                 [obj1 = forward<T>(obj1)](R&& obj2) mutable {
                     return parsers::createBasic(make_pair(forward<T>(obj1), forward<R>(obj2)));
@@ -207,6 +269,35 @@ Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const
                 // In order to forward obj1, the lambda must be mutable
                 [obj1 = forward<T>(obj1)](R&&) mutable {
                     return forward<T>(obj1);
+                });
+        });
+}
+
+template<typename T>
+template<typename R>
+Parser<R> Parser<T>::ignoreAndThenRef(const Parser<R>& nextParser) const
+{
+    using namespace std;
+
+    return andThen(
+        [&nextParser](T&&) {
+            return nextParser;
+        }
+    );
+}
+
+template<typename T>
+template<typename R>
+Parser<T> Parser<T>::thenIgnoreRef(const Parser<R>& nextParser) const
+{
+    using namespace std;
+
+    return andThen(
+        [&nextParser](T&& obj1) {
+            return nextParser.andThenRef(
+                // In order to forward obj1, the lambda must be mutable
+                [obj1 = forward<T>(obj1)](R&&) mutable {
+                    return parsers::createBasic(forward<T>(obj1));
                 });
         });
 }

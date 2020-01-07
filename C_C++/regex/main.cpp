@@ -12,13 +12,29 @@ int main(int argc, char **argv)
         cerr << "Enter a pattern." << endl;
     }
 
-    unique_ptr<Regex> rgx = Regex::kRegexParser.parse(argv[1]);
-    // unique_ptr<Regex> rgx2 = Regex::kCharParser.parse(argv[1]);
-    // auto p = parsers::thisChar('a');
-    // cout << "hi" << endl;
-    // cout << p.parse(argv[1]) << endl;
-    rgx->print();
-    // rgx2->print();
+    try {
+        unique_ptr<Regex> rgx2 = Regex::kConcatParser.parse(argv[1]);
+        rgx2->print();
+    } catch (invalid_argument& e) {
+        cerr << e.what() << endl;
+    }
 
-    // unique_ptr<Regex> rgx = make_unique<Dot>(Dot());
+    try {
+        unique_ptr<Regex> rgx = Regex::kRegexParser.parse(argv[1]);
+        rgx->print();
+    } catch (invalid_argument& e) {
+        cerr << e.what() << endl;
+    }
+
+    // ALT() ISN'T SUPPOSED TO BE USED FOR THIS
+    Parser<string> p =
+        parsers::thisChar('a').andThenMap([](char c){ return string(1, c); })
+        .alt(parsers::thisChar('a').many());
+
+    try {
+        string s = p.parse(argv[1]);
+        cout << s << endl;
+    } catch (invalid_argument& e) {
+        cerr << e.what() << endl;
+    }
 }

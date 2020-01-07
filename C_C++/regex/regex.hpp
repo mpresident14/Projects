@@ -21,9 +21,10 @@ public:
     static Parser<std::unique_ptr<Regex>> kRegexParser;
     
 
-private:
+// private:
     static Parser<std::unique_ptr<Regex>> kDotParser;
     static Parser<std::unique_ptr<Regex>> kCharParser;
+    static Parser<std::unique_ptr<Regex>> kConcatParser;
     static Parser<std::unique_ptr<Regex>> kStarParser;
 };
 
