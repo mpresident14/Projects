@@ -82,12 +82,7 @@ public:
     template<typename Fn, typename Par = std::invoke_result_t<Fn, T>>
     std::enable_if_t<is_parser_v<Par>, Par> andThen(Fn&& pGenFn) const;
 
-    template<typename Fn, typename Par = std::invoke_result_t<Fn, T>>
-    std::enable_if_t<is_parser_v<Par>, Par> andThenRef(Fn&& pGenFn) const;
-
     Parser<T> alt(Parser<T> nextParser) const;
-
-    Parser<T> altRef(const Parser<T>& nextParser) const;
 
     // mapFn must accept an rvalue reference
     template<typename Fn, typename R = std::invoke_result_t<Fn, T&&>>
@@ -95,9 +90,6 @@ public:
 
     template<typename R>
     Parser<std::pair<T,R>> combine(Parser<R> nextParser) const;
-
-    template<typename R>
-    Parser<std::pair<T,R>> combineRef(const Parser<R>& nextParser) const;
 
     template<
         typename Fn,
@@ -120,13 +112,7 @@ public:
     Parser<R> ignoreAndThen(Parser<R> nextParser) const;
 
     template<typename R>
-    Parser<R> ignoreAndThenRef(const Parser<R>& nextParser) const;
-
-    template<typename R>
     Parser<T> thenIgnore(Parser<R> nextParser) const;
-
-    template<typename R>
-    Parser<T> thenIgnoreRef(const Parser<R>& nextParser) const;
 
     T parse(const std::string&) const;
 
