@@ -24,16 +24,16 @@ class Num : public Expr {
 public:
     Num(double n) : num_{n} {}
     double eval() override { return num_; }
+
+private:
     double num_;
 };
 
 enum Op {PLUS, MINUS, TIMES, DIVIDE, POW};
-char opToSym[]{'+', '-', 'x', '/'};
 
 class BinOp : public Expr {
 public:
     BinOp(ExprPtr e1, ExprPtr e2,  Op op) : e1_{move(e1)}, e2_{move(e2)}, op_{op} {}
-    // ~BinOp() { delete e1_; delete e2_; }
     double eval() override
     {
         double n = e1_->eval();
@@ -51,23 +51,20 @@ public:
                 return pow(n, m);
         }
     }
+
+private:
     ExprPtr e1_;
     ExprPtr e2_;
     Op op_;
 };
 
-ExprPtr foldExprs(pair<ExprPtr , vector<pair<Op, ExprPtr >>> exprAndRestVec)
+ExprPtr foldExprs(pair<ExprPtr, vector<pair<Op, ExprPtr>>> exprAndRestVec)
 {
     auto& restVec = get<1>(exprAndRestVec);
-    if (restVec.empty()) {
-        return move(exprAndRestVec.first);
-    }
+    ExprPtr binop = move(exprAndRestVec.first);
 
-    ExprPtr binop;
-    ExprPtr eLeft = move(exprAndRestVec.first);
     for (auto& opAndExpr : restVec) {
-        binop = make_unique<BinOp>(move(eLeft), move(opAndExpr.second), opAndExpr.first);
-        eLeft = move(binop);
+        binop = make_unique<BinOp>(move(binop), move(opAndExpr.second), opAndExpr.first);
     }
     return binop;
 }
@@ -87,9 +84,9 @@ int main(int argc, char **argv)
      * RestTerms    := [+|- Term]
      * Term         := Factor RestFactors
      * RestFactors  := [*|/ Factor]
-     * Factor       := Single RestPowers
+     * Factor       := Single RestPowers | -Factor
      * RestPowers   := [^ Single]
-     * Single       := double | (Expr)
+     * Single       := uDouble | (Expr)
      */
 
     Parser<ExprPtr> expr =  fail<ExprPtr>; // Placeholder
@@ -108,7 +105,7 @@ int main(int argc, char **argv)
 
     Parser<ExprPtr> single =
         skipws(
-            anyDouble.andThenMap([](double n) -> ExprPtr  { return make_unique<Num>(n); })
+            anyUDouble.andThenMap([](double n) -> ExprPtr  { return make_unique<Num>(n); })
             .alt(
                 thisChar('(')
                 .ignoreAndThenRef(expr) // Needs to be a reference b/c expr is not yet defined
@@ -116,7 +113,14 @@ int main(int argc, char **argv)
         );
     Parser<vector<pair<Op, ExprPtr>>> restPowers = power.combine(single).many();
 
-    Parser<ExprPtr> factor = single.combine(restPowers).andThenMap(foldExprs);
+    Parser<ExprPtr> factor =
+        single.combine(restPowers).andThenMap(foldExprs)
+        .alt(thisChar('-').ignoreAndThenRef(factor).andThenMap(
+            [](ExprPtr expr) -> ExprPtr {
+                return make_unique<BinOp>(make_unique<Num>(-1), move(expr), TIMES); 
+            }
+        ));
+
     Parser<vector<pair<Op, ExprPtr>>> restFactors = timesDiv.combine(factor).many();
 
     Parser<ExprPtr> term = factor.combine(restFactors).andThenMap(foldExprs);

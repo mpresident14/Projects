@@ -233,16 +233,20 @@ namespace parsers {
         )
     };
 
-    const Parser<double> anyDouble{
-        anyInt.combine(decimal).andThenMap(
-            [](pair<int, double>&& wholeAndDec) {
-                int whole = wholeAndDec.first;
-                return whole > 0
-                    ? wholeAndDec.first + wholeAndDec.second
-                    : wholeAndDec.first - wholeAndDec.second;
+    const Parser<double> anyUDouble{
+        anyUnsigned.combine(decimal).andThenMap(
+            [](pair<unsigned, double>&& wholeAndDec) {
+                return wholeAndDec.first + wholeAndDec.second;
             }
         )
-        .alt(anyInt.andThenMap([] (int n) { return (double) n; }))
+        .alt(anyUnsigned.andThenMap([] (int n) { return (double) n; }))
+    };
+
+    const Parser<double> anyDouble{
+        thisChar('-').ignoreAndThen(anyUDouble).andThenMap(
+            [](double d) { return -d; }
+        )
+        .alt(anyUDouble)
     };
 
     const Parser<string> whitespace{
