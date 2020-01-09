@@ -17,6 +17,7 @@ using RgxPtr = unique_ptr<Regex>;
 
 // TODO: Make more efficient
 // TODO: Add comments and regex grammar
+// TODO: Clean up this file.
 class Regex {
 public:
     virtual ~Regex(){};

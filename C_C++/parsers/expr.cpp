@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <vector>
 #include <cmath>
+#include <memory>
 
 using namespace std;
 using namespace parsers;
@@ -16,6 +17,8 @@ public:
     virtual ~Expr(){};
     virtual double eval() = 0;
 };
+
+using ExprPtr = unique_ptr<Expr>;
 
 class Num : public Expr {
 public:
@@ -29,8 +32,8 @@ char opToSym[]{'+', '-', 'x', '/'};
 
 class BinOp : public Expr {
 public:
-    BinOp(Expr *e1, Expr *e2,  Op op) : e1_{e1}, e2_{e2}, op_{op} {}
-    ~BinOp() { delete e1_; delete e2_; }
+    BinOp(ExprPtr e1, ExprPtr e2,  Op op) : e1_{move(e1)}, e2_{move(e2)}, op_{op} {}
+    // ~BinOp() { delete e1_; delete e2_; }
     double eval() override
     {
         double n = e1_->eval();
@@ -48,23 +51,23 @@ public:
                 return pow(n, m);
         }
     }
-    Expr *e1_;
-    Expr *e2_;
+    ExprPtr e1_;
+    ExprPtr e2_;
     Op op_;
 };
 
-Expr* foldExprs(pair<Expr*, vector<pair<Op, Expr*>>> exprAndRestVec)
+ExprPtr foldExprs(pair<ExprPtr , vector<pair<Op, ExprPtr >>> exprAndRestVec)
 {
     auto& restVec = get<1>(exprAndRestVec);
     if (restVec.empty()) {
-        return exprAndRestVec.first;
+        return move(exprAndRestVec.first);
     }
 
-    BinOp *binop;
-    Expr *eLeft = exprAndRestVec.first;
+    ExprPtr binop;
+    ExprPtr eLeft = move(exprAndRestVec.first);
     for (auto& opAndExpr : restVec) {
-        binop = new BinOp(eLeft, opAndExpr.second, opAndExpr.first);
-        eLeft = binop;
+        binop = make_unique<BinOp>(move(eLeft), move(opAndExpr.second), opAndExpr.first);
+        eLeft = move(binop);
     }
     return binop;
 }
@@ -89,7 +92,7 @@ int main(int argc, char **argv)
      * Single       := double | (Expr)
      */
 
-    Parser<Expr*> expr =  fail<Expr*>; // Placeholder
+    Parser<ExprPtr> expr =  fail<ExprPtr>; // Placeholder
 
     Parser<Op> plusMinus = 
         skipws(
@@ -103,28 +106,27 @@ int main(int argc, char **argv)
         );
     Parser<Op> power = skipws(thisChar('^').andThenMap([](char) { return POW; }));
 
-    Parser<Expr*> single =
+    Parser<ExprPtr> single =
         skipws(
-            anyDouble.andThenMap([](double n) -> Expr* { return new Num(n); })
+            anyDouble.andThenMap([](double n) -> ExprPtr  { return make_unique<Num>(n); })
             .alt(
                 thisChar('(')
                 .ignoreAndThenRef(expr) // Needs to be a reference b/c expr is not yet defined
                 .thenIgnore(skipws(thisChar(')'))))
         );
-    Parser<vector<pair<Op, Expr*>>> restPowers = power.combine(single).many();
+    Parser<vector<pair<Op, ExprPtr>>> restPowers = power.combine(single).many();
 
-    Parser<Expr*> factor = single.combine(restPowers).andThenMap(foldExprs);
-    Parser<vector<pair<Op, Expr*>>> restFactors = timesDiv.combine(factor).many();
+    Parser<ExprPtr> factor = single.combine(restPowers).andThenMap(foldExprs);
+    Parser<vector<pair<Op, ExprPtr>>> restFactors = timesDiv.combine(factor).many();
 
-    Parser<Expr*> term = factor.combine(restFactors).andThenMap(foldExprs);
-    Parser<vector<pair<Op, Expr*>>> restTerms = plusMinus.combine(term).many();
+    Parser<ExprPtr> term = factor.combine(restFactors).andThenMap(foldExprs);
+    Parser<vector<pair<Op, ExprPtr>>> restTerms = plusMinus.combine(term).many();
 
     expr = term.combine(restTerms).thenIgnore(whitespace).andThenMap(foldExprs);
     
     try {
-        auto result = expr.parse(argv[1]);
+        ExprPtr result = expr.parse(argv[1]);
         cout << result->eval() << endl;
-        delete result;
     } catch (invalid_argument& e) {
         cerr << e.what() << endl;
     }
