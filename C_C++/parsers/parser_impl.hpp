@@ -228,6 +228,34 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
 }
 
 template<typename T>
+template<typename U>
+Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::some() const
+{
+    using namespace std;
+
+    return combine(many())
+        .andThenMap([](auto&& charAndString) {
+            auto& str = get<1>(charAndString);
+            str.insert(str.cbegin(), move(get<0>(charAndString)));
+            return move(str);
+        });
+}
+
+template<typename T>
+template<typename U>
+Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::some() const
+{
+    using namespace std;
+
+    return combine(many())
+        .andThenMap([](auto&& objAndObjVec) {
+            auto& objVec = get<1>(objAndObjVec);
+            objVec.insert(objVec.begin(), move(get<0>(objAndObjVec)));
+            return move(objVec);
+        });
+}
+
+template<typename T>
 Parser<std::nullptr_t> Parser<T>::ignore() const
 {
     return andThenMap(

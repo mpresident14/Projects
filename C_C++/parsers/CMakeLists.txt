@@ -23,3 +23,4 @@ include_directories("${PROJECT_SOURCE_DIR}")
 
 add_executable(main main.cpp)
 add_executable(expr expr.cpp)
+add_executable(regex regex.cpp)

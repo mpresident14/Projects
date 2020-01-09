@@ -113,6 +113,11 @@ public:
     template<typename U = T>
     Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> many() const;
 
+    template<typename U = T>
+    Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> some() const;
+    template<typename U = T>
+    Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> some() const;
+
     Parser<std::nullptr_t> ignore() const;
 
     template<typename R>
@@ -193,7 +198,7 @@ namespace parsers {
 
     // Not worrying about overflow
     const Parser<unsigned> anyUnsigned{
-        anyDigit.many().andThenMap(
+        anyDigit.some().andThenMap(
             [](vector<unsigned>&& nums) {
                 unsigned result = 0;
                 for (auto iter = nums.begin(); iter != nums.end(); ++iter) {
@@ -211,8 +216,33 @@ namespace parsers {
             [](unsigned&& num) { return -num; }
         )
         .alt(anyUnsigned).andThenMap(
-            [](unsigned&& num) { return int(num); }
+            [](unsigned&& num) { return (int) num; }
         )
+    };
+
+    const Parser<double> decimal{
+        thisChar('.').ignoreAndThen(anyDigit.many()).andThenMap(
+            [](vector<unsigned>&& nums) {
+                double dec = 0;
+                for (auto iter = nums.rbegin(); iter != nums.rend(); ++iter) {
+                    dec += *iter;
+                    dec /= 10;
+                }
+                return dec;
+            }
+        )
+    };
+
+    const Parser<double> anyDouble{
+        anyInt.combine(decimal).andThenMap(
+            [](pair<int, double>&& wholeAndDec) {
+                int whole = wholeAndDec.first;
+                return whole > 0
+                    ? wholeAndDec.first + wholeAndDec.second
+                    : wholeAndDec.first - wholeAndDec.second;
+            }
+        )
+        .alt(anyInt.andThenMap([] (int n) { return (double) n; }))
     };
 
     const Parser<string> whitespace{
