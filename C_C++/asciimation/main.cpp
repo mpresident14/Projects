@@ -49,8 +49,8 @@ void readySetGo()
 bool passwordGame()
 {
     ScrollLeft("pics/computer.txt").animate();
-    SlideUp("story/password.txt").animate("");
-    SlideUp("story/password_challenge.txt").animate("");
+    SlideUp("story/password.txt").animate();
+    SlideUp("story/password_challenge.txt").animate();
 
     cleanup();
     system("clear");
@@ -65,7 +65,7 @@ bool passwordGame()
         getline(cin, guess);
         if (guess == password) {
             init_ncurses();
-            SlideUp("story/access_granted.txt").animate("");
+            SlideUp("story/access_granted.txt").animate();
             return true;
         } else {
             cout << "Access Denied!"  << '\n' << endl;
@@ -73,7 +73,7 @@ bool passwordGame()
     }
 
     init_ncurses();
-    SlideUp("story/mission_failed.txt").animate("");
+    SlideUp("story/mission_failed.txt").animate();
     return false;
 }
 
@@ -99,8 +99,8 @@ string randomString(size_t len)
 bool eavesdropGame()
 {
     ScrollLeft("pics/phone.txt").animate();
-    SlideUp("story/eavesdrop.txt").animate("");
-    SlideUp("story/eavesdrop_challenge.txt").animate("");
+    SlideUp("story/eavesdrop.txt").animate();
+    SlideUp("story/eavesdrop_challenge.txt").animate();
 
     cleanup();
     system("clear");
@@ -115,7 +115,7 @@ bool eavesdropGame()
         while (true) {
             if (future.wait_for(0ms) == future_status::ready) {
                 init_ncurses();
-                SlideUp("story/mission_failed.txt").animate("");
+                SlideUp("story/mission_failed.txt").animate();
                 return false;
             }
             getline(cin, userInput);
@@ -130,7 +130,7 @@ bool eavesdropGame()
     }
 
     init_ncurses();
-    SlideUp("story/success.txt").animate("");
+    SlideUp("story/success.txt").animate();
     return true;
 }
 
@@ -140,13 +140,13 @@ int main()
     // Set up ncurses so that it's ready to display our asciimation.
     init_ncurses();
 
-    ScrollLeft("pics/vday_presents.txt").animate();
+    ScrollLeft("pics/vday_presents.txt").setDelay(30000).animate();
 
-    // SlideUp("pics/ralph_vs_pikachu.txt").animate("");
-    // SlideUp("story/intro.txt").animate("");
+    SlideUp("pics/ralph_vs_pikachu.txt").animate();
+    SlideUp("story/intro.txt").animate();
 
     hack_or_spy:
-        if (SlideUp("story/hack_or_spy.txt").animate("12") == '1') {
+        if (SlideUp("story/hack_or_spy.txt").animateWithChoices("12") == '1') {
             if (!passwordGame()) {
                 goto hack_or_spy;
             }
@@ -156,8 +156,8 @@ int main()
             }
         }
 
-    SlideUp("story/fantastic_work.txt").animate("");
-    SlideUp("pics/happy_vday.txt").animate("");
+    SlideUp("story/fantastic_work.txt").animate();
+    SlideUp("pics/happy_vday.txt").animate();
 
     // Reset ncurses settings
     cleanup();

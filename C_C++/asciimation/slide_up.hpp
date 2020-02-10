@@ -9,7 +9,8 @@
 class SlideUp : public Asciimation {
 public:
     SlideUp(const char *filename);
-    char animate(const std::string& charChoices);
+    void animate();
+    char animateWithChoices(const std::string& charChoices);
 
 protected:
     size_t currentRow_;

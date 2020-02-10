@@ -89,3 +89,16 @@ void init_ncurses()
     // if one of our updates would put it off-screen.
     scrollok(stdscr, FALSE);
 }
+
+void extractLine(std::ifstream& in, char *buf, size_t n)
+{
+    char c;
+    size_t i = 0;
+    while ((c = in.get()) != '\n' && i != n) {
+        buf[i++] = c;
+    }
+
+    for (; i < n; ++i) {
+        buf[i] = ' ';
+    }
+}

@@ -11,6 +11,8 @@ using namespace std;
 ScrollLeft::ScrollLeft(const char *filename)
     : currentCol_(0)
 {
+    updateDelayMicros_ = 50000;
+
     ifstream inputFile(filename);
     if (!inputFile.good()) {
         throw invalid_argument( "Couldn't open file for reading" );
@@ -53,7 +55,7 @@ void ScrollLeft::animate()
     for (size_t i = 0; i < picWidth_ * 2 + 1; ++i) {
         update();
         refresh();
-        usleep(50000);
+        usleep(updateDelayMicros_);
     }
 
     clearScreen();

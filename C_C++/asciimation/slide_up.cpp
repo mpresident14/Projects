@@ -11,6 +11,8 @@ using namespace std;
 SlideUp::SlideUp(const char *filename)
     : currentRow_(0)
 {
+    updateDelayMicros_ = 80000;
+
     ifstream inputFile(filename);
     if (!inputFile.good()) {
         throw invalid_argument( "Couldn't open file for reading" );
@@ -49,14 +51,29 @@ void SlideUp::update()
     ++currentRow_;
 }
 
-char SlideUp::animate(const string& charChoices)
+void SlideUp::animate()
+{
+    for (size_t i = 0; i < picHeight_ + 1; ++i) {
+        update();
+        refresh();
+        usleep(updateDelayMicros_);
+    }
+
+    getchar();
+
+    // Return the screen to its normal settings before exiting, since we don't
+    // want to leave it in ncurses's preferred setup.
+    clearScreen();
+}
+
+char SlideUp::animateWithChoices(const string& charChoices)
 {
     char c;
 
     for (size_t i = 0; i < picHeight_ + 1; ++i) {
         update();
         refresh();
-        usleep(80000);
+        usleep(updateDelayMicros_);
     }
 
     do {

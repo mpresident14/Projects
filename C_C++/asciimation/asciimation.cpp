@@ -14,19 +14,6 @@ Asciimation::~Asciimation()
     delete[] contents_;
 }
 
-void Asciimation::extractLine(std::ifstream& in, char *buf, size_t n)
-{
-    char c;
-    size_t i = 0;
-    while ((c = in.get()) != '\n' && i != n) {
-        buf[i++] = c;
-    }
-
-    for (; i < n; ++i) {
-        buf[i] = ' ';
-    }
-}
-
 void Asciimation::clearScreen()
 {
     for(size_t i = 0; i < picHeight_; ++i){
@@ -34,4 +21,10 @@ void Asciimation::clearScreen()
             mvaddch(i, j, ' ');
         }
     }
+}
+
+Asciimation& Asciimation::setDelay(size_t micros)
+{
+    updateDelayMicros_ = micros;
+    return *this;
 }
