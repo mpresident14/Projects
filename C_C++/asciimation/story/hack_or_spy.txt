@@ -5,4 +5,4 @@ Alright, Alej has left the room for class! Now's
 our chance to do some reconnaisance! What should
 we do? (Enter a number.)
 1. Try to hack into Ralph's laptop.
-2. Spy on Ralph.
+2. Try to eavesdrop on Ralph's conversation.
