@@ -5,14 +5,13 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <ncurses.h>
+#include <cstring>
 
 using namespace std;
 
 SlideUp::SlideUp(const char *filename)
-    : currentRow_(0)
+    : Asciimation(80000), currentRow_(0)
 {
-    updateDelayMicros_ = 80000;
-
     ifstream inputFile(filename);
     if (!inputFile.good()) {
         throw invalid_argument( "Couldn't open file for reading" );
@@ -59,7 +58,9 @@ void SlideUp::animate()
         usleep(updateDelayMicros_);
     }
 
-    getchar();
+    // Proceed on keystroke
+    flushinp();
+    getch();
 
     // Return the screen to its normal settings before exiting, since we don't
     // want to leave it in ncurses's preferred setup.
@@ -78,10 +79,8 @@ char SlideUp::animateWithChoices(const string& charChoices)
 
     do {
         c = getchar();
-    } while (!charChoices.empty() && charChoices.find(c) == string::npos);
+    } while (charChoices.find(c) == string::npos);
 
-    // Return the screen to its normal settings before exiting, since we don't
-    // want to leave it in ncurses's preferred setup.
     clearScreen();
 
     return c;

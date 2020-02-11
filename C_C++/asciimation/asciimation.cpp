@@ -1,10 +1,12 @@
 #include "asciimation.hpp"
 
-#include <unistd.h>
 #include <ncurses.h>
-#include <iostream>
 
 using namespace std;
+
+Asciimation::Asciimation(size_t delayMicros)
+    : updateDelayMicros_(delayMicros)
+{}
 
 Asciimation::~Asciimation()
 {

@@ -1,14 +1,6 @@
 /**
- * \file ncurses-helper.cpp
- * \author CS 70 Provided Code
- *
- * \brief Makes ncurses a little more user friendly for asciimation.
- *
- * \details
- *
- * \remarks
- *
- */
+ * Shamelessly copied (mostly) from HMC CS70
+ * */
 
 #include <iostream>
 #include <ncurses.h>
@@ -28,6 +20,7 @@ void cleanup()
     mvcur(0, COLS - 1, LINES - 1, 0);
     endwin();
 }
+
 
 void resizeHandler( int )
 {
@@ -60,7 +53,6 @@ void cleanUpScreenHandler( int signum )
 }
 
 
-
 void init_ncurses()
 {
     // Make sure the screen gets cleaned up if we exit abormally
@@ -78,9 +70,6 @@ void init_ncurses()
     // Make the cursor invisible
     curs_set(0);
 
-    // Tell ncurses not to block waiting for user input on getch() calls.
-    nodelay(stdscr, TRUE);
-
     // We're not using the cursor, so tell ncurses to leave it wherever our
     // updates happen to put it.
     leaveok(stdscr, TRUE);
@@ -90,6 +79,10 @@ void init_ncurses()
     scrollok(stdscr, FALSE);
 }
 
+/* *
+ * Grab line and put it in the buffer WITHOUT terminating null char.
+ * If line has < n chars, fill end with spaces.
+ * */
 void extractLine(std::ifstream& in, char *buf, size_t n)
 {
     char c;

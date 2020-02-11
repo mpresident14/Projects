@@ -1,8 +1,11 @@
-5
+8
 50
 
 You, Pikachu, are an MI6 agent undercover in
-Claremont, CA, USA. You have been sent to find
-a rogue KGB agent who is only known by the
-pseudonym Ralph. Your mission is to find out
-what's he's up to. Good luck!
+Claremont, CA, USA. You have been sent to spy
+on a rogue KGB agent who is only known by the
+pseudonym Ralph. After many weeks of searching,
+you found him at Claremont Mckenna College,
+hiding out in the room of a student named Alej.
+Your mission is to find out what's he's up to
+without giving away your identity. Good luck!

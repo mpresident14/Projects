@@ -3,7 +3,6 @@
 
 #include "asciimation.hpp"
 
-#include <cstring>
 #include <string>
 
 class SlideUp : public Asciimation {
@@ -12,11 +11,10 @@ public:
     void animate();
     char animateWithChoices(const std::string& charChoices);
 
-protected:
-    size_t currentRow_;
-
 private:
     void update();
+
+    size_t currentRow_;
 };
 
 #endif

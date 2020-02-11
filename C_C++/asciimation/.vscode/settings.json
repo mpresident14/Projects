@@ -3,7 +3,11 @@
         "ostream": "cpp",
         "future": "cpp",
         "iostream": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "iosfwd": "cpp",
+        "*.tcc": "cpp",
+        "thread": "cpp",
+        "atomic": "cpp"
     },
     "files.trimTrailingWhitespace": true
 }

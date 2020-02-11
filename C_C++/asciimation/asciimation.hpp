@@ -2,19 +2,19 @@
 #define ASCIIMATION_HPP
 
 #include <cstddef>
-#include <fstream>
 
 #include "ncurses_helper.hpp"
 
 class Asciimation {
 public:
+    Asciimation(size_t delayMicros);
     ~Asciimation();
     virtual void update() = 0;
     virtual void animate() = 0;
     Asciimation& setDelay(size_t micros);
 
 protected:
-    virtual void clearScreen();
+    void clearScreen();
 
     char** contents_;
     size_t picHeight_;

@@ -5,14 +5,13 @@
 #include <stdexcept>
 #include <ncurses.h>
 #include <unistd.h>
+#include <cstring>
 
 using namespace std;
 
 ScrollLeft::ScrollLeft(const char *filename)
-    : currentCol_(0)
+    : Asciimation(50000), currentCol_(0)
 {
-    updateDelayMicros_ = 50000;
-
     ifstream inputFile(filename);
     if (!inputFile.good()) {
         throw invalid_argument( "Couldn't open file for reading" );
