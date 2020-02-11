@@ -1,0 +1,8 @@
+5
+50
+
+Alright, Alej has left the room for class! Now's
+your chance to do some reconnaissance! What
+will you do? (Enter a number.)
+1. Try to hack into Ralph's computer.
+2. Try to eavesdrop on Ralph's conversation.

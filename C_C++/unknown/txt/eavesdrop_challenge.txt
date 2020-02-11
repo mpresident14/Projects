@@ -1,0 +1,16 @@
+13
+100
+
+ ______     __  __     ______     __         __         ______     __   __     ______     ______
+/\  ___\   /\ \_\ \   /\  __ \   /\ \       /\ \       /\  ___\   /\ "-.\ \   /\  ___\   /\  ___\
+\ \ \____  \ \  __ \  \ \  __ \  \ \ \____  \ \ \____  \ \  __\   \ \ \-.  \  \ \ \__ \  \ \  __\
+ \ \_____\  \ \_\ \_\  \ \_\ \_\  \ \_____\  \ \_____\  \ \_____\  \ \_\\"\_\  \ \_____\  \ \_____\
+  \/_____/   \/_/\/_/   \/_/\/_/   \/_____/   \/_____/   \/_____/   \/_/ \/_/   \/_____/   \/_____/
+
+Okay, you need to write down everything Ralph says. Remember,
+it may seem like useless garble now, but it will likely contain
+valuable information once you decode it! Use the keyboard to
+copy every line that is displayed. Hit Enter after copying each
+line. Ralph is talking fast, so you'll need to be quick. You
+have 45 seconds to write down everything Ralph says! Press any
+key to start.
