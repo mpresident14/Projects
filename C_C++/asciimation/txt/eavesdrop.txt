@@ -1,8 +1,0 @@
-5
-50
-
-Hmm, Ralph seems to be talking on the phone, but
-he is speaking in some sort of code. Luckily, you
-have a computer program to decipher it, but you
-need to quickly write down everything Ralph says
-so that you can decrypt it later!
