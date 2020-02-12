@@ -14,6 +14,7 @@
 
 using namespace std;
 
+atomic_bool timesUp(false);
 void timer(size_t seconds, atomic_bool& b)
 {
     for (size_t i = 0; i < seconds; ++i) {
@@ -90,7 +91,7 @@ bool passwordGame()
     char password[] = "1234";
     random_shuffle(password, password + 4);
 
-    atomic_bool timesUp(false);
+    timesUp = false;
     thread thr(timer, 30, ref(timesUp));
     thr.detach();
 
@@ -121,7 +122,7 @@ bool eavesdropGame()
 
     setUpGame();
 
-    atomic_bool timesUp(false);
+    timesUp = false;
     thread thr(timer, 45, ref(timesUp));
     thr.detach();
 
