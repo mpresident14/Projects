@@ -1,26 +1,157 @@
 #include "scroll_left.hpp"
 #include "slide_up.hpp"
-#include "ncurses_helper.hpp"
 
 #include <iostream>
+#include <atomic>
 #include <ncurses.h>
 #include <unistd.h>
 #include <thread>
-#include <future>
 #include <chrono>
 #include <algorithm>
 #include <ctime>
 #include <cstring>
+#include <optional>
+#include <cstdlib>
+#include <csignal>
 
 using namespace std;
+using namespace std::string_literals;
 
 atomic_bool timesUp(false);
-void timer(size_t seconds, atomic_bool& b)
+const char alphanum[]
+    = "            0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+
+/*************************************************
+ * ncurses utils shamelessly taken from HMC CS70 *
+ *************************************************/
+void cleanup()
+{
+    // Restore the saved shell terminal before exiting.
+    // Put the cursor back to beginning of the last row of the terminal, where
+    // we expect it to be when the program exits.
+    mvcur(0, COLS - 1, LINES - 1, 0);
+    endwin();
+}
+
+void resizeHandler( int )
+{
+    endwin();
+    refresh();
+}
+
+void cleanUpScreenHandler( int signum )
+{
+    cleanup();
+
+    string err_name = "Unknown error";
+
+    switch (signum) {
+    case SIGSEGV:
+        err_name = "Segmentation fault";
+        break;
+    case SIGFPE:
+        err_name = "Floating point error";
+        break;
+    case SIGABRT:
+        err_name = "Abort request";
+        break;
+    }
+    cerr << "Interupt signal (" << signum << ") (" << err_name <<
+      ") received.\n";
+
+    exit(signum);
+}
+
+void init_ncurses()
+{
+    // Make sure the screen gets cleaned up if we exit abormally
+    signal(SIGSEGV, cleanUpScreenHandler);
+    signal(SIGFPE, cleanUpScreenHandler);
+    signal(SIGABRT, cleanUpScreenHandler);
+    signal(SIGWINCH, resizeHandler);
+
+    // Initialize the screen
+    initscr();
+
+    // Don't echo characters entered by the user
+    noecho();
+
+    // Make the cursor invisible
+    curs_set(0);
+
+    // Scroll if update goes past bottom of screen.
+    scrollok(stdscr, TRUE);
+}
+
+
+/************************************
+ * Other (not stolen) ncurses utils *
+ ************************************/
+
+void moveCursorNextLine()
+{
+    int cy = getcury(stdscr);
+    // If we get to the bottom of the screen, we can't move the cursor down
+    // anymore, so we have to scroll up.
+    if (cy == LINES - 1) {
+        scroll(stdscr);
+    } else {
+        wmove(stdscr, cy + 1, 0);
+        refresh();
+    }
+}
+
+/*
+ * Like getstr(), but allows a timeout to interrupt after any keystroke
+ * (See timer() below)
+ */
+optional<string> getLineWithTimeout()
+{
+    optional<string> strOpt{string()};
+    strOpt->reserve(5);
+
+    char c;
+    while ((c = getch()) != '\n' && c != '\r') {
+        if (timesUp.load()) {
+            return optional<string>();
+        }
+
+        if (c == '\b' || c == 127 /* DEL */) {
+            int curX = getcurx(stdscr);
+            // Hacky way to backspace the desired char, as well as the ^? that
+            // is output when you hit Backspace. Really should turn on noecho()
+            // and print characters myself b/c this may be machine-dependent.
+
+            // If at the beginning of a line
+            if (curX == 2) {
+                mvwdelch(stdscr, getcury(stdscr), curX - 2);
+                delch();
+            } else {
+                mvwdelch(stdscr, getcury(stdscr), curX - 3);
+                delch();
+                delch();
+                strOpt->pop_back();
+            }
+        } else {
+            strOpt->append(1, c);
+        }
+    }
+
+    moveCursorNextLine();
+    return strOpt;
+}
+
+/**************
+ * Game utils *
+ **************/
+
+void timer(size_t seconds)
 {
     for (size_t i = 0; i < seconds; ++i) {
         this_thread::sleep_for(1s);
     }
-    b.store(true);
+    timesUp.store(true);
 }
 
 void printAndSleep(const char *str)
@@ -40,7 +171,7 @@ void readySetGo()
     printAndSleep("." );
     printAndSleep("." );
     printAndSleep("." );
-    printAndSleep("GO!!!\n\n");
+    printw("GO!!!\n\n");
 }
 
 void setUpGame()
@@ -54,13 +185,10 @@ void setUpGame()
 
 void cleanUpGame()
 {
-    erase();
     noecho();
     curs_set(0);
+    erase();
 }
-
-const char alphanum[]
-    = "            0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 string randomString(size_t len)
 {
@@ -80,6 +208,10 @@ string randomString(size_t len)
     return s;
 }
 
+/*********
+ * Games *
+ *********/
+
 bool passwordGame()
 {
     ScrollLeft("txt/computer.txt").animate();
@@ -88,31 +220,33 @@ bool passwordGame()
 
     setUpGame();
 
-    char password[] = "1234";
-    random_shuffle(password, password + 4);
+    string password = "1234"s;
+    random_shuffle(password.begin(), password.end());
 
     timesUp = false;
-    thread thr(timer, 30, ref(timesUp));
+    thread thr(timer, 30);
     thr.detach();
 
-    char guess[256];
-    // This will allow an extra guess after timer stops, but that's ok
-    while (!timesUp.load()) {
-        getnstr(guess, 256);
-        if (!strncmp(password, guess, 4)) {
+    while (true) {
+        optional<string> guess = getLineWithTimeout();
+
+        // Time expired
+        if (!guess) {
+            cleanUpGame();
+            SlideUp("txt/mission_failed.txt").animate();
+            return false;
+        }
+
+        if (*guess == password) {
             cleanUpGame();
             SlideUp("txt/access_granted.txt").animate();
             return true;
         } else {
             printw("ACCESS DENIED!\n\n");
-            refresh();
         }
     }
-
-    cleanUpGame();
-    SlideUp("txt/mission_failed.txt").animate();
-    return false;
 }
+
 
 bool eavesdropGame()
 {
@@ -123,23 +257,25 @@ bool eavesdropGame()
     setUpGame();
 
     timesUp = false;
-    thread thr(timer, 45, ref(timesUp));
+    thread thr(timer, 45);
     thr.detach();
 
-    char userInput[256];;
     for (size_t i = 1; i < 6; ++i) {
         size_t len = i * 5;
         string randText = randomString(len);
         printw("%s\n", randText.c_str());
+
         while (true) {
-            // This will allow an extra input after timer stops, but that's ok
-            if (timesUp.load()) {
+            optional<string> userInput = getLineWithTimeout();
+
+            // Time expired
+            if (!userInput) {
                 cleanUpGame();
                 SlideUp("txt/mission_failed.txt").animate();
                 return false;
             }
-            getnstr(userInput, 256);
-            if (!strncmp(userInput, randText.c_str(), len)) {
+
+            if (*userInput == randText) {
                 printw("CORRECT!\n\n");
                 break;
             } else {
@@ -153,6 +289,7 @@ bool eavesdropGame()
     SlideUp("txt/success.txt").animate();
     return true;
 }
+
 
 int main()
 {

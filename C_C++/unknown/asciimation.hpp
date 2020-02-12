@@ -2,8 +2,7 @@
 #define ASCIIMATION_HPP
 
 #include <cstddef>
-
-#include "ncurses_helper.hpp"
+#include <fstream>
 
 class Asciimation {
 public:
@@ -14,6 +13,8 @@ public:
     Asciimation& setDelay(size_t micros);
 
 protected:
+    static void extractLine(std::ifstream& in, char *buf, size_t n);
+
     void clearScreen();
 
     char** contents_;
@@ -23,5 +24,6 @@ protected:
     size_t width_;
     size_t updateDelayMicros_;
 };
+
 
 #endif

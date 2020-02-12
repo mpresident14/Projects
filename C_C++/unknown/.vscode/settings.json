@@ -7,7 +7,10 @@
         "iosfwd": "cpp",
         "*.tcc": "cpp",
         "thread": "cpp",
-        "atomic": "cpp"
+        "atomic": "cpp",
+        "optional": "cpp",
+        "csignal": "cpp",
+        "fstream": "cpp"
     },
     "files.trimTrailingWhitespace": true
 }
