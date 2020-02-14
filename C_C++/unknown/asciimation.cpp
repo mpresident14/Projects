@@ -33,7 +33,7 @@ Asciimation::~Asciimation()
     delete[] contents_;
 }
 
-void Asciimation::clearScreen()
+void Asciimation::clearScreen() const
 {
     for(size_t i = 0; i < picHeight_; ++i){
         for(size_t j = 0; j < picWidth_; ++j){

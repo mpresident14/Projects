@@ -8,14 +8,13 @@ class Asciimation {
 public:
     Asciimation(size_t delayMicros);
     ~Asciimation();
-    virtual void update() = 0;
     virtual void animate() = 0;
     Asciimation& setDelay(size_t micros);
 
 protected:
     static void extractLine(std::ifstream& in, char *buf, size_t n);
 
-    void clearScreen();
+    void clearScreen() const;
 
     char** contents_;
     size_t picHeight_;
