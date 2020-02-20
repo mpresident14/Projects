@@ -1,18 +1,12 @@
-CXX = cl 
-CXXFLAGS = /W4 /EHsc /c
+CXX = clang++
+CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
 
-all: example.exe
+all: example
 
-clean: 
-	del *.obj
-	del *.exe
+clean:
+	rm *.o
+	rm *.exe
 
-example.obj: example.cpp testing-program.hpp
-	$(CXX) $(CXXFLAGS) example.cpp
-
-testing-program.obj: testing-program.cpp testing-program.hpp 
-	$(CXX) $(CXXFLAGS) testing-program.cpp
-
-example.exe: example.obj testing-program.obj
-	link example.obj testing-program.obj /out:example.exe
+example: example.cpp unit_test.hpp
+	$(CXX) $(CXXFLAGS) example.cpp -o example
 

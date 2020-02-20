@@ -224,7 +224,7 @@ bool passwordGame()
     random_shuffle(password.begin(), password.end());
 
     timesUp = false;
-    thread thr(timer, 30);
+    thread thr(timer, 60);
     thr.detach();
 
     while (true) {
@@ -257,7 +257,7 @@ bool eavesdropGame()
     setUpGame();
 
     timesUp = false;
-    thread thr(timer, 45);
+    thread thr(timer, 75);
     thr.detach();
 
     for (size_t i = 1; i < 6; ++i) {

@@ -21,7 +21,8 @@
             "macFrameworkPath": [
                 "/System/Library/Frameworks",
                 "/Library/Frameworks"
-            ]
+            ],
+            "compilerPath": "/usr/bin/clang"
         },
         {
             "name": "Linux",
@@ -40,7 +41,8 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "compilerPath": "/usr/bin/clang"
         },
         {
             "name": "Win32",
@@ -81,8 +83,9 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "compilerPath": "/usr/bin/clang"
         }
     ],
-    "version": 3
+    "version": 4
 }

@@ -12,5 +12,5 @@ it may seem like useless garble now, but it will likely contain
 valuable information once you decode it! Use the keyboard to
 copy every line that is displayed. Hit Enter after copying each
 line. Ralph is talking fast, so you'll need to be quick. You
-have 45 seconds to write down everything Ralph says! Press any
+have 75 seconds to write down everything Ralph says! Press any
 key to start.

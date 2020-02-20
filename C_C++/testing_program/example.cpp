@@ -1,4 +1,4 @@
-#include "testing-program.hpp"
+#include "unit_test.hpp"
 
 using namespace std;
 
@@ -6,45 +6,51 @@ using namespace std;
  * Tests for functionality *
  ***************************/
 
-void test1() {
-  TestingProgram tester{"Test 1"};  // Set up the testing object
+UnitTest tester = createTester();
 
-  affirm(1 == 1);
+void test1()
+{
+  tester.initTest();
+
+  tester.affirm(1 == 1);
   for (size_t i = 0; i < 10; ++i) {
-    affirm(i == 0 + i);
+    tester.affirm(i == 0 + i);
   }
 
-  TestingProgram::printResults();  // Print results about the
+  tester.printResults();  // Print results about the
                                    // individual test
 }
 
-void test2() {
-  TestingProgram tester{"Test 2"};
+void test2()
+{
+  tester.initTest();
 
-  affirm(false);  // This fails
-  affirm(true);
-  affirm(9 == 8);  // This fails
+  tester.affirm(false);  // This fails
+  tester.affirm(true);
+  tester.affirm(9 == 8);  // This fails
 
-  TestingProgram::printResults();
+  tester.printResults();
 }
 
-void test3() {
-  TestingProgram tester{"Test 3"};
+void test3()
+{
+  tester.initTest();
 
   int x[2] = {2, 5};
-  affirm(x[0] == 2);
-  affirm(x[1] == 5);
+  tester.affirm(x[0] == 2);
+  tester.affirm(x[1] == 5);
 
-  TestingProgram::printResults();
+  tester.printResults();
 }
 
-int main() {
+int main()
+{
   // Call each of your tests
   test1();
   test2();
   test3();
 
   // Print results of your test file
-  TestingProgram::summarize();
+  tester.summarize();
   return 0;
 }
