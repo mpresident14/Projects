@@ -65,16 +65,16 @@ public:
   // Individual test statistics
   void printResults()
   {
-    std::cerr << "Result: Failed " << failuresInTest_ << " / " << affirmsInTest_
-              << " affirmations." << "\n" << std::endl;
+    std::cerr << "Result: Passed " << affirmsInTest_ - failuresInTest_
+              << " / " << affirmsInTest_ << " affirmations." << "\n" << std::endl;
   }
 
   // Entire file statistics
   void summarize()
   {
     std::cerr << "------------------------------------------------" << std::endl;
-    std::cerr << "SUMMARY: Failed " << testsFailed_ << " / " << totalTests_
-              << " tests." << std::endl;
+    std::cerr << "SUMMARY: Passed " << totalTests_ - testsFailed_
+              << " / " << totalTests_ << " tests." << std::endl;
 
     if (testsFailed_ == 0) {
       std::cerr << "Congratulations! All tests passed!" << std::endl;
