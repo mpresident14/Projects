@@ -1,9 +1,10 @@
-#include "CharParser.hpp"
+#include "Parsers.hpp"
 
 #include <unit_test.hpp>
 #include <cstring>
 
 using namespace std;
+using namespace parsers;
 
 /***************************
  * Tests for functionality *
@@ -15,29 +16,32 @@ void testCharParser()
 {
     tester.initTest();
 
-    CharParser p('$');
-
-    tester.affirm(p.parse("$") == '$');
+    tester.affirm(anyChar.parse("$") == '$');
 
     try {
-        p.parse("$4");
+        anyChar.parse("$4");
     } catch (invalid_argument& e) {
         tester.affirm(!strcmp(e.what(), "No parse: 4 remained."));
-    }
-
-    try {
-        p.parse("a");
-    } catch (invalid_argument& e) {
-        tester.affirm(!strcmp(e.what(), "Expected: $."));
     }
 
     tester.printResults();
 }
 
+void testConditionalParser()
+{
+    tester.initTest();
+
+    ConditionalParser<char> aParser = cond<char>(anyChar, [](char& c) { return c == 'a'; });
+
+    // tester.affirm(aParser.parse("a") == 'a');
+
+    tester.printResults();
+}
 
 int main()
 {
     testCharParser();
+    testConditionalParser();
 
 
     tester.summarize();

@@ -1,21 +1,18 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP 1
 
-#include <string_view>
-#include <optional>
-#include <utility>
-#include <stdexcept>
+#include "ParserImpl.hpp"
 
-template<typename Result>
+template<typename T>
 class Parser {
 public:
-    using OptResult = std::optional<std::pair<Result, std::string_view>>;
+    using OptResult = typename ParserImpl<T>::OptResult;
 
-    virtual ~Parser() { delete overrideErrMsg_; }
+    Parser(ParserImpl<T> *impl) : impl_(impl) {}
 
-    Result parse(const std::string& input)
+    T parse(const std::string& input) const
     {
-        OptResult opt = maybeParse(input);
+        OptResult opt = impl_->maybeParse(input);
         if (opt.has_value()) {
             std::string_view& remaining = std::get<1>(opt.value());
             if (remaining.empty()) {
@@ -25,22 +22,13 @@ public:
                 throw std::invalid_argument("No parse: " + std::string(remaining) + " remained.");
             }
         } else {
-            throw std::invalid_argument(overrideErrMsg_ ? overrideErrMsg_ : getErrorMsg());
+            // throw std::invalid_argument(overrideErrMsg_ ? overrideErrMsg_ : getErrorMsg());
+            throw std::invalid_argument("No parse.");
         }
     }
 
-protected:
-    Parser() : overrideErrMsg_{nullptr} {}
-    virtual OptResult maybeParse(std::string_view input) = 0;
-    virtual std::string getErrorMsg() = 0;
-
-    OptResult makeResult(Result result, std::string_view rest)
-    {
-        return std::make_optional(std::make_pair(result, rest));
-    }
-
-    char *overrideErrMsg_;
-
+// private:
+    ParserImpl<T> *impl_;
 };
 
 #endif
