@@ -6,6 +6,8 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <exception>
+#include <type_traits>
 
 class UnitTest {
 public:
@@ -28,7 +30,35 @@ public:
     ++totalTests_;
   }
 
-  void check(bool statement, size_t line)
+  template<typename F>
+  void assertThrows(const F& fn, const std::string& errMsg, size_t line)
+  {
+    try {
+      fn();
+      assertTrue(false, line);
+    } catch (std::exception& e) {
+      assertTrue(std::string(e.what()) == errMsg, line);
+    }
+  }
+
+  template<typename T1, typename T2>
+  void assertNotEqual(const T1& obj1, const T2& obj2, size_t line)
+  {
+    assertTrue(obj1 != obj2, line);
+  }
+
+  template<typename T1, typename T2>
+  void assertEquals(const T1& obj1, const T2& obj2, size_t line)
+  {
+    assertTrue(obj1 == obj2, line);
+  }
+
+  void assertFalse(bool statement, size_t line)
+  {
+    assertTrue(!statement, line);
+  }
+
+  void assertTrue(bool statement, size_t line)
   {
     ++affirmsInTest_;
 
@@ -103,7 +133,12 @@ private:
 };
 
 // Macros to grab relevant values from test file
-#define affirm(statement) UnitTest::check(statement, __LINE__)
+#define assertFalse(statement) UnitTest::assertFalse(statement, __LINE__)
+#define assertTrue(statement) UnitTest::assertTrue(statement, __LINE__)
+#define assertEquals(obj1, obj2) UnitTest::assertEquals(obj1, obj2, __LINE__)
+#define assertNotEqual(obj1, obj2) UnitTest::assertNotEqual(obj1, obj2, __LINE__)
+#define assertThrows(fn, errMsg) UnitTest::assertThrows(fn, errMsg, __LINE__)
+
 #define createTester() UnitTest::createTester(__FILE__)
 #define initTest() initTest(__FUNCTION__)
 

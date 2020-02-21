@@ -12,22 +12,22 @@ void test1()
 {
   tester.initTest();
 
-  tester.affirm(1 == 1);
+  tester.assertEquals(1, 1);
   for (size_t i = 0; i < 10; ++i) {
-    tester.affirm(i == 0 + i);
+    tester.assertTrue(i == 0 + i);
   }
 
-  tester.printResults();  // Print results about the
-                                   // individual test
+  tester.printResults();
+
 }
 
 void test2()
 {
   tester.initTest();
 
-  tester.affirm(false);  // This fails
-  tester.affirm(true);
-  tester.affirm(9 == 8);  // This fails
+  tester.assertTrue(false);
+  tester.assertTrue(true);
+  tester.assertNotEqual(9, 4 + 5);
 
   tester.printResults();
 }
@@ -36,10 +36,8 @@ void test3()
 {
   tester.initTest();
 
-  int x[2] = {2, 5};
-  tester.affirm(x[0] == 2);
-  tester.affirm(x[1] == 5);
-
+  auto lambda = [](){ throw invalid_argument("Error!"); };
+  tester.assertThrows(lambda, "Error!");
   tester.printResults();
 }
 
