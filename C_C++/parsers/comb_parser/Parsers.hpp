@@ -10,9 +10,10 @@
 /**************************************************************************
  *                           PRECOMPUTED PARSERS
  **************************************************************************/
+
 namespace parsers
 {
-    CharParser anyChar;
+    constexpr CharParser anyChar;
 }
 
 #endif

@@ -18,12 +18,12 @@ public:
 
 private:
     ConditionalParser(const P& parser, bool (*condFn)(const T&))
-        : parser_(parser), condFn_(condFn) {std::cout << "const &" << std::endl;}
+        : parser_(parser), condFn_(condFn) {}
 
     ConditionalParser(P&& parser, bool (*condFn)(const T&))
-        : parser_(std::move(parser)), condFn_(condFn) { std::cout << "&&" << std::endl;}
+        : parser_(std::move(parser)), condFn_(condFn) {}
 
-    virtual std::optional<T> apply(std::string_view input, size_t *pos) override
+    virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
     {
         std::optional<T> optResult = parser_.apply(input, pos);
         if (optResult.has_value() && condFn_(optResult.value())) {

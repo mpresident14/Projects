@@ -21,7 +21,7 @@ private:
     MapParser(P&& parser, T (*mapFn)(From&&))
         : parser_(std::move(parser)), mapFn_(mapFn) {}
 
-    virtual std::optional<T> apply(std::string_view input, size_t *pos) override
+    virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
     {
         std::optional<From> optResult = parser_.apply(input, pos);
         if (optResult.has_value()) {

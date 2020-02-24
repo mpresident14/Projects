@@ -12,13 +12,8 @@ class CharParser: public Parser<char, CharParser> {
     friend class Parser;
 
 private:
-    virtual std::optional<char> apply(std::string_view input, size_t *pos) override
+    virtual std::optional<char> apply(const std::string& input, size_t *pos) const override
     {
-        // if (input[*pos] == c_) {
-        //     ++(*pos);
-        //     return std::make_optional(c_);
-        // }
-        // return {};
         if (*pos < input.size()) {
             auto optResult = std::make_optional(input[*pos]);
             ++(*pos);
