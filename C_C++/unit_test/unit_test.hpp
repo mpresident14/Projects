@@ -74,9 +74,9 @@ public:
 
 
   template<typename T1, typename T2>
-  void assertNotEqual(const T1& obj1, const T2& obj2, size_t line)
+  void assertNotEqual(const T1& obj, const T2& actual, size_t line)
   {
-    assertTrue(obj1 != obj2, line);
+    assertTrue(obj != actual, line);
   }
 
 
@@ -85,11 +85,11 @@ public:
     typename T2,
     std::enable_if_t<is_printable_v<T1> && is_printable_v<T2>, int> = 0
   >
-  void assertEquals(const T1& obj1, const T2& obj2, size_t line)
+  void assertEquals(const T1& expected, const T2& actual, size_t line)
   {
     std::ostringstream os;
-    os << "Expected " << obj1 << ", got " << obj2;
-    assertTrue(obj1 == obj2, line, os.str());
+    os << "Expected " << expected << ", got " << actual;
+    assertTrue(expected == actual, line, os.str());
   }
 
 
@@ -98,9 +98,9 @@ public:
     typename T2,
     std::enable_if_t<!is_printable_v<T1> || !is_printable_v<T2>, int> = 0
   >
-  void assertEquals(const T1& obj1, const T2& obj2, size_t line)
+  void assertEquals(const T1& expected, const T2& actual, size_t line)
   {
-    assertTrue(obj1 == obj2, line);
+    assertTrue(expected == actual, line);
   }
 
 
@@ -195,8 +195,8 @@ private:
 // Macros to grab relevant values from test file
 #define assertFalse(statement) assertFalse(statement, __LINE__)
 #define assertTrue(statement) assertTrue(statement, __LINE__)
-#define assertEquals(obj1, obj2) assertEquals(obj1, obj2, __LINE__)
-#define assertNotEqual(obj1, obj2) assertNotEqual(obj1, obj2, __LINE__)
+#define assertEquals(expected, actual) assertEquals(expected, actual, __LINE__)
+#define assertNotEqual(obj, actual) assertNotEqual(obj, actual, __LINE__)
 #define assertThrows(fn, errMsg) assertThrows(fn, errMsg, __LINE__)
 
 #define createTester() createTester(__FILE__)
