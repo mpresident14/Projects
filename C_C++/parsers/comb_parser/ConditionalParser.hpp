@@ -4,35 +4,24 @@
 #include "Parser.hpp"
 
 #include <utility>
+#include <iostream>
 
 template <typename T, typename P>
-class ConditionalParser: public Parser<T> {
+class ConditionalParser: public Parser<T, ConditionalParser<T, P>> {
 public:
     template<typename T2, typename R2, typename P2>
     friend class MapParser;
     template<typename T2, typename P2>
     friend class ConditionalParser;
-    friend class CharParser;
-    template<typename T2>
+    template<typename T2, typename Derived>
     friend class Parser;
-
-    auto onlyIf(bool (*condFn)(const T&))
-    {
-        return ConditionalParser<T, std::remove_pointer_t<decltype(this)>>(*this, condFn);
-    }
-
-    template<typename To>
-    auto mapTo(To (*mapFn)(T&&))
-    {
-        return MapParser<To, T, std::remove_pointer_t<decltype(this)>>(*this, mapFn);
-    }
 
 private:
     ConditionalParser(const P& parser, bool (*condFn)(const T&))
-        : parser_(parser), condFn_(condFn) {}
+        : parser_(parser), condFn_(condFn) {std::cout << "const &" << std::endl;}
 
     ConditionalParser(P&& parser, bool (*condFn)(const T&))
-        : parser_(std::move<P>(parser)), condFn_(condFn) {}
+        : parser_(std::move(parser)), condFn_(condFn) { std::cout << "&&" << std::endl;}
 
     virtual std::optional<T> apply(std::string_view input, size_t *pos) override
     {
@@ -43,9 +32,6 @@ private:
         return {};
     }
 
-
-
-// private:
     P parser_;
     bool (*condFn_)(const T&);
 };

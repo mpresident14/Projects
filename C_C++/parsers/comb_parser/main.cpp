@@ -8,8 +8,7 @@ using namespace std;
 
 int main()
 {
-    CharParser charP(' ');
-    auto BP = charP.onlyIf([](const char& c) { return c == 'b'; });
+    auto BP = parsers::anyChar.onlyIf([](const char& c) { return c == 'b'; });
 
     string (*lambda1)(char&&) = [](char&& c) { return string(3, c); };
     size_t (*lambda2)(string&&) = [](string&& s) { return s.size(); };

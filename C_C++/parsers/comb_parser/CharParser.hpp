@@ -3,9 +3,15 @@
 
 #include "Parser.hpp"
 
-class CharParser: public Parser<char> {
-public:
-    CharParser(char c) : c_(c) {}
+class CharParser: public Parser<char, CharParser> {
+    template<typename T2, typename P2>
+    friend class ConditionalParser;
+    template <typename T2, typename From2, typename P2>
+    friend class MapParser;
+    template<typename T2, typename Derived>
+    friend class Parser;
+
+private:
     virtual std::optional<char> apply(std::string_view input, size_t *pos) override
     {
         // if (input[*pos] == c_) {
@@ -20,20 +26,6 @@ public:
         }
         return {};
     }
-
-    auto onlyIf(bool (*condFn)(const char&))
-    {
-        return ConditionalParser<char, std::remove_pointer_t<decltype(this)>>(*this, condFn);
-    }
-
-    template<typename To>
-    auto mapTo(To (*mapFn)(char&&))
-    {
-        return MapParser<To, char, std::remove_pointer_t<decltype(this)>>(*this, mapFn);
-    }
-
-private:
-    char c_;
 };
 
 #endif

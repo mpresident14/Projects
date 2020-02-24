@@ -6,6 +6,7 @@
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 
 template <typename T, typename P>
 class ConditionalParser;
@@ -13,58 +14,77 @@ class ConditionalParser;
 template <typename T, typename R, typename P>
 class MapParser;
 
-template <typename T>
+class CharParser;
+
+template <typename T, typename Derived>
 class Parser {
 public:
     T parse(const std::string& input);
-
-    /* *
-    * See below for comments on this.
-    * */
-    // auto onlyIf(bool (*condFn)(const T&)) = 0;
-    // template<typename To>
-    // auto mapTo(To (*mapFn)(T&&)) = 0;
-
-
+    auto onlyIf(bool (*condFn)(const T&)) &;
+    auto onlyIf(bool (*condFn)(const T&)) &&;
+    template<typename To> auto mapTo(To (*mapFn)(T&&)) &;
+    template<typename To> auto mapTo(To (*mapFn)(T&&)) &&;
 protected:
-    std::optional<T> apply(std::string_view input);
     virtual std::optional<T> apply(std::string_view input, size_t *pos) = 0;
 };
 
 
-template<typename T>
-T Parser<T>::parse(const std::string& input)
+/**************************************************************************
+ *                       INTERFACE PARSING FUNCTION
+ **************************************************************************/
+
+template <typename T, typename Derived>
+T Parser<T, Derived>::parse(const std::string& input)
 {
-    std::optional<T> optResult = apply(input);
+    size_t pos = 0;
+    std::optional<T> optResult = apply(input, &pos);
     if (optResult.has_value()) {
         return optResult.value();
     }
     throw std::invalid_argument("No parse for input " + input);
 }
 
-template<typename T>
-std::optional<T> Parser<T>::apply(std::string_view input)
-{
-    size_t pos = 0;
-    return apply(input, &pos);
-}
-
-/* *
- * decltype is compile-time, so it cannot deduce the derived type
- * I think I will have these virtual and define them in every class :(
+/**************************************************************************
+ *                              COMBINATORS
+ **************************************************************************
+ * decltype is compile-time, so it cannot deduce the Parser type in the
+ * template of the derived class constructor. Therefore, we use the
+ * curiously recurring template pattern (CRTP) to allow the base class
+ * Parser to know what type of Parser it is at compile-time. See
+ * https://www.geeksforgeeks.org/curiously-recurring-template-pattern-crtp-2/)
+ * for more on CRTP.
+ *
+ * Note that we static_cast to a Derived* and then dereference, rather
+ * than just casting to Derived, which would result in object slicing
+ * (if we provided a Parser -> Derived constructor). Note that we could
+ * also static_cast to a Derived& instead.
  * */
 
-// template<typename T>
-// auto Parser<T>::onlyIf(bool (*condFn)(const T&))
-// {
-//     return ConditionalParser<T, std::remove_pointer_t<decltype(this)>>(*this, condFn);
-// }
 
-// template<typename T>
-// template<typename To>
-// auto Parser<T>::mapTo(To (*mapFn)(T&&))
-// {
-//     return MapParser<To, T, std::remove_pointer_t<decltype(this)>>(*this, mapFn);
-// }
+template <typename T, typename Derived>
+auto Parser<T, Derived>::onlyIf(bool (*condFn)(const T&)) &
+{
+    return ConditionalParser<T, Derived>(*static_cast<Derived*>(this), condFn);
+}
+
+template <typename T, typename Derived>
+auto Parser<T, Derived>::onlyIf(bool (*condFn)(const T&)) &&
+{
+    return ConditionalParser<T, Derived>(std::move(*static_cast<Derived*>(this)), condFn);
+}
+
+template <typename T, typename Derived>
+template<typename To>
+auto Parser<T, Derived>::mapTo(To (*mapFn)(T&&)) &
+{
+    return MapParser<To, T, Derived>(*static_cast<Derived*>(this), mapFn);
+}
+
+template <typename T, typename Derived>
+template<typename To>
+auto Parser<T, Derived>::mapTo(To (*mapFn)(T&&)) &&
+{
+    return MapParser<To, T, Derived>(std::move(*static_cast<Derived*>(this)), mapFn);
+}
 
 #endif

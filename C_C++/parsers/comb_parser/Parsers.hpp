@@ -6,4 +6,13 @@
 #include "MapParser.hpp"
 #include "CharParser.hpp"
 
+
+/**************************************************************************
+ *                           PRECOMPUTED PARSERS
+ **************************************************************************/
+namespace parsers
+{
+    CharParser anyChar;
+}
+
 #endif
