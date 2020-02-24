@@ -6,22 +6,22 @@
 #include <utility>
 #include <iostream>
 
-template <typename T, typename P>
-class ConditionalParser: public Parser<T, ConditionalParser<T, P>> {
+template <typename T, typename F, typename P>
+class ConditionalParser: public Parser<T, ConditionalParser<T, F, P>> {
 public:
     template<typename T2, typename R2, typename P2>
     friend class MapParser;
-    template<typename T2, typename P2>
+    template<typename T2, typename F2, typename P2>
     friend class ConditionalParser;
     template<typename T2, typename Derived>
     friend class Parser;
 
 private:
-    ConditionalParser(const P& parser, bool (*condFn)(const T&))
-        : parser_(parser), condFn_(condFn) {}
+    ConditionalParser(const P& parser, F&& condFn)
+        : parser_(parser), condFn_(std::move(condFn)) {}
 
-    ConditionalParser(P&& parser, bool (*condFn)(const T&))
-        : parser_(std::move(parser)), condFn_(condFn) {}
+    ConditionalParser(P&& parser, F&& condFn)
+        : parser_(std::move(parser)), condFn_(std::move(condFn)) {}
 
     virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
     {
@@ -33,7 +33,7 @@ private:
     }
 
     P parser_;
-    bool (*condFn_)(const T&);
+    F condFn_;
 };
 
 #endif

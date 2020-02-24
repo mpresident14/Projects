@@ -4,7 +4,7 @@
 #include "Parser.hpp"
 
 class CharParser: public Parser<char, CharParser> {
-    template<typename T2, typename P2>
+    template<typename T2, typename F, typename P2>
     friend class ConditionalParser;
     template <typename T2, typename From2, typename P2>
     friend class MapParser;

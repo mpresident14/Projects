@@ -7,7 +7,7 @@
 
 template <typename T, typename From, typename P>
 class MapParser: public Parser<T, MapParser<T, From, P>> {
-    template<typename T2, typename P2>
+    template<typename T2, typename F, typename P2>
     friend class ConditionalParser;
     template <typename T2, typename From2, typename P2>
     friend class MapParser;
@@ -15,6 +15,8 @@ class MapParser: public Parser<T, MapParser<T, From, P>> {
     friend class Parser;
 
 private:
+    // Note that for member functions, the typename P has already been deduced at the
+    // class level, so P&& is not a universal reference.
     MapParser(const P& parser, T (*mapFn)(From&&))
         : parser_(parser), mapFn_(mapFn) {}
 

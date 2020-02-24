@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <utility>
 
-template <typename T, typename P>
+template <typename T, typename F, typename P>
 class ConditionalParser;
 
 template <typename T, typename R, typename P>
@@ -19,8 +19,31 @@ template <typename T, typename Derived>
 class Parser {
 public:
     T parse(const std::string& input) const;
-    auto onlyIf(bool (*condFn)(const T&)) const &;
-    auto onlyIf(bool (*condFn)(const T&)) const &&;
+
+    template<
+        typename F,
+        // Early compiler error for user rather than displaying error in the implementation parts
+        typename = std::enable_if_t<
+            std::is_same_v<
+                std::invoke_result_t<F, const T&>,
+                bool
+            >
+        >
+    >
+    auto onlyIf(F condFn) const &;
+
+    template<
+        typename F,
+        // Early compiler error for user rather than displaying error in the implementation parts
+        typename = std::enable_if_t<
+            std::is_same_v<
+                std::invoke_result_t<F, const T&>,
+                bool
+            >
+        >
+    >
+    auto onlyIf(F condFn) const &&;
+
     template<typename To> auto mapTo(To (*mapFn)(T&&)) const &;
     template<typename To> auto mapTo(To (*mapFn)(T&&)) const &&;
 protected:
@@ -61,15 +84,19 @@ T Parser<T, Derived>::parse(const std::string& input) const
 
 
 template <typename T, typename Derived>
-auto Parser<T, Derived>::onlyIf(bool (*condFn)(const T&)) const &
+template<typename F, typename Void>
+auto Parser<T, Derived>::onlyIf(F condFn) const &
 {
-    return ConditionalParser<T, Derived>(*static_cast<const Derived*>(this), condFn);
+    return ConditionalParser<T, F, Derived>(
+        *static_cast<const Derived*>(this), std::move(condFn));
 }
 
 template <typename T, typename Derived>
-auto Parser<T, Derived>::onlyIf(bool (*condFn)(const T&)) const &&
+template<typename F, typename Void>
+auto Parser<T, Derived>::onlyIf(F condFn) const &&
 {
-    return ConditionalParser<T, Derived>(std::move(*static_cast<const Derived*>(this)), condFn);
+    return ConditionalParser<T, F, Derived>(
+        std::move(*static_cast<const Derived*>(this)), std::move(condFn));
 }
 
 template <typename T, typename Derived>
