@@ -6,13 +6,75 @@ using namespace std;
  * Tests for functionality *
  ***************************/
 
-UnitTest tester = createTester();
+struct Widget {
+  int val_;
+  // bool operator==(const Widget& other) { return val_ == other.val_; }
+};
+bool operator==(const Widget& w1, const Widget& w2)
+{ return w1.val_ == w2.val_; }
 
-void test1()
+auto tester = mcprez::UnitTest::createTester();
+
+void testAssertTrue()
 {
   tester.initTest();
 
-  tester.assertEquals(1, 1);
+  tester.assertTrue(false);
+  tester.assertTrue(true);
+
+  tester.printResults();
+}
+
+void testAssertFalse()
+{
+  tester.initTest();
+
+  tester.assertFalse(false);
+  tester.assertFalse(true);
+
+  tester.printResults();
+}
+
+
+void testAssertEquals()
+{
+  tester.initTest();
+
+  tester.assertEquals(Widget{1}, Widget{2});
+  tester.assertEquals(1,1);
+  tester.assertEquals("hello", "goodbye");
+
+  tester.printResults();
+}
+
+void testAssertNotEqual()
+{
+  tester.initTest();
+
+  tester.assertNotEqual(1, 2);
+  tester.assertNotEqual(4, 4);
+
+  tester.printResults();
+}
+
+
+void testAssertThrows()
+{
+  tester.initTest();
+
+  auto throwing = [](){ throw invalid_argument("Error!"); };
+  tester.assertThrows(throwing, "Error!");
+
+  auto nonThrowing = [](){ return 0; };
+  tester.assertThrows(nonThrowing, "Error!");
+
+  tester.printResults();
+}
+
+void testLoop()
+{
+  tester.initTest();
+
   for (size_t i = 0; i < 10; ++i) {
     tester.assertTrue(i == 0 + i);
   }
@@ -21,32 +83,26 @@ void test1()
 
 }
 
-void test2()
+void testAllPass()
 {
   tester.initTest();
 
-  tester.assertTrue(false);
   tester.assertTrue(true);
-  tester.assertNotEqual(9, 4 + 5);
+  tester.assertFalse(false);
 
-  tester.printResults();
-}
-
-void test3()
-{
-  tester.initTest();
-
-  auto lambda = [](){ throw invalid_argument("Error!"); };
-  tester.assertThrows(lambda, "Error!");
   tester.printResults();
 }
 
 int main()
 {
   // Call each of your tests
-  test1();
-  test2();
-  test3();
+  testAssertTrue();
+  testAssertFalse();
+  testAssertEquals();
+  testAssertNotEqual();
+  testAssertThrows();
+  testLoop();
+  testAllPass();
 
   // Print results of your test file
   tester.summarize();
