@@ -4,15 +4,19 @@
 #include "Parser.hpp"
 
 #include <utility>
-#include <iostream>
 
 template <typename T, typename F, typename P>
 class ConditionalParser: public Parser<T, ConditionalParser<T, F, P>> {
-public:
-    template<typename T2, typename R2, typename P2>
+
+    template<typename T2, typename From, typename F2, typename P2>
     friend class MapParser;
+
     template<typename T2, typename F2, typename P2>
     friend class ConditionalParser;
+
+    template <typename T2, typename Tuple>
+    friend class AltParser;
+
     template<typename T2, typename Derived>
     friend class Parser;
 
@@ -23,12 +27,19 @@ private:
     ConditionalParser(P&& parser, F&& condFn)
         : parser_(std::move(parser)), condFn_(std::move(condFn)) {}
 
+
     virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
     {
+        size_t oldPos = *pos;
         std::optional<T> optResult = parser_.apply(input, pos);
         if (optResult.has_value() && condFn_(optResult.value())) {
             return optResult;
         }
+
+        // TODO: optResult will leak upon condFn failure if T is a pointer
+
+        // Restore the position if the condFn fails.
+        *pos = oldPos;
         return {};
     }
 

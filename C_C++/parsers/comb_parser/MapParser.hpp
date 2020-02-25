@@ -5,23 +5,30 @@
 
 #include <utility>
 
-template <typename T, typename From, typename P>
-class MapParser: public Parser<T, MapParser<T, From, P>> {
-    template<typename T2, typename F, typename P2>
+template <typename T, typename From, typename F, typename P>
+class MapParser: public Parser<T, MapParser<T, From, F, P>> {
+
+    template<typename T2, typename F2, typename P2>
     friend class ConditionalParser;
-    template <typename T2, typename From2, typename P2>
+
+    template <typename T2, typename From2, typename F2, typename P2>
     friend class MapParser;
+
+    template <typename T2, typename Tuple>
+    friend class AltParser;
+
     template<typename T2, typename Derived>
     friend class Parser;
 
 private:
     // Note that for member functions, the typename P has already been deduced at the
     // class level, so P&& is not a universal reference.
-    MapParser(const P& parser, T (*mapFn)(From&&))
-        : parser_(parser), mapFn_(mapFn) {}
+    MapParser(const P& parser, F&& mapFn)
+        : parser_(parser), mapFn_(std::move(mapFn)) {}
 
-    MapParser(P&& parser, T (*mapFn)(From&&))
-        : parser_(std::move(parser)), mapFn_(mapFn) {}
+    MapParser(P&& parser, F&& mapFn)
+        : parser_(std::move(parser)), mapFn_(std::move(mapFn)) {}
+
 
     virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
     {
@@ -34,7 +41,7 @@ private:
 
 private:
     P parser_;
-    T (*mapFn_)(From&&);
+    F mapFn_;
 };
 
 #endif

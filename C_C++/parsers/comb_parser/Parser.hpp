@@ -7,11 +7,16 @@
 #include <type_traits>
 #include <utility>
 
+#include <iostream>
+
 template <typename T, typename F, typename P>
 class ConditionalParser;
 
-template <typename T, typename R, typename P>
+template <typename T, typename From, typename F, typename P>
 class MapParser;
+
+template <typename T, typename Tuple>
+class AltParser;
 
 class CharParser;
 
@@ -42,10 +47,14 @@ public:
             >
         >
     >
-    auto onlyIf(F condFn) const &&;
+    auto onlyIf(F condFn) &&;
 
-    template<typename To> auto mapTo(To (*mapFn)(T&&)) const &;
-    template<typename To> auto mapTo(To (*mapFn)(T&&)) const &&;
+    template <typename F>
+    auto mapTo(F mapFn) const &;
+
+    template <typename F>
+    auto mapTo(F mapFn) &&;
+
 protected:
     virtual std::optional<T> apply(const std::string& input, size_t *pos) const = 0;
 };
@@ -84,7 +93,7 @@ T Parser<T, Derived>::parse(const std::string& input) const
 
 
 template <typename T, typename Derived>
-template<typename F, typename Void>
+template<typename F, typename>
 auto Parser<T, Derived>::onlyIf(F condFn) const &
 {
     return ConditionalParser<T, F, Derived>(
@@ -92,25 +101,28 @@ auto Parser<T, Derived>::onlyIf(F condFn) const &
 }
 
 template <typename T, typename Derived>
-template<typename F, typename Void>
-auto Parser<T, Derived>::onlyIf(F condFn) const &&
+template<typename F, typename>
+auto Parser<T, Derived>::onlyIf(F condFn) &&
 {
     return ConditionalParser<T, F, Derived>(
-        std::move(*static_cast<const Derived*>(this)), std::move(condFn));
+        std::move(*static_cast<Derived*>(this)), std::move(condFn));
 }
 
 template <typename T, typename Derived>
-template<typename To>
-auto Parser<T, Derived>::mapTo(To (*mapFn)(T&&)) const &
+template <typename F>
+auto Parser<T, Derived>::mapTo(F mapFn) const &
 {
-    return MapParser<To, T, Derived>(*static_cast<const Derived*>(this), mapFn);
+    return MapParser<std::decay_t<std::invoke_result_t<F, T&&>>, T, F, Derived>(
+        *static_cast<const Derived*>(this), std::move(mapFn));
 }
 
+
 template <typename T, typename Derived>
-template<typename To>
-auto Parser<T, Derived>::mapTo(To (*mapFn)(T&&)) const &&
+template <typename F>
+auto Parser<T, Derived>::mapTo(F mapFn) &&
 {
-    return MapParser<To, T, Derived>(std::move(*static_cast<const Derived*>(this)), mapFn);
+    return MapParser<std::decay_t<std::invoke_result_t<F, T&&>>, T, F, Derived>(
+        std::move(*static_cast<Derived*>(this)), std::move(mapFn));
 }
 
 #endif

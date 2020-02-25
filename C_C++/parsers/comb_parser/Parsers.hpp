@@ -5,15 +5,25 @@
 #include "ConditionalParser.hpp"
 #include "MapParser.hpp"
 #include "CharParser.hpp"
+#include "AltParser.hpp"
 
-
-/**************************************************************************
- *                           PRECOMPUTED PARSERS
- **************************************************************************/
 
 namespace parsers
 {
+    /**************************************************************************
+     *                           PRECOMPUTED PARSERS
+     **************************************************************************/
     constexpr CharParser anyChar;
+
+
+    /**************************************************************************
+     *                           NONCHAINED COMBINATORS
+     **************************************************************************/
+    template <typename T, typename... ParserTypes>
+    auto alt(ParserTypes&&... parsers)
+    {
+        return AltParser<T, std::tuple<ParserTypes...>>(std::forward<ParserTypes>(parsers)...);
+    }
 }
 
 #endif
