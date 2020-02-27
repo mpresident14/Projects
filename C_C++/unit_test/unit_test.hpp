@@ -113,10 +113,9 @@ public:
 
   ~UnitTest()
   {
-    // Need print results of last test.
+    // Need to print results of last test.
     printResults();
     summarize();
-    delete[] testName_;
   }
   UnitTest(const UnitTest&) = delete;
   UnitTest& operator=(const UnitTest&) = delete;
