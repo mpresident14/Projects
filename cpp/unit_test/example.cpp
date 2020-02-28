@@ -5,7 +5,7 @@ using namespace std;
 struct Widget { int val_;};
 bool operator==(const Widget& w1, const Widget& w2) { return w1.val_ == w2.val_; }
 
-auto tester = mcprez::UnitTest::createTester();
+auto tester = prez::UnitTest::createTester();
 
 void testAssertTrue()
 {
