@@ -3,6 +3,11 @@
 
 #include "Parser.hpp"
 
+namespace parsers
+{
+    CharParser anyChar();
+}
+
 class CharParser: public Parser<char, CharParser> {
 
     template<typename T2, typename F, typename P2>
@@ -14,8 +19,12 @@ class CharParser: public Parser<char, CharParser> {
     template <typename T2, typename Tuple>
     friend class AltParser;
 
+    friend CharParser parsers::anyChar();
+
 
 private:
+    CharParser() {}
+
     virtual std::optional<char> apply(const std::string& input, size_t *pos) const override
     {
         if (*pos < input.size()) {

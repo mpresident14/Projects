@@ -25,6 +25,10 @@ class CharParser;
 template <typename T, typename Derived>
 class Parser {
 public:
+    // virtual Parser(const Parser&) = default;
+    // virtual Parser& operator=(const Parser&) = default;
+
+
     T parse(const std::string& input) const;
 
     template<
@@ -62,6 +66,11 @@ public:
 
 protected:
     virtual std::optional<T> apply(const std::string& input, size_t *pos) const = 0;
+
+    // This is a hacky and upsetting to allow us to call get() regardless
+    // of whether the parser is an actual Parser or a reference_wrapper of
+    // a Parser.
+    const Derived& get() const { return static_cast<const Derived&>(*this); }
 };
 
 /**************************************************************************
