@@ -20,7 +20,6 @@ class ConditionalParser: public Parser<T, ConditionalParser<T, F, P>> {
     template<typename T2, typename Derived>
     friend class Parser;
 
-
 private:
     ConditionalParser(const P& parser, F&& condFn)
         : parser_(parser), condFn_(std::move(condFn)) {}
@@ -32,8 +31,7 @@ private:
     virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
     {
         size_t oldPos = *pos;
-        // const P& parserRef = parser_;
-        std::optional<T> optResult = parser_.get().apply(input, pos);
+        std::optional<T> optResult = parser_.apply(input, pos);
         if (optResult.has_value() && condFn_(optResult.value())) {
             return optResult;
         }

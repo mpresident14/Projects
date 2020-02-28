@@ -54,7 +54,7 @@ private:
     template <int I, std::enable_if_t<I != std::tuple_size_v<Tuple>, int> = 0>
     std::optional<T> applyHelper(const std::string& input, size_t *pos) const
     {
-        std::optional<T> optResult = std::get<I>(parsers_).get().apply(input, pos);
+        std::optional<T> optResult = std::get<I>(parsers_).apply(input, pos);
         if (optResult.has_value()) {
             return optResult;
         }
