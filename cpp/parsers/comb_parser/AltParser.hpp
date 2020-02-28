@@ -6,6 +6,12 @@
 #include <utility>
 #include <tuple>
 
+namespace parsers
+{
+    template <typename... ParserTypes>
+    AltParser<p_first_t<ParserTypes...>, std::tuple<ParserTypes...>> alt(ParserTypes&&... parsers);
+}
+
 
 template <typename T, typename Tuple>
 class AltParser: public Parser<T, AltParser<T, Tuple>> {
@@ -22,14 +28,16 @@ class AltParser: public Parser<T, AltParser<T, Tuple>> {
     template<typename T2, typename Derived>
     friend class Parser;
 
-// private:
-public:
+    template <typename... ParserTypes>
+    friend AltParser<parsers::p_first_t<ParserTypes...>, std::tuple<ParserTypes...>> parsers::alt(ParserTypes&&... parsers);
+
+
+private:
     template <typename... ParserTypes>
     AltParser(ParserTypes&&... parsers)
         : parsers_(std::tuple<ParserTypes...>(std::forward<ParserTypes>(parsers)...)) {}
 
 
-private:
     virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
     {
         return applyHelper<0>(input, pos);
@@ -56,5 +64,6 @@ private:
 
     Tuple parsers_;
 };
+
 
 #endif

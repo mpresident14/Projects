@@ -9,6 +9,7 @@
 
 #include <iostream>
 
+/* Forward declarations */
 template <typename T, typename F, typename P>
 class ConditionalParser;
 
@@ -20,6 +21,7 @@ class AltParser;
 
 class CharParser;
 
+/* Parser abstract base class */
 template <typename T, typename Derived>
 class Parser {
 public:
@@ -55,13 +57,45 @@ public:
     template <typename F>
     auto mapTo(F mapFn) &&;
 
+    using result_type = T;
+
+
 protected:
     virtual std::optional<T> apply(const std::string& input, size_t *pos) const = 0;
 };
 
+/**************************************************************************
+ *                          TEMPLATE UTILITIES
+ **************************************************************************/
+namespace parsers
+{
+    /* *
+     * Get the type of the result the parser returns
+     * NOTE: We can't use the strategy of using a template type Parser<T, Derived> in our
+     * struct because we want to use this for the derived types.
+     * */
+    template<typename>
+    struct p_result;
+
+    template<typename P>
+    struct p_result { using type = typename std::decay_t<P>::result_type; };
+
+    template<typename P>
+    using p_result_t = typename p_result<P>::type;
+
+    /* Get the result type of the first parser in a parameter pack */
+    template <typename... ParserTypes>
+    struct p_first
+    {
+        using type = p_result_t<std::tuple_element_t<0, std::tuple<ParserTypes...>>>;
+    };
+
+    template <typename... ParserTypes>
+    using p_first_t = typename p_first<ParserTypes...>::type;
+}
 
 /**************************************************************************
- *                       INTERFACE PARSING FUNCTION
+ *                       MAIN PARSING FUNCTION
  **************************************************************************/
 
 template <typename T, typename Derived>

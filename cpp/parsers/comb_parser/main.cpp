@@ -12,7 +12,7 @@ int main()
     auto a = parsers::anyChar.onlyIf([&match](const char& c) { return c == match; });
     auto b = parsers::anyChar.onlyIf([](const char& c) { return c == 'b'; });
     auto c = parsers::anyChar.onlyIf([](const char& c) { return c == 'c'; });
-    auto abc = parsers::alt<char>(a, b, c);
+    auto abc = parsers::alt(a, b, c);
 
     int n = 3;
     auto lambda1 = [&n](char&& c) { return string(n, c); };
