@@ -14,10 +14,10 @@ class MapParser: public Parser<T, MapParser<T, From, F, P>> {
     template <typename T2, typename From2, typename F2, typename P2>
     friend class MapParser;
 
-    template <typename T2, typename Tuple>
+    template <typename T2, typename... PTypes>
     friend class AltParser;
 
-    template <typename T2, typename Tuple2>
+    template <typename T2, typename... PTypes>
     friend class SequenceParser;
 
     template<typename T2, typename Derived>

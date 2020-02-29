@@ -32,11 +32,24 @@ namespace parsers
      *                           NONCHAINED COMBINATORS
      **************************************************************************/
     template <typename... ParserTypes>
-    AltParser<parsers::p_first_t<ParserTypes...>, std::tuple<ParserTypes...>>
+    AltParser<parsers::p_first_t<ParserTypes...>, ParserTypes...>
     alt(ParserTypes&&... parsers)
     {
-        return AltParser<parsers::p_first_t<ParserTypes...>, std::tuple<ParserTypes...>>(std::forward<ParserTypes>(parsers)...);
+        return
+            AltParser<parsers::p_first_t<ParserTypes...>, ParserTypes...>
+            (std::forward<ParserTypes>(parsers)...);
     }
+
+
+    template <typename... ParserTypes>
+    SequenceParser<parsers::p_tuple_results_t<ParserTypes...>, ParserTypes...>
+    seq(ParserTypes&&... parsers)
+    {
+        return
+            SequenceParser<parsers::p_tuple_results_t<ParserTypes...>, ParserTypes...>
+            (std::forward<ParserTypes>(parsers)...);
+    }
+
 
     template <typename T>
     LazyParser<T> lazy()

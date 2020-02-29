@@ -18,8 +18,11 @@ class CharParser: public Parser<char, CharParser> {
     template <typename T2, typename From, typename F, typename P2>
     friend class MapParser;
 
-    template <typename T2, typename Tuple>
+    template <typename T2, typename... PTypes>
     friend class AltParser;
+
+    template <typename T2, typename... PTypes>
+    friend class SequenceParser;
 
     friend CharParser parsers::anyChar();
 

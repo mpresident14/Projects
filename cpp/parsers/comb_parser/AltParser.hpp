@@ -6,18 +6,19 @@
 #include <utility>
 #include <tuple>
 
-template <typename T, typename Tuple>
+template <typename T2, typename... PTypes>
 class AltParser;
 
 namespace parsers
 {
     template <typename... ParserTypes>
-    AltParser<p_first_t<ParserTypes...>, std::tuple<ParserTypes...>> alt(ParserTypes&&... parsers);
+    AltParser<parsers::p_first_t<ParserTypes...>, ParserTypes...>
+    alt(ParserTypes&&... parsers);
 }
 
 
-template <typename T, typename Tuple>
-class AltParser: public Parser<T, AltParser<T, Tuple>> {
+template <typename T, typename... ParserTypes>
+class AltParser: public Parser<T, AltParser<T, ParserTypes...>> {
 
     template<typename T2, typename F, typename P2>
     friend class ConditionalParser;
@@ -25,21 +26,21 @@ class AltParser: public Parser<T, AltParser<T, Tuple>> {
     template <typename T2, typename From, typename F, typename P2>
     friend class MapParser;
 
-    template <typename T2, typename Tuple2>
+    template <typename T2, typename... PTypes>
     friend class AltParser;
 
-    template <typename T2, typename Tuple2>
+    template <typename T2, typename... PTypes>
     friend class SequenceParser;
 
     template<typename T2, typename Derived>
     friend class Parser;
 
-    template <typename... ParserTypes>
-    friend AltParser<parsers::p_first_t<ParserTypes...>, std::tuple<ParserTypes...>> parsers::alt(ParserTypes&&... parsers);
+    template <typename... PTypes>
+    friend AltParser<parsers::p_first_t<PTypes...>, PTypes...>
+    parsers::alt(PTypes&&... parsers);
 
 
 private:
-    template <typename... ParserTypes>
     AltParser(ParserTypes&&... parsers)
         : parsers_(std::tuple<ParserTypes...>(std::forward<ParserTypes>(parsers)...)) {}
 
@@ -51,13 +52,13 @@ private:
 
 
     // Recursive tuple iteration via templates
-    template <int I, std::enable_if_t<I == std::tuple_size_v<Tuple>, int> = 0>
+    template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
     std::optional<T> applyHelper(const std::string&, size_t *) const
     {
         return {};
     }
 
-    template <int I, std::enable_if_t<I != std::tuple_size_v<Tuple>, int> = 0>
+    template <int I, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
     std::optional<T> applyHelper(const std::string& input, size_t *pos) const
     {
         std::optional<T> optResult = std::get<I>(parsers_).apply(input, pos);
@@ -68,7 +69,7 @@ private:
     }
 
 
-    Tuple parsers_;
+    std::tuple<ParserTypes...> parsers_;
 };
 
 

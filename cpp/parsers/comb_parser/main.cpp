@@ -3,8 +3,11 @@
 #include <iostream>
 #include <string>
 
+#include <boost/type_index.hpp>
+
 
 using namespace std;
+using namespace boost::typeindex;
 
 int main()
 {
@@ -25,14 +28,21 @@ int main()
     cout << abc3.parse("ccc") << endl;
 
     auto pStr = parsers::lazy<string>();
-
     auto a2 = parsers::anyChar().onlyIf([&match](const char& c) { return c == match; });
-
     pStr.set(a2.mapTo([](char&& c) { return string(3, c); }));
-
-
     cout << pStr.parse("aaa") << endl;
 
+    auto abcSeq = parsers::seq(a,b,c);
+    auto acSeq = parsers::seq(a,a,c);
+    auto tupResult = parsers::alt(acSeq, abcSeq).parse("abc");
+    char ca;
+    char cb;
+    char cc;
+    tie(ca, cb, cc) = tupResult;
+    cout << ca << ", " << cb << ", " << cc << endl;
+
+
+    cout << "m = " << type_id_with_cvr<parsers::p_tuple_results_t<decltype(a), decltype(b)>>().pretty_name() << endl;
 
     return 0;
 }

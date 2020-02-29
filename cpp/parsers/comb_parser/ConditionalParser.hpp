@@ -14,10 +14,10 @@ class ConditionalParser: public Parser<T, ConditionalParser<T, F, P>> {
     template<typename T2, typename F2, typename P2>
     friend class ConditionalParser;
 
-    template <typename T2, typename Tuple>
+    template <typename T2, typename... PTypes>
     friend class AltParser;
 
-    template <typename T2, typename Tuple2>
+    template <typename T2, typename... PTypes>
     friend class SequenceParser;
 
     template<typename T2, typename Derived>
@@ -43,7 +43,7 @@ private:
 
         // Restore the position if the condFn fails.
         *pos = oldPos;
-        return {};
+        return optResult;
     }
 
     P parser_;

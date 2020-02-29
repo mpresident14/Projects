@@ -91,6 +91,16 @@ namespace parsers
 
     template <typename... ParserTypes>
     using p_first_t = typename p_first<ParserTypes...>::type;
+
+    /* Get a tuple of all the types in the parser parameter pack */
+    template <typename... ParserTypes>
+    struct p_tuple_results
+    {
+        using type = std::tuple<p_result_t<ParserTypes>...>;
+    };
+
+    template <typename... ParserTypes>
+    using p_tuple_results_t = typename p_tuple_results<ParserTypes...>::type;
 }
 
 /**************************************************************************
