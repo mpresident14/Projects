@@ -15,7 +15,7 @@
 template <typename T, typename F, typename P>
 class ConditionalParser;
 
-template <typename T, typename From, typename F, typename P>
+template <typename T, typename F, typename P>
 class MapParser;
 
 
@@ -155,7 +155,7 @@ template <typename T, typename Derived>
 template <typename F>
 auto Parser<T, Derived>::mapTo(F mapFn) const &
 {
-    return MapParser<std::decay_t<std::invoke_result_t<F, T&&>>, T, F, Derived>(
+    return MapParser<std::decay_t<std::invoke_result_t<F, T&&>>, F, Derived>(
         *static_cast<const Derived*>(this), std::move(mapFn));
 }
 
@@ -164,7 +164,7 @@ template <typename T, typename Derived>
 template <typename F>
 auto Parser<T, Derived>::mapTo(F mapFn) &&
 {
-    return MapParser<std::decay_t<std::invoke_result_t<F, T&&>>, T, F, Derived>(
+    return MapParser<std::decay_t<std::invoke_result_t<F, T&&>>, F, Derived>(
         std::move(*static_cast<Derived*>(this)), std::move(mapFn));
 }
 

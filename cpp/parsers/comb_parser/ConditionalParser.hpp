@@ -8,7 +8,7 @@
 template <typename T, typename F, typename P>
 class ConditionalParser: public Parser<T, ConditionalParser<T, F, P>> {
 
-    template<typename T2, typename From, typename F2, typename P2>
+    template <typename T2, typename F2, typename P2>
     friend class MapParser;
 
     template<typename T2, typename F2, typename P2>

@@ -5,13 +5,13 @@
 
 #include <utility>
 
-template <typename T, typename From, typename F, typename P>
-class MapParser: public Parser<T, MapParser<T, From, F, P>> {
+template <typename T, typename F, typename P>
+class MapParser: public Parser<T, MapParser<T, F, P>> {
 
     template<typename T2, typename F2, typename P2>
     friend class ConditionalParser;
 
-    template <typename T2, typename From2, typename F2, typename P2>
+    template <typename T2, typename F2, typename P2>
     friend class MapParser;
 
     template <typename T2, typename... PTypes>
@@ -35,7 +35,7 @@ private:
 
     virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
     {
-        std::optional<From> optResult = parser_.apply(input, pos);
+        auto optResult = parser_.apply(input, pos);
         if (optResult.has_value()) {
             return std::make_optional<T>(mapFn_(std::move(optResult.value())));
         }
