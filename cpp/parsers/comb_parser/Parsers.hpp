@@ -5,6 +5,7 @@
 #include "MapParser.hpp"
 #include "CharParser.hpp"
 #include "AltParser.hpp"
+#include "LazyParser.hpp"
 
 
 // TODO: Put this in templates.cpp
@@ -20,16 +21,27 @@ namespace parsers
     /**************************************************************************
      *                           PRECOMPUTED PARSERS
      **************************************************************************/
-    constexpr CharParser anyChar;
+    CharParser anyChar()
+    {
+        static CharParser p;
+        return p;
+    }
 
 
     /**************************************************************************
      *                           NONCHAINED COMBINATORS
      **************************************************************************/
     template <typename... ParserTypes>
-    AltParser<parsers::p_first_t<ParserTypes...>, std::tuple<ParserTypes...>> alt(ParserTypes&&... parsers)
+    AltParser<parsers::p_first_t<ParserTypes...>, std::tuple<ParserTypes...>>
+    alt(ParserTypes&&... parsers)
     {
         return AltParser<parsers::p_first_t<ParserTypes...>, std::tuple<ParserTypes...>>(std::forward<ParserTypes>(parsers)...);
+    }
+
+    template <typename T>
+    LazyParser<T> lazy()
+    {
+        return LazyParser<T>();
     }
 }
 

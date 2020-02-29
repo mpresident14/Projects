@@ -1,6 +1,8 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
+#include "ParserBase.hpp"
+
 #include <string>
 #include <optional>
 #include <stdexcept>
@@ -23,8 +25,9 @@ class CharParser;
 
 /* Parser abstract base class */
 template <typename T, typename Derived>
-class Parser {
+class Parser : public ParserBase<T> {
 public:
+    virtual ~Parser(){}
     T parse(const std::string& input) const;
 
     template<
