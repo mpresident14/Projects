@@ -3,6 +3,8 @@
 
 #include "Parser.hpp"
 
+class CharParser;
+
 namespace parsers
 {
     CharParser anyChar();

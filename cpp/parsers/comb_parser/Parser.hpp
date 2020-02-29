@@ -18,10 +18,6 @@ class ConditionalParser;
 template <typename T, typename From, typename F, typename P>
 class MapParser;
 
-template <typename T, typename Tuple>
-class AltParser;
-
-class CharParser;
 
 /* Parser abstract base class */
 template <typename T, typename Derived>

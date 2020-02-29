@@ -1,23 +1,20 @@
-#ifndef ALT_PARSER_HPP
-#define ALT_PARSER_HPP
+#ifndef SEQUENCE_PARSER_HPP
+#define SEQUENCE_PARSER_HPP
 
 #include "Parser.hpp"
 
 #include <utility>
 #include <tuple>
 
-template <typename T, typename Tuple>
-class AltParser;
-
-namespace parsers
-{
-    template <typename... ParserTypes>
-    AltParser<p_first_t<ParserTypes...>, std::tuple<ParserTypes...>> alt(ParserTypes&&... parsers);
-}
+// namespace parsers
+// {
+//     template <typename... ParserTypes>
+//     AltParser<p_first_t<ParserTypes...>, std::tuple<ParserTypes...>> alt(ParserTypes&&... parsers);
+// }
 
 
 template <typename T, typename Tuple>
-class AltParser: public Parser<T, AltParser<T, Tuple>> {
+class SequenceParser: public Parser<Tuple, SequenceParser<T, Tuple>> {
 
     template<typename T2, typename F, typename P2>
     friend class ConditionalParser;
@@ -34,13 +31,10 @@ class AltParser: public Parser<T, AltParser<T, Tuple>> {
     template<typename T2, typename Derived>
     friend class Parser;
 
-    template <typename... ParserTypes>
-    friend AltParser<parsers::p_first_t<ParserTypes...>, std::tuple<ParserTypes...>> parsers::alt(ParserTypes&&... parsers);
-
 
 private:
     template <typename... ParserTypes>
-    AltParser(ParserTypes&&... parsers)
+    SequenceParser(ParserTypes&&... parsers)
         : parsers_(std::tuple<ParserTypes...>(std::forward<ParserTypes>(parsers)...)) {}
 
 
@@ -51,20 +45,21 @@ private:
 
 
     // Recursive tuple iteration via templates
-    template <int I, std::enable_if_t<I == std::tuple_size_v<Tuple>, int> = 0>
-    std::optional<T> applyHelper(const std::string&, size_t *) const
+    template <typename TupResult, int I, std::enable_if_t<I == std::tuple_size_v<Tuple>, int> = 0>
+    std::optional<T> applyHelper(const std::string&, size_t *, TupResult) const
     {
         return {};
     }
 
-    template <int I, std::enable_if_t<I != std::tuple_size_v<Tuple>, int> = 0>
-    std::optional<T> applyHelper(const std::string& input, size_t *pos) const
+    template <typename TupResult, int I, std::enable_if_t<I != std::tuple_size_v<Tuple>, int> = 0>
+    std::optional<T> applyHelper(const std::string& input, size_t *pos, TupResult currentTuple) const
     {
         std::optional<T> optResult = std::get<I>(parsers_).apply(input, pos);
         if (optResult.has_value()) {
-            return optResult;
+            auto newTup = std::tuple_cat(currentTuple, make_tuple(std::move(optResult.value())));
+            return applyHelper<decltype(newTup), I+1>(input, pos, newTup);
         }
-        return applyHelper<I+1>(input, pos);
+        return {};
     }
 
 

@@ -6,7 +6,7 @@
 #include "CharParser.hpp"
 #include "AltParser.hpp"
 #include "LazyParser.hpp"
-
+#include "SequenceParser.hpp"
 
 // TODO: Put this in templates.cpp
 // template <typename T>
