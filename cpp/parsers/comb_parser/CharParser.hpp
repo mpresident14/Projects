@@ -33,13 +33,13 @@ class CharParser: public Parser<char, CharParser> {
     friend CharParser parsers::anyChar(bool consumeWhiteSpace);
 
 private:
-    CharParser(bool consumeWhiteSpace) : consumeWhiteSpace_(consumeWhiteSpace) { std::cout << "RAN" << std::endl;}
+    CharParser(bool consumeWhiteSpace) : consumeWhiteSpace_(consumeWhiteSpace) {}
 
     virtual std::optional<char> apply(std::istream& input) const override
     {
         int c;
         if (consumeWhiteSpace_) {
-            while ((c = input.get()) == ' '){}
+            while (isspace(c = input.get())){}
         } else {
             c = input.get();
         }

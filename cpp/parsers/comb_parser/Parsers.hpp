@@ -35,8 +35,7 @@ namespace parsers
     }
 
 
-    template <typename F>
-    ConditionalParser<char, F, CharParser> thisChar(char c, bool consumeWhiteSpace = true)
+    auto thisChar(char c, bool consumeWhiteSpace = true)
     {
         return anyChar(consumeWhiteSpace).onlyIf([c](char d) { return c == d; });
     }
@@ -80,10 +79,26 @@ namespace parsers
 
 
     template <typename P>
-    ManyParser<std::vector<parsers::p_result_t<P>>, std::decay_t<P>> many(P&& parser)
+    ManyParser<
+        std::conditional_t<
+            std::is_same_v<p_result_t<P>, char>,
+            std::string,
+            std::vector<p_result_t<P>>
+        >,
+        std::decay_t<P>
+    >
+    many(P&& parser)
     {
         return
-            ManyParser<std::vector<parsers::p_result_t<P>>, std::decay_t<P>>(std::forward<P>(parser));
+            ManyParser<
+                std::conditional_t<
+                    std::is_same_v<p_result_t<P>, char>,
+                    std::string,
+                    std::vector<p_result_t<P>>
+                >,
+                std::decay_t<P>
+            >
+            (std::forward<P>(parser));
     }
 
 

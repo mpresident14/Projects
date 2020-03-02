@@ -11,7 +11,15 @@ class ManyParser;
 namespace parsers
 {
     template <typename P>
-    ManyParser<std::vector<parsers::p_result_t<P>>, std::decay_t<P>> many(P&& parser);
+    ManyParser<
+        std::conditional_t<
+            std::is_same_v<p_result_t<P>, char>,
+            std::string,
+            std::vector<p_result_t<P>>
+        >,
+        std::decay_t<P>
+    >
+    many(P&& parser);
 }
 
 
@@ -40,13 +48,29 @@ class ManyParser: public Parser<T, ManyParser<T, P>> {
     friend class Parser;
 
     template <typename P2>
-    friend ManyParser<std::vector<parsers::p_result_t<P2>>, std::decay_t<P2>> parsers::many(P2&& parser);
+    ManyParser<
+        std::conditional_t<
+            std::is_same_v<parsers::p_result_t<P2>, char>,
+            std::string,
+            std::vector<parsers::p_result_t<P2>>
+        >,
+        std::decay_t<P2>
+    >
+    friend parsers::many(P2&& parser);
 
 private:
     ManyParser(const P& parser) : parser_(parser) {}
     ManyParser(P&& parser) : parser_(std::move(parser)) {}
 
     virtual std::optional<T> apply(std::istream& input) const override
+    {
+        return applyHelper(input);
+    }
+
+
+    /* Default: return a vector */
+    template <typename P1 = P, std::enable_if_t<!std::is_same_v<parsers::p_result_t<P1>, char>, int> = 0>
+    std::optional<T> applyHelper(std::istream& input) const
     {
         using PType = parsers::p_result_t<P>;
 
@@ -60,7 +84,25 @@ private:
         return std::optional(v);
     }
 
+
+    /* Specialization: return a string for many chars */
+    template <typename P1 = P, std::enable_if_t<std::is_same_v<parsers::p_result_t<P1>, char>, int> = 0>
+    std::optional<T> applyHelper(std::istream& input) const
+    {
+        // using PType = parsers::p_result_t<P>;
+
+        std::string s;
+        std::optional<char> optResult = parser_.apply(input);
+        while (optResult.has_value()) {
+            s.append(1, std::move(optResult.value()));
+            optResult = parser_.apply(input);
+        }
+
+        return std::optional(s);
+    }
+
     P parser_;
 };
+
 
 #endif

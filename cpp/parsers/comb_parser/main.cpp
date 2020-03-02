@@ -37,9 +37,8 @@ int main()
     auto tupResult = parsers::alt(acbSeq, abcSeq).parse("abc");
     cout << get<0>(tupResult) << ", " << get<1>(tupResult) << ", " << get<2>(tupResult) << endl;
 
-    auto manyA = parsers::many(a);
-    auto v = manyA.parse("aaaaaaaaaaaaaaaaaaaa");
-    cout << v.size() << endl;
+    cout << parsers::many(a).parse("aaaaaaaaaaaaaaaaaaaa") << endl;
+    std::vector<std::string> v = parsers::many(parsers::thisString("cool")).parse("coolcoolcool");
 
     auto ignoreA = parsers::ignore(a);
     ignoreA.parse("a");
@@ -55,6 +54,8 @@ int main()
         parsers::thisString("evers"),
         parsers::thisString("ever"));
     cout << testP.parse("ever") << endl;
+
+    cout << parsers::thisChar('i').parse("i") << endl;
 
 
     cout << "m = " << type_id_with_cvr<decltype(ignoreTup)>().pretty_name() << endl;

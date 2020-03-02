@@ -48,23 +48,23 @@ private:
     virtual std::optional<std::string> apply(std::istream& input) const override
     {
         int oldPos = input.tellg();
+
         std::cout << "POS: " << oldPos << std::endl;
+
         char inC;
         if (consumeWhiteSpace_) {
-            while ((inC = input.get()) == ' '){}
-        } else {
-            inC = input.get();
+            while (isspace(inC = input.peek())) {
+                input.get();
+            }
         }
 
         for (const char& c : str_) {
+            inC = input.get();
             if (inC == EOF || inC != c) {
                 input.clear();
                 input.seekg(oldPos);
-                if (!input)
-                    std::cout << "FAIL" << std::endl;
                 return {};
             }
-            inC = input.get();
         }
 
         return std::optional(str_);
