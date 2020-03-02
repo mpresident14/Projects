@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <istream>
 
 #include <iostream>
 
@@ -21,10 +22,9 @@ class ParserBase {
 
 public:
     virtual ~ParserBase(){}
-    virtual T parse(const std::string& input) const = 0;
 
 protected:
-    virtual std::optional<T> apply(const std::string& input, size_t *pos) const = 0;
+    virtual std::optional<T> apply(std::istream& input) const = 0;
 };
 
 #endif

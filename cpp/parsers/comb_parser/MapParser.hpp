@@ -33,9 +33,9 @@ private:
         : parser_(std::move(parser)), mapFn_(std::move(mapFn)) {}
 
 
-    virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
+    virtual std::optional<T> apply(std::istream& input) const override
     {
-        auto optResult = parser_.apply(input, pos);
+        auto optResult = parser_.apply(input);
         if (optResult.has_value()) {
             return std::make_optional<T>(mapFn_(std::move(optResult.value())));
         }

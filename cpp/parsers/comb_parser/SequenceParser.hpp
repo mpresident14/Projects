@@ -45,35 +45,35 @@ private:
         : parsers_(std::tuple<ParserTypes...>(std::forward<ParserTypes>(parsers)...)) {}
 
 
-    virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
+    virtual std::optional<T> apply(std::istream& input) const override
     {
-        size_t oldPos = *pos;
-        std::optional<T> optResult = applyHelper<0>(input, pos, std::tuple<>());
+        size_t oldPos = input.tellg();
+        std::optional<T> optResult = applyHelper<0>(input, std::tuple<>());
         if (optResult.has_value()) {
             return optResult;
         }
+        // TODO: optResult will leak upon condFn failure if T is a pointer
 
         // Reset position if parse failed
-        *pos = oldPos;
+        input.seekg(oldPos);
         return optResult;
     }
 
 
     // Recursive tuple iteration via templates
     template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
-    std::optional<T> applyHelper(const std::string&, size_t *, T&& tup) const
+    std::optional<T> applyHelper(std::istream&, T&& tup) const
     {
         return std::make_optional(tup);
     }
 
     template <int I, typename Tup, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
-    std::optional<T> applyHelper(const std::string& input, size_t *pos, Tup&& currentTuple) const
+    std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) const
     {
-        auto optResult = std::get<I>(parsers_).apply(input, pos);
+        auto optResult = std::get<I>(parsers_).apply(input);
         if (optResult.has_value()) {
             return applyHelper<I+1>(
                 input,
-                pos,
                 std::tuple_cat(
                     currentTuple,
                     std::make_tuple(std::move(optResult.value()))));

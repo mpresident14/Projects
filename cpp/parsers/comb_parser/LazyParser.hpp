@@ -48,9 +48,9 @@ public:
 private:
     LazyParser() : parser_(nullptr) {}
 
-    virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
+    virtual std::optional<T> apply(std::istream& input) const override
     {
-        return parser_->apply(input, pos);
+        return parser_->apply(input);
     }
 
     ParserBase<T> *parser_;

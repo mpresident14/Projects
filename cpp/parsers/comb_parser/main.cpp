@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include <boost/type_index.hpp>
 
@@ -32,7 +33,7 @@ int main()
     pStr.set(a2.mapTo([](char&& c) { return string(3, c); }));
     cout << pStr.parse("aaa") << endl;
 
-    auto abcSeq = parsers::seq(a,b,c);
+    auto abcSeq = parsers::seq(a,move(b),c);
     auto acSeq = parsers::seq(a,a,c);
     auto tupResult = parsers::alt(acSeq, abcSeq).parse("abc");
     char ca;

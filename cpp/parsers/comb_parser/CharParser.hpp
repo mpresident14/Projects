@@ -29,11 +29,11 @@ class CharParser: public Parser<char, CharParser> {
 private:
     CharParser() {}
 
-    virtual std::optional<char> apply(const std::string& input, size_t *pos) const override
+    virtual std::optional<char> apply(std::istream& input) const override
     {
-        if (*pos < input.size()) {
-            auto optResult = std::make_optional(input[*pos]);
-            ++(*pos);
+        int c;
+        if ((c = input.get()) != EOF) {
+            auto optResult = std::make_optional(c);
             return optResult;
         }
         return {};

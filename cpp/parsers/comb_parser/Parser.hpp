@@ -8,8 +8,8 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
-
-#include <iostream>
+#include <istream>
+#include <sstream>
 
 /* Forward declarations */
 template <typename T, typename F, typename P>
@@ -24,6 +24,7 @@ template <typename T, typename Derived>
 class Parser : public ParserBase<T> {
 public:
     virtual ~Parser(){}
+    T parse(std::istream& input) const;
     T parse(const std::string& input) const;
 
     template<
@@ -60,7 +61,7 @@ public:
 
 
 protected:
-    virtual std::optional<T> apply(const std::string& input, size_t *pos) const = 0;
+    virtual std::optional<T> apply(std::istream& input) const = 0;
 };
 
 /**************************************************************************
@@ -104,18 +105,26 @@ namespace parsers
 }
 
 /**************************************************************************
- *                       MAIN PARSING FUNCTION
+ *                       MAIN PARSING FUNCTIONS
  **************************************************************************/
+
+template <typename T, typename Derived>
+T Parser<T, Derived>::parse(std::istream& input) const
+{
+    std::optional<T> optResult = apply(input);
+    if (optResult.has_value()) {
+        return optResult.value();
+    }
+    // TODO: Replace with appropriate parse error.
+    throw std::invalid_argument("No parse for input.");
+}
+
 
 template <typename T, typename Derived>
 T Parser<T, Derived>::parse(const std::string& input) const
 {
-    size_t pos = 0;
-    std::optional<T> optResult = apply(input, &pos);
-    if (optResult.has_value()) {
-        return optResult.value();
-    }
-    throw std::invalid_argument("No parse for input " + input);
+    std::istringstream strStream(input);
+    return parse(strStream);
 }
 
 /**************************************************************************

@@ -45,27 +45,27 @@ private:
         : parsers_(std::tuple<ParserTypes...>(std::forward<ParserTypes>(parsers)...)) {}
 
 
-    virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
+    virtual std::optional<T> apply(std::istream& input) const override
     {
-        return applyHelper<0>(input, pos);
+        return applyHelper<0>(input);
     }
 
 
     // Recursive tuple iteration via templates
     template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
-    std::optional<T> applyHelper(const std::string&, size_t *) const
+    std::optional<T> applyHelper(std::istream&) const
     {
         return {};
     }
 
     template <int I, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
-    std::optional<T> applyHelper(const std::string& input, size_t *pos) const
+    std::optional<T> applyHelper(std::istream& input) const
     {
-        std::optional<T> optResult = std::get<I>(parsers_).apply(input, pos);
+        std::optional<T> optResult = std::get<I>(parsers_).apply(input);
         if (optResult.has_value()) {
             return optResult;
         }
-        return applyHelper<I+1>(input, pos);
+        return applyHelper<I+1>(input);
     }
 
 

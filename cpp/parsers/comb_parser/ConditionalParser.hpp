@@ -31,10 +31,10 @@ private:
         : parser_(std::move(parser)), condFn_(std::move(condFn)) {}
 
 
-    virtual std::optional<T> apply(const std::string& input, size_t *pos) const override
+    virtual std::optional<T> apply(std::istream& input) const override
     {
-        size_t oldPos = *pos;
-        std::optional<T> optResult = parser_.apply(input, pos);
+        size_t oldPos = input.tellg();
+        std::optional<T> optResult = parser_.apply(input);
         if (optResult.has_value() && condFn_(optResult.value())) {
             return optResult;
         }
@@ -42,7 +42,7 @@ private:
         // TODO: optResult will leak upon condFn failure if T is a pointer
 
         // Restore the position if the condFn fails.
-        *pos = oldPos;
+        input.seekg(oldPos);
         return optResult;
     }
 
