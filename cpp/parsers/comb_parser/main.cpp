@@ -39,6 +39,7 @@ int main()
 
     cout << parsers::many(a).parse("aaaaaaaaaaaaaaaaaaaa") << endl;
     std::vector<std::string> v = parsers::many(parsers::thisString("cool")).parse("coolcoolcool");
+    parsers::ignore_t ig = parsers::many(parsers::ignore(a)).parse("aaaaaaa");
 
     auto ignoreA = parsers::ignore(a);
     ignoreA.parse("a");

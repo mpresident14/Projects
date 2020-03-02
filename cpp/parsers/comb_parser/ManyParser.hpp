@@ -13,9 +13,13 @@ namespace parsers
     template <typename P>
     ManyParser<
         std::conditional_t<
-            std::is_same_v<p_result_t<P>, char>,
+            std::is_same_v<parsers::p_result_t<P>, char>,
             std::string,
-            std::vector<p_result_t<P>>
+            std::conditional_t<
+                std::is_same_v<parsers::p_result_t<P>, parsers::ignore_t>,
+                parsers::ignore_t,
+                std::vector<parsers::p_result_t<P>>
+            >
         >,
         std::decay_t<P>
     >
@@ -52,7 +56,11 @@ class ManyParser: public Parser<T, ManyParser<T, P>> {
         std::conditional_t<
             std::is_same_v<parsers::p_result_t<P2>, char>,
             std::string,
-            std::vector<parsers::p_result_t<P2>>
+            std::conditional_t<
+                std::is_same_v<parsers::p_result_t<P2>, parsers::ignore_t>,
+                parsers::ignore_t,
+                std::vector<parsers::p_result_t<P2>>
+            >
         >,
         std::decay_t<P2>
     >
@@ -69,7 +77,7 @@ private:
 
 
     /* Default: return a vector */
-    template <typename P1 = P, std::enable_if_t<!std::is_same_v<parsers::p_result_t<P1>, char>, int> = 0>
+    template <typename P1 = P, std::enable_if_t<!std::is_same_v<parsers::p_result_t<P1>, char> && !std::is_same_v<parsers::p_result_t<P1>, parsers::ignore_t>, int> = 0>
     std::optional<T> applyHelper(std::istream& input) const
     {
         using PType = parsers::p_result_t<P>;
@@ -89,8 +97,6 @@ private:
     template <typename P1 = P, std::enable_if_t<std::is_same_v<parsers::p_result_t<P1>, char>, int> = 0>
     std::optional<T> applyHelper(std::istream& input) const
     {
-        // using PType = parsers::p_result_t<P>;
-
         std::string s;
         std::optional<char> optResult = parser_.apply(input);
         while (optResult.has_value()) {
@@ -99,6 +105,19 @@ private:
         }
 
         return std::optional(s);
+    }
+
+
+    /* Specialization: return ignore_t for many ignore_ts */
+    template <typename P1 = P, std::enable_if_t<std::is_same_v<parsers::p_result_t<P1>, parsers::ignore_t>, int> = 0>
+    std::optional<T> applyHelper(std::istream& input) const
+    {
+        std::optional<parsers::ignore_t> optResult = parser_.apply(input);
+        while (optResult.has_value()) {
+            optResult = parser_.apply(input);
+        }
+
+        return std::optional(parsers::ignore_t());
     }
 
     P parser_;

@@ -48,9 +48,6 @@ private:
     virtual std::optional<std::string> apply(std::istream& input) const override
     {
         int oldPos = input.tellg();
-
-        std::cout << "POS: " << oldPos << std::endl;
-
         char inC;
         if (consumeWhiteSpace_) {
             while (isspace(inC = input.peek())) {

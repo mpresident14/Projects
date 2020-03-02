@@ -81,9 +81,13 @@ namespace parsers
     template <typename P>
     ManyParser<
         std::conditional_t<
-            std::is_same_v<p_result_t<P>, char>,
+            std::is_same_v<parsers::p_result_t<P>, char>,
             std::string,
-            std::vector<p_result_t<P>>
+            std::conditional_t<
+                std::is_same_v<parsers::p_result_t<P>, parsers::ignore_t>,
+                parsers::ignore_t,
+                std::vector<parsers::p_result_t<P>>
+            >
         >,
         std::decay_t<P>
     >
@@ -92,9 +96,13 @@ namespace parsers
         return
             ManyParser<
                 std::conditional_t<
-                    std::is_same_v<p_result_t<P>, char>,
+                    std::is_same_v<parsers::p_result_t<P>, char>,
                     std::string,
-                    std::vector<p_result_t<P>>
+                    std::conditional_t<
+                        std::is_same_v<parsers::p_result_t<P>, parsers::ignore_t>,
+                        parsers::ignore_t,
+                        std::vector<parsers::p_result_t<P>>
+                    >
                 >,
                 std::decay_t<P>
             >
