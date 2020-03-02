@@ -65,6 +65,7 @@ private:
         // TODO: optResult will leak upon condFn failure if T is a pointer
 
         // Reset position if parse failed
+        input.clear();
         input.seekg(oldPos);
         return optResult;
     }

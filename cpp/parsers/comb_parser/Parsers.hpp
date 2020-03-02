@@ -24,21 +24,36 @@ namespace parsers
     /**************************************************************************
      *                           PRECOMPUTED PARSERS
      **************************************************************************/
-    CharParser anyChar()
+    CharParser anyChar(bool consumeWhiteSpace = true)
     {
-        static CharParser p;
+        if (consumeWhiteSpace) {
+            static CharParser p(true);
+            return p;
+        }
+        static CharParser p(false);
         return p;
     }
 
-    StringParser thisString(const std::string& str) { return StringParser(str); }
-    StringParser thisString(std::string&& str) { return StringParser(str); }
-    StringParser thisString(const char *str) { return StringParser(str); }
+
+    template <typename F>
+    ConditionalParser<char, F, CharParser> thisChar(char c, bool consumeWhiteSpace = true)
+    {
+        return anyChar(consumeWhiteSpace).onlyIf([c](char d) { return c == d; });
+    }
+
+
+    StringParser thisString(const std::string& str, bool consumeWhiteSpace = true)
+    { return StringParser(str, consumeWhiteSpace); }
+
+    StringParser thisString(std::string&& str, bool consumeWhiteSpace = true)
+    { return StringParser(str, consumeWhiteSpace); }
+
+    StringParser thisString(const char *str, bool consumeWhiteSpace = true)
+    { return StringParser(str, consumeWhiteSpace); }
+
 
     template <typename T>
-    LazyParser<T> lazy()
-    {
-        return LazyParser<T>();
-    }
+    LazyParser<T> lazy() { return LazyParser<T>(); }
 
 
     /**************************************************************************

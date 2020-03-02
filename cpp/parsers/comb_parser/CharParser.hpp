@@ -7,7 +7,7 @@ class CharParser;
 
 namespace parsers
 {
-    CharParser anyChar();
+    CharParser anyChar(bool consumeWhiteSpace);
 }
 
 class CharParser: public Parser<char, CharParser> {
@@ -30,19 +30,32 @@ class CharParser: public Parser<char, CharParser> {
     template <typename P2>
     friend class IgnoreParser;
 
-    friend CharParser parsers::anyChar();
+    friend CharParser parsers::anyChar(bool consumeWhiteSpace);
 
 private:
-    CharParser() {}
+    CharParser(bool consumeWhiteSpace) : consumeWhiteSpace_(consumeWhiteSpace) { std::cout << "RAN" << std::endl;}
 
     virtual std::optional<char> apply(std::istream& input) const override
     {
         int c;
-        if ((c = input.get()) != EOF) {
+        if (consumeWhiteSpace_) {
+            while ((c = input.get()) == ' '){}
+        } else {
+            c = input.get();
+        }
+
+        if (c != EOF) {
             return std::optional(c);
         }
+
+        // The istream object apparently stops working when you reach the EOF,
+        // so you need to clear the bit.
+        input.clear();
+        input.unget();
         return {};
     }
+
+    bool consumeWhiteSpace_;
 };
 
 #endif

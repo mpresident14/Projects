@@ -46,6 +46,7 @@ private:
         // TODO: optResult will leak upon condFn failure if T is a pointer
 
         // Restore the position if the condFn fails.
+        input.clear();
         input.seekg(oldPos);
         return {};
     }

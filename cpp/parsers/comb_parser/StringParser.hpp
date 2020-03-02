@@ -9,9 +9,9 @@ class StringParser;
 
 namespace parsers
 {
-    StringParser thisString(const std::string& str);
-    StringParser thisString(std::string&& str);
-    StringParser thisString(const char *str);
+    StringParser thisString(const std::string& str, bool consumeWhiteSpace);
+    StringParser thisString(std::string&& str, bool consumeWhiteSpace);
+    StringParser thisString(const char *str, bool consumeWhiteSpace);
 }
 
 class StringParser: public Parser<std::string, StringParser> {
@@ -34,29 +34,44 @@ class StringParser: public Parser<std::string, StringParser> {
     template <typename P2>
     friend class IgnoreParser;
 
-    friend StringParser parsers::thisString(const std::string& str);
-    friend StringParser parsers::thisString(std::string&& str);
-    friend StringParser parsers::thisString(const char *str);
+    friend StringParser parsers::thisString(const std::string& str, bool consumeWhiteSpace);
+    friend StringParser parsers::thisString(std::string&& str, bool consumeWhiteSpace);
+    friend StringParser parsers::thisString(const char *str, bool consumeWhiteSpace);
 
 private:
-    StringParser(const std::string& str) : str_(str) {}
-    StringParser(std::string&& str) : str_(std::move(str)) {}
+    StringParser(const std::string& str, bool consumeWhiteSpace)
+        : str_(str), consumeWhiteSpace_{consumeWhiteSpace} {}
+
+    StringParser(std::string&& str, bool consumeWhiteSpace)
+        : str_(std::move(str)), consumeWhiteSpace_{consumeWhiteSpace} {}
 
     virtual std::optional<std::string> apply(std::istream& input) const override
     {
-        size_t oldPos = input.tellg();
+        int oldPos = input.tellg();
+        std::cout << "POS: " << oldPos << std::endl;
+        char inC;
+        if (consumeWhiteSpace_) {
+            while ((inC = input.get()) == ' '){}
+        } else {
+            inC = input.get();
+        }
+
         for (const char& c : str_) {
-            int inC = input.get();
-            if (inC == EOF || static_cast<char>(inC) != c) {
+            if (inC == EOF || inC != c) {
+                input.clear();
                 input.seekg(oldPos);
+                if (!input)
+                    std::cout << "FAIL" << std::endl;
                 return {};
             }
+            inC = input.get();
         }
 
         return std::optional(str_);
     }
 
     std::string str_;
+    bool consumeWhiteSpace_;
 };
 
 #endif

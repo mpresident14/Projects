@@ -150,6 +150,10 @@ template <typename T, typename Derived>
 T Parser<T, Derived>::parse(std::istream& input) const
 {
     std::optional<T> optResult = apply(input);
+    if (input.peek() != EOF) {
+        // TODO: Replace with appropriate parse error.
+        throw std::invalid_argument("Characters remained.");
+    }
     if (optResult.has_value()) {
         return optResult.value();
     }
