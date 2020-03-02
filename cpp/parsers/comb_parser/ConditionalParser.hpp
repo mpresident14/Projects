@@ -44,7 +44,7 @@ private:
 
         // Restore the position if the condFn fails.
         input.seekg(oldPos);
-        return optResult;
+        return {};
     }
 
     P parser_;
