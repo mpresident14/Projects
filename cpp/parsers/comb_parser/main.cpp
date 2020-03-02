@@ -42,6 +42,10 @@ int main()
     tie(ca, cb, cc) = tupResult;
     cout << ca << ", " << cb << ", " << cc << endl;
 
+    auto manyA = parsers::many(a);
+    auto v = manyA.parse("aaaaaaaaaaaaaaaaaaaa");
+    cout << v.size() << endl;
+
 
     cout << "m = " << type_id_with_cvr<parsers::p_tuple_results_t<decltype(a), decltype(b)>>().pretty_name() << endl;
 

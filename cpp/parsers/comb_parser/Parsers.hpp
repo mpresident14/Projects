@@ -28,6 +28,12 @@ namespace parsers
         return p;
     }
 
+    template <typename T>
+    LazyParser<T> lazy()
+    {
+        return LazyParser<T>();
+    }
+
 
     /**************************************************************************
      *                           NONCHAINED COMBINATORS
@@ -52,10 +58,12 @@ namespace parsers
     }
 
 
-    template <typename T>
-    LazyParser<T> lazy()
+    // TODO: P is deduced to a Parser& so parser is a Parser& && -> Parser&
+    template <typename P>
+    ManyParser<std::vector<parsers::p_result_t<P>>, std::decay_t<P>> many(P&& parser)
     {
-        return LazyParser<T>();
+        return
+            ManyParser<std::vector<parsers::p_result_t<P>>, std::decay_t<P>>(std::forward<P>(parser));
     }
 }
 

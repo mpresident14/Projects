@@ -26,6 +26,9 @@ class LazyParser: public Parser<T, LazyParser<T>> {
     template <typename T2, typename... PTypes>
     friend class SequenceParser;
 
+    template <typename T2, typename P2>
+    friend class ManyParser;
+
     template<typename T2, typename Derived>
     friend class Parser;
 

@@ -20,6 +20,9 @@ class MapParser: public Parser<T, MapParser<T, F, P>> {
     template <typename T2, typename... PTypes>
     friend class SequenceParser;
 
+    template <typename T2, typename P2>
+    friend class ManyParser;
+
     template<typename T2, typename Derived>
     friend class Parser;
 
