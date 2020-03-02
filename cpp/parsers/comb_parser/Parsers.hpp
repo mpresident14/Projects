@@ -9,6 +9,7 @@
 #include "SequenceParser.hpp"
 #include "ManyParser.hpp"
 #include "IgnoreParser.hpp"
+#include "StringParser.hpp"
 
 // TODO: Put this in templates.cpp
 // template <typename T>
@@ -28,6 +29,10 @@ namespace parsers
         static CharParser p;
         return p;
     }
+
+    StringParser thisString(const std::string& str) { return StringParser(str); }
+    StringParser thisString(std::string&& str) { return StringParser(str); }
+    StringParser thisString(const char *str) { return StringParser(str); }
 
     template <typename T>
     LazyParser<T> lazy()

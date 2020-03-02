@@ -49,6 +49,9 @@ int main()
     auto ignoreTup = ignoreAThenCB.parse("acb");
     cout << get<0>(ignoreTup) << ", " << get<1>(ignoreTup) << endl;
 
+    auto strP = parsers::thisString("hello");
+    cout << strP.parse("hello") << endl;
+
 
     cout << "m = " << type_id_with_cvr<decltype(ignoreTup)>().pretty_name() << endl;
 
