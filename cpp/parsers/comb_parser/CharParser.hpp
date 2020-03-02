@@ -27,6 +27,9 @@ class CharParser: public Parser<char, CharParser> {
     template <typename T2, typename P2>
     friend class ManyParser;
 
+    template <typename P2>
+    friend class IgnoreParser;
+
     friend CharParser parsers::anyChar();
 
 private:

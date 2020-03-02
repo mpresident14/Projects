@@ -8,6 +8,7 @@
 #include "LazyParser.hpp"
 #include "SequenceParser.hpp"
 #include "ManyParser.hpp"
+#include "IgnoreParser.hpp"
 
 // TODO: Put this in templates.cpp
 // template <typename T>
@@ -49,21 +50,27 @@ namespace parsers
 
 
     template <typename... ParserTypes>
-    SequenceParser<parsers::p_tuple_results_t<ParserTypes...>, std::decay_t<ParserTypes>...>
+    SequenceParser<parsers::p_results_filtered_t<ParserTypes...>, std::decay_t<ParserTypes>...>
     seq(ParserTypes&&... parsers)
     {
         return
-            SequenceParser<parsers::p_tuple_results_t<ParserTypes...>, std::decay_t<ParserTypes>...>
+            SequenceParser<parsers::p_results_filtered_t<ParserTypes...>, std::decay_t<ParserTypes>...>
             (std::forward<ParserTypes>(parsers)...);
     }
 
 
-    // TODO: P is deduced to a Parser& so parser is a Parser& && -> Parser&
     template <typename P>
     ManyParser<std::vector<parsers::p_result_t<P>>, std::decay_t<P>> many(P&& parser)
     {
         return
             ManyParser<std::vector<parsers::p_result_t<P>>, std::decay_t<P>>(std::forward<P>(parser));
+    }
+
+
+    template <typename P>
+    IgnoreParser<std::decay_t<P>> ignore(P&& parser)
+    {
+        return IgnoreParser<std::decay_t<P>>(std::forward<P>(parser));
     }
 }
 

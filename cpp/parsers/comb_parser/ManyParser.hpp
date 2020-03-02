@@ -33,6 +33,9 @@ class ManyParser: public Parser<T, ManyParser<T, P>> {
     template <typename T2, typename P2>
     friend class ManyParser;
 
+    template <typename P2>
+    friend class IgnoreParser;
+
     template<typename T2, typename Derived>
     friend class Parser;
 

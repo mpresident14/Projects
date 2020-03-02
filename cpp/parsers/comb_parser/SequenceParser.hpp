@@ -6,13 +6,14 @@
 #include <utility>
 #include <tuple>
 
+
 template <typename T, typename... PTypes>
 class SequenceParser;
 
 namespace parsers
 {
     template <typename... PTypes>
-    SequenceParser<parsers::p_tuple_results_t<PTypes...>, std::decay_t<PTypes>...>
+    SequenceParser<p_results_filtered_t<PTypes...>, std::decay_t<PTypes>...>
     seq(PTypes&&... parsers);
 }
 
@@ -35,11 +36,14 @@ class SequenceParser: public Parser<T, SequenceParser<T, ParserTypes...>> {
     template <typename T2, typename P2>
     friend class ManyParser;
 
+    template <typename P2>
+    friend class IgnoreParser;
+
     template<typename T2, typename Derived>
     friend class Parser;
 
     template <typename... PTypes>
-    friend SequenceParser<parsers::p_tuple_results_t<PTypes...>, std::decay_t<PTypes>...>
+    friend SequenceParser<parsers::p_results_filtered_t<PTypes...>, std::decay_t<PTypes>...>
     parsers::seq(PTypes&&... parsers);
 
 
@@ -66,14 +70,32 @@ private:
     }
 
 
-    // Recursive tuple iteration via templates
+    /* Recursive tuple iteration via templates */
+    // Base case
     template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
     std::optional<T> applyHelper(std::istream&, T&& tup) const
     {
         return std::optional(tup);
     }
 
-    template <int I, typename Tup, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
+
+    // If not an ignore_t (should go in result tuple)
+    template <
+        int I,
+        typename Tup,
+        std::enable_if_t<
+            // conjunction short-circuits, i.e. doesn't instantiate ::value
+            // if it doesn't have to, so we hide the tuple_element_t request
+            // in the ::value member of is_ignore.
+            std::conjunction_v<
+                std::bool_constant<I != sizeof...(ParserTypes)>,
+                std::negation<
+                    parsers::is_ignore<I, std::tuple<ParserTypes...>>
+                >
+            >,
+            int
+        > = 0
+    >
     std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) const
     {
         auto optResult = std::get<I>(parsers_).apply(input);
@@ -83,6 +105,30 @@ private:
                 std::tuple_cat(
                     currentTuple,
                     std::tuple(std::move(optResult.value()))));
+        }
+        return {};
+    }
+
+
+    // If an ignore_t (should not go in result tuple)
+    template <
+        int I,
+        typename Tup,
+        std::enable_if_t<
+            std::conjunction_v<
+                std::bool_constant<I != sizeof...(ParserTypes)>,
+                parsers::is_ignore<I, std::tuple<ParserTypes...>>
+            >,
+            int
+        > = 0
+    >
+    std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) const
+    {
+        auto optResult = std::get<I>(parsers_).apply(input);
+        if (optResult.has_value()) {
+            return applyHelper<I+1>(
+                input,
+                std::forward<Tup>(currentTuple));
         }
         return {};
     }

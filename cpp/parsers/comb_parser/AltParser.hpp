@@ -12,7 +12,7 @@ class AltParser;
 namespace parsers
 {
     template <typename... ParserTypes>
-    AltParser<parsers::p_first_t<ParserTypes...>, std::decay_t<ParserTypes>...>
+    AltParser<p_first_t<ParserTypes...>, std::decay_t<ParserTypes>...>
     alt(ParserTypes&&... parsers);
 }
 
@@ -31,6 +31,9 @@ class AltParser: public Parser<T, AltParser<T, ParserTypes...>> {
 
     template <typename T2, typename... PTypes>
     friend class SequenceParser;
+
+    template <typename P2>
+    friend class IgnoreParser;
 
     template<typename T2, typename Derived>
     friend class Parser;

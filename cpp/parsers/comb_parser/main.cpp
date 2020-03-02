@@ -42,8 +42,15 @@ int main()
     auto v = manyA.parse("aaaaaaaaaaaaaaaaaaaa");
     cout << v.size() << endl;
 
+    auto ignoreA = parsers::ignore(a);
+    ignoreA.parse("a");
 
-    cout << "m = " << type_id_with_cvr<parsers::p_tuple_results_t<decltype(a), decltype(b)>>().pretty_name() << endl;
+    auto ignoreAThenCB = parsers::seq(ignoreA,c,b);
+    auto ignoreTup = ignoreAThenCB.parse("acb");
+    cout << get<0>(ignoreTup) << ", " << get<1>(ignoreTup) << endl;
+
+
+    cout << "m = " << type_id_with_cvr<decltype(ignoreTup)>().pretty_name() << endl;
 
     return 0;
 }

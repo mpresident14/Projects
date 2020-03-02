@@ -32,6 +32,9 @@ class LazyParser: public Parser<T, LazyParser<T>> {
     template<typename T2, typename Derived>
     friend class Parser;
 
+    template <typename P2>
+    friend class IgnoreParser;
+
     template <typename T2>
     friend LazyParser<T2> parsers::lazy();
 

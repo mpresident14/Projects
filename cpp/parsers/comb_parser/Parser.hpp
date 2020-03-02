@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <istream>
 #include <sstream>
+#include <tuple>
 
 /* Forward declarations */
 template <typename T, typename F, typename P>
@@ -92,14 +93,53 @@ namespace parsers
     using p_first_t = typename p_first<ParserTypes...>::type;
 
     /* Get a tuple of all the types in the parser parameter pack */
+    // template <typename... ParserTypes>
+    // struct p_tuple_results
+    // {
+    //     using type = std::tuple<p_result_t<ParserTypes>...>;
+    // };
+
+    // template <typename... ParserTypes>
+    // using p_tuple_results_t = typename p_tuple_results<ParserTypes...>::type;
+
+    struct ignore_t {};
+
+    /* Get a tuple of all the types in the parser parameter pack that aren't ignore_t */
     template <typename... ParserTypes>
-    struct p_tuple_results
+    struct p_results_filtered
     {
-        using type = std::tuple<p_result_t<ParserTypes>...>;
+        using type =
+            decltype(std::tuple_cat(
+                std::declval<
+                    std::conditional_t<
+                        std::is_same_v<
+                            p_result_t<ParserTypes>,
+                            ignore_t
+                        >,
+                        std::tuple<>,
+                        std::tuple<p_result_t<ParserTypes>>
+                    >
+                >()...
+            ));
     };
 
     template <typename... ParserTypes>
-    using p_tuple_results_t = typename p_tuple_results<ParserTypes...>::type;
+    using p_results_filtered_t = typename p_results_filtered<ParserTypes...>::type;
+
+
+    template <int I, typename Tuple>
+    struct is_ignore
+    {
+        static constexpr bool value =
+            std::is_same_v<
+                p_result_t<std::tuple_element_t<I, Tuple>>,
+                ignore_t
+            >;
+    };
+
+    template <int I, typename Tuple>
+    constexpr bool is_ignore_v = is_ignore<I, Tuple>::value;
+
 }
 
 /**************************************************************************
