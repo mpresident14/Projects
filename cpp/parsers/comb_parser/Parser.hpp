@@ -4,10 +4,8 @@
 #include "ParserBase.hpp"
 
 #include <string>
-#include <optional>
 #include <stdexcept>
 #include <type_traits>
-#include <utility>
 #include <istream>
 #include <sstream>
 
@@ -19,7 +17,7 @@ template <typename T, typename F, typename P>
 class MapParser;
 
 
-/* Parser abstract base class */
+/* Main parser abstract base class */
 template <typename T, typename Derived>
 class Parser : public ParserBase<T> {
 public:

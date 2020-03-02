@@ -1,20 +1,19 @@
 #ifndef PARSER_BASE_HPP
 #define PARSER_BASE_HPP
 
-#include <string>
-#include <optional>
-#include <stdexcept>
-#include <type_traits>
-#include <utility>
 #include <istream>
+#include <optional>
 
 #include <iostream>
 
 template <typename T>
 class LazyParser;
 
-
-/* Parser abstract basest class */
+/* *
+ * Parser abstract basest class
+ * (mainly so LazyParser does not have to know the Derived type of
+ * the parser it's holding)
+ * */
 template <typename T>
 class ParserBase {
     template <typename T2>
