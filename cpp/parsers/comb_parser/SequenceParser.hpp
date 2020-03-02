@@ -64,7 +64,7 @@ private:
     template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
     std::optional<T> applyHelper(std::istream&, T&& tup) const
     {
-        return std::make_optional(tup);
+        return std::optional(tup);
     }
 
     template <int I, typename Tup, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
@@ -76,7 +76,7 @@ private:
                 input,
                 std::tuple_cat(
                     currentTuple,
-                    std::make_tuple(std::move(optResult.value()))));
+                    std::tuple(std::move(optResult.value()))));
         }
         return {};
     }

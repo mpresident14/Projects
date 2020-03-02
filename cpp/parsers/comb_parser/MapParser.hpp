@@ -37,7 +37,7 @@ private:
     {
         auto optResult = parser_.apply(input);
         if (optResult.has_value()) {
-            return std::make_optional<T>(mapFn_(std::move(optResult.value())));
+            return std::optional<T>(mapFn_(std::move(optResult.value())));
         }
         return {};
     }

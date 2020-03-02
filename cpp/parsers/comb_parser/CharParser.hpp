@@ -33,8 +33,7 @@ private:
     {
         int c;
         if ((c = input.get()) != EOF) {
-            auto optResult = std::make_optional(c);
-            return optResult;
+            return std::optional(c);
         }
         return {};
     }
