@@ -12,7 +12,7 @@ class SequenceParser;
 namespace parsers
 {
     template <typename... PTypes>
-    SequenceParser<parsers::p_tuple_results_t<PTypes...>, PTypes...>
+    SequenceParser<parsers::p_tuple_results_t<PTypes...>, std::decay_t<PTypes>...>
     seq(PTypes&&... parsers);
 }
 
@@ -39,13 +39,16 @@ class SequenceParser: public Parser<T, SequenceParser<T, ParserTypes...>> {
     friend class Parser;
 
     template <typename... PTypes>
-    friend SequenceParser<parsers::p_tuple_results_t<PTypes...>, PTypes...>
+    friend SequenceParser<parsers::p_tuple_results_t<PTypes...>, std::decay_t<PTypes>...>
     parsers::seq(PTypes&&... parsers);
 
 
 private:
+    SequenceParser(const ParserTypes&... parsers)
+        : parsers_(std::tuple<ParserTypes...>(parsers...)) {}
+
     SequenceParser(ParserTypes&&... parsers)
-        : parsers_(std::tuple<ParserTypes...>(std::forward<ParserTypes>(parsers)...)) {}
+        : parsers_(std::tuple<ParserTypes...>(std::move(parsers)...)) {}
 
 
     virtual std::optional<T> apply(std::istream& input) const override

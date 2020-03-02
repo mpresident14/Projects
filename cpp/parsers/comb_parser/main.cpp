@@ -13,7 +13,7 @@ using namespace boost::typeindex;
 int main()
 {
     char match = 'a';
-    auto a = parsers::anyChar().onlyIf([&match](const char& c) { return c == match; });
+    const auto a = parsers::anyChar().onlyIf([&match](const char& c) { return c == match; });
     auto b = parsers::anyChar().onlyIf([](const char& c) { return c == 'b'; });
     auto c = parsers::anyChar().onlyIf([](const char& c) { return c == 'c'; });
     auto abc = parsers::alt(a, b, c);
@@ -33,14 +33,10 @@ int main()
     pStr.set(a2.mapTo([](char&& c) { return string(3, c); }));
     cout << pStr.parse("aaa") << endl;
 
-    auto abcSeq = parsers::seq(a,move(b),c);
-    auto acSeq = parsers::seq(a,a,c);
-    auto tupResult = parsers::alt(acSeq, abcSeq).parse("abc");
-    char ca;
-    char cb;
-    char cc;
-    tie(ca, cb, cc) = tupResult;
-    cout << ca << ", " << cb << ", " << cc << endl;
+    auto acbSeq = parsers::seq(a,c,b);
+    auto abcSeq = parsers::seq(a,b,c);
+    auto tupResult = parsers::alt(acbSeq, abcSeq).parse("abc");
+    cout << get<0>(tupResult) << ", " << get<1>(tupResult) << ", " << get<2>(tupResult) << endl;
 
     auto manyA = parsers::many(a);
     auto v = manyA.parse("aaaaaaaaaaaaaaaaaaaa");

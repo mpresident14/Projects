@@ -39,21 +39,21 @@ namespace parsers
      *                           NONCHAINED COMBINATORS
      **************************************************************************/
     template <typename... ParserTypes>
-    AltParser<parsers::p_first_t<ParserTypes...>, ParserTypes...>
+    AltParser<parsers::p_first_t<ParserTypes...>, std::decay_t<ParserTypes>...>
     alt(ParserTypes&&... parsers)
     {
         return
-            AltParser<parsers::p_first_t<ParserTypes...>, ParserTypes...>
+            AltParser<parsers::p_first_t<ParserTypes...>, std::decay_t<ParserTypes>...>
             (std::forward<ParserTypes>(parsers)...);
     }
 
 
     template <typename... ParserTypes>
-    SequenceParser<parsers::p_tuple_results_t<ParserTypes...>, ParserTypes...>
+    SequenceParser<parsers::p_tuple_results_t<ParserTypes...>, std::decay_t<ParserTypes>...>
     seq(ParserTypes&&... parsers)
     {
         return
-            SequenceParser<parsers::p_tuple_results_t<ParserTypes...>, ParserTypes...>
+            SequenceParser<parsers::p_tuple_results_t<ParserTypes...>, std::decay_t<ParserTypes>...>
             (std::forward<ParserTypes>(parsers)...);
     }
 

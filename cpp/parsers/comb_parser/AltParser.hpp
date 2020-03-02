@@ -12,7 +12,7 @@ class AltParser;
 namespace parsers
 {
     template <typename... ParserTypes>
-    AltParser<parsers::p_first_t<ParserTypes...>, ParserTypes...>
+    AltParser<parsers::p_first_t<ParserTypes...>, std::decay_t<ParserTypes>...>
     alt(ParserTypes&&... parsers);
 }
 
@@ -36,11 +36,14 @@ class AltParser: public Parser<T, AltParser<T, ParserTypes...>> {
     friend class Parser;
 
     template <typename... PTypes>
-    friend AltParser<parsers::p_first_t<PTypes...>, PTypes...>
+    friend AltParser<parsers::p_first_t<PTypes...>, std::decay_t<PTypes>...>
     parsers::alt(PTypes&&... parsers);
 
 
 private:
+    AltParser(const ParserTypes&... parsers)
+        : parsers_(std::tuple<ParserTypes...>(parsers...)) {}
+
     AltParser(ParserTypes&&... parsers)
         : parsers_(std::tuple<ParserTypes...>(std::forward<ParserTypes>(parsers)...)) {}
 
