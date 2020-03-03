@@ -10,7 +10,7 @@ class ConditionalParser;
 namespace parsers
 {
     template<typename P, typename F>
-    ConditionalParser<p_result_t<P>, std::decay_t<F>, decay_ifn_lazy_t<P>>
+    ConditionalParser<p_result_t<P>, std::decay_t<F>, std::decay_t<P>>
     doOnlyIf(P&& parser, F&& condFn);
 }
 
@@ -36,7 +36,7 @@ class ConditionalParser: public Parser<T> {
     friend class IgnoreParser;
 
     template<typename P2, typename F2>
-    friend ConditionalParser<parsers::p_result_t<P2>, std::decay_t<F2>, parsers::decay_ifn_lazy_t<P2>>
+    friend ConditionalParser<parsers::p_result_t<P2>, std::decay_t<F2>, std::decay_t<P2>>
     parsers::doOnlyIf(P2&& parser, F2&& condFn);
 
 private:

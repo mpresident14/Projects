@@ -9,7 +9,7 @@ class IgnoreParser;
 namespace parsers
 {
     template <typename P>
-    IgnoreParser<decay_ifn_lazy_t<P>> skip(P&& parser);
+    IgnoreParser<std::decay_t<P>> skip(P&& parser);
 }
 
 template <typename P>
@@ -34,7 +34,7 @@ class IgnoreParser: public Parser<parsers::ignore_t> {
     friend class IgnoreParser;
 
     template <typename P2>
-    friend IgnoreParser<parsers::decay_ifn_lazy_t<P2>> parsers::skip(P2&& parser);
+    friend IgnoreParser<std::decay_t<P2>> parsers::skip(P2&& parser);
 
 private:
     IgnoreParser(const P& parser)

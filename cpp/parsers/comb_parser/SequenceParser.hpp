@@ -13,7 +13,7 @@ class SequenceParser;
 namespace parsers
 {
     template <typename... PTypes>
-    SequenceParser<p_results_filtered_t<PTypes...>, decay_ifn_lazy_t<PTypes>...>
+    SequenceParser<p_results_filtered_t<PTypes...>, std::decay_t<PTypes>...>
     seq(PTypes&&... parsers);
 }
 
@@ -40,7 +40,7 @@ class SequenceParser: public Parser<T> {
     friend class IgnoreParser;
 
     template <typename... PTypes>
-    friend SequenceParser<parsers::p_results_filtered_t<PTypes...>, parsers::decay_ifn_lazy_t<PTypes>...>
+    friend SequenceParser<parsers::p_results_filtered_t<PTypes...>, std::decay_t<PTypes>...>
     parsers::seq(PTypes&&... parsers);
 
 
