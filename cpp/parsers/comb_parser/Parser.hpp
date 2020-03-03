@@ -112,6 +112,7 @@ namespace parsers
     using p_results_filtered_t = typename p_results_filtered<ParserTypes...>::type;
 
 
+    /* Check if tuple element I is a Parser<ignore_t> */
     template <int I, typename Tuple>
     struct is_ignore
     {
@@ -124,6 +125,26 @@ namespace parsers
     template <int I, typename Tuple>
     constexpr bool is_ignore_v = is_ignore<I, Tuple>::value;
 
+
+    template <typename>
+    struct is_lazy : std::false_type {};
+
+    template <typename T>
+    struct is_lazy<LazyParser<T>> : std::true_type {};
+
+    template <typename P>
+    constexpr bool is_lazy_v = is_lazy<P>::value;
+
+    template <typename P>
+    struct decay_ifn_lazy {
+        using type = std::conditional_t<is_lazy_v<P>, P, std::decay<P>>
+    };
+
+    template <typename P>
+    using decay_ifn_lazy_t = typename decay_ifn_lazy<P>::type;
+
 }
+
+
 
 #endif

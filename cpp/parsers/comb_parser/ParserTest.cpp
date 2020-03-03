@@ -166,7 +166,7 @@ void testSeqParser()
 void testLazyParser()
 {
     auto rAssocAdd = lazy<unsigned long>();
-    auto plusNum = ignoreAndThen(skipWs(thisChar('+')), rAssocAdd);
+    auto plusNum = ignoreAndThen(thisChar('+'), rAssocAdd);
     rAssocAdd.set(
         transform(
             seq(
@@ -193,7 +193,7 @@ int main()
     testIgnoreParser();
     testManyParser();
     testAltParser();
-    // testSeqParser();
+    testSeqParser();
     testLazyParser();
 
     return 0;

@@ -150,9 +150,9 @@ namespace parsers
     {
         return transform(
             seq(
-                skip(std::forward<P1>(toIgnore)),
+                std::forward<P1>(toIgnore),
                 std::forward<P2>(parser)),
-            [](auto&& tup) { return std::move(std::get<0>(tup)); });
+            [](auto&& tup) { return std::move(std::get<1>(tup)); });
 
     }
 
@@ -160,7 +160,12 @@ namespace parsers
     template <typename P>
     auto skipWs(P&& parser)
     {
-        return ignoreAndThen(whiteSpace, std::forward<P>(parser));
+        return transform(
+            seq(
+                whiteSpace,
+                std::forward<P>(parser)),
+            [](auto&& tup) { return std::move(std::get<1>(tup)); });
+
     }
 
 
