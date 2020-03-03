@@ -22,5 +22,9 @@ int main()
     auto manyNumbers = many(anyULong);
     printContainer(manyNumbers.parse("1 100 1000"));
 
+    auto seqNumbers = seq(anyULong, anyULong, anyULong);
+    auto t = seqNumbers.parse("123 456 78");
+    printTuple(t);
+
     return 0;
 }

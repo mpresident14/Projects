@@ -32,6 +32,9 @@ class AltParser: public Parser<T> {
     template <typename T2, typename... PTypes>
     friend class SequenceParser;
 
+    template <typename T2, typename P2>
+    friend class ManyParser;
+
     template <typename P2>
     friend class IgnoreParser;
 

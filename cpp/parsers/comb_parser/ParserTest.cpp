@@ -1,5 +1,7 @@
 #include "Parsers.hpp"
 
+#include <bits/stdc++.h>
+
 #include <prez/unit_test.hpp>
 
 
@@ -80,6 +82,16 @@ void testMapParser()
 }
 
 
+void testIgnoreParser()
+{
+    auto ignoreChar = skip(anyChar());
+    tester.assertTrue((is_same_v<ignore_t, decltype(ignoreChar.parse("a"))>));
+    tester.assertThrows([&ignoreChar]() {
+        ignoreChar.parse("ab");
+    });
+}
+
+
 void testManyParser()
 {
     auto ignoreManyDigits = many(skip(anyDigitChar));
@@ -108,6 +120,69 @@ void testManyParser()
 }
 
 
+void testAltParser()
+{
+    auto abc = alt(thisChar('a'), thisChar('b'), thisChar('c'));
+
+    tester.assertEquals('a', abc.parse("a"));
+    tester.assertEquals('b', abc.parse("b"));
+    tester.assertEquals('c', abc.parse("c"));
+    tester.assertThrows([&abc]() {
+        abc.parse("d");
+    });
+    tester.assertEquals("ababcbcabb", many(abc).parse("ababcbcabb"));
+
+
+    auto strP = alt(thisString("ant"), thisString("ants"), thisString("antsy"));
+    tester.assertThrows([&strP]() {
+        strP.parse("ants"); // should find "ant" and stop
+    });
+    auto betterStrP = alt(thisString("antsy"), thisString("ants"), thisString("ant"));
+    tester.assertEquals("ants", betterStrP.parse("ants"));
+}
+
+
+void testSeqParser()
+{
+    auto hello = thisString("hello");
+    auto hodgepodge = seq(hello, thisChar('a'), anyULong);
+    tester.assertEquals(std::tuple(string("hello"), 'a', 1234), hodgepodge.parse("helloa  1234"));
+    tester.assertThrows([&hodgepodge]() {
+        hodgepodge.parse("helloa bye");
+    });
+
+    auto hodgepodge2 = seq(hello, thisChar('b'), anyULong);
+    auto withAlt = alt(hodgepodge, hodgepodge2);
+    tester.assertEquals(std::tuple(string("hello"), 'b', 1234), withAlt.parse("hellob  1234"));
+
+    auto withSkip = seq(skip(hello), anyULong);
+    tester.assertEquals(std::tuple(1234), withSkip.parse("hello 1234"));
+    tester.assertThrows([&withSkip]() {
+        withSkip.parse("1234");
+    });
+}
+
+
+void testLazyParser()
+{
+    auto rAssocAdd = lazy<unsigned long>();
+    auto plusNum = ignoreAndThen(skipWs(thisChar('+')), rAssocAdd);
+    rAssocAdd.set(
+        transform(
+            seq(
+                anyULong,
+                transform(
+                    many(plusNum),
+                    [](auto&& v) { return accumulate(v.begin(), v.end(), 0); })
+            ),
+            [](auto&& nums) { return get<0>(nums) + get<1>(nums); }));
+
+    tester.assertEquals(10, rAssocAdd.parse("1+ 2 + 3 +4"));
+    cout << rAssocAdd.parse("2+4+ 4+1412") << endl;
+
+}
+
+
 int main()
 {
     testCharParser();
@@ -115,7 +190,11 @@ int main()
     testStringParser();
     testConditionalParser();
     testMapParser();
+    testIgnoreParser();
     testManyParser();
+    testAltParser();
+    // testSeqParser();
+    testLazyParser();
 
     return 0;
 }

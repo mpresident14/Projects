@@ -11,7 +11,7 @@
 #include "IgnoreParser.hpp"
 #include "StringParser.hpp"
 
-#include<stdlib.h>
+#include <stdlib.h>
 
 // TODO: Put this in templates.cpp
 // template <typename T>
@@ -141,16 +141,26 @@ namespace parsers
     StringParser thisString(const char *str) { return StringParser(str); }
 
 
-    // TODO: This is really inefficient and super common. Define a new parser (ignoreAndThen) instead.
-    template <typename P>
-    auto skipWs(P&& parser)
+    auto whiteSpace = many(doOnlyIf(anyChar(), [](char c) { return isspace(c); }));
+
+
+    // TODO: This is really inefficient and super common. Define a new parser instead.
+    template <typename P1, typename P2>
+    auto ignoreAndThen(P1&& toIgnore, P2&& parser)
     {
         return transform(
             seq(
-                many(doOnlyIf(anyChar(), [](char c) { return isspace(c); })),
-                std::forward<P>(parser)),
-            [](auto&& tup) { return std::move(std::get<1>(tup)); });
+                skip(std::forward<P1>(toIgnore)),
+                std::forward<P2>(parser)),
+            [](auto&& tup) { return std::move(std::get<0>(tup)); });
 
+    }
+
+
+    template <typename P>
+    auto skipWs(P&& parser)
+    {
+        return ignoreAndThen(whiteSpace, std::forward<P>(parser));
     }
 
 
