@@ -7,7 +7,7 @@ class CharParser;
 
 namespace parsers
 {
-    CharParser anyChar(bool consumeWhiteSpace);
+    CharParser anyChar();
 }
 
 class CharParser: public Parser<char> {
@@ -30,20 +30,14 @@ class CharParser: public Parser<char> {
     template <typename P2>
     friend class IgnoreParser;
 
-    friend CharParser parsers::anyChar(bool consumeWhiteSpace);
+    friend CharParser parsers::anyChar();
 
 private:
-    CharParser(bool consumeWhiteSpace) : consumeWhiteSpace_(consumeWhiteSpace) {}
+    CharParser() {}
 
     virtual std::optional<char> apply(std::istream& input) const override
     {
-        int c;
-        if (consumeWhiteSpace_) {
-            while (isspace(c = input.get())){}
-        } else {
-            c = input.get();
-        }
-
+        int c = input.get();
         if (c != EOF) {
             return std::optional(c);
         }
@@ -54,8 +48,6 @@ private:
         input.unget();
         return {};
     }
-
-    bool consumeWhiteSpace_;
 };
 
 #endif

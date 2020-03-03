@@ -11,6 +11,8 @@
 #include "IgnoreParser.hpp"
 #include "StringParser.hpp"
 
+#include<stdlib.h>
+
 // TODO: Put this in templates.cpp
 // template <typename T>
 // struct p_result;
@@ -21,40 +23,6 @@
 
 namespace parsers
 {
-    /**************************************************************************
-     *                            COMMON PARSERS
-     **************************************************************************/
-    CharParser anyChar(bool consumeWhiteSpace = true)
-    {
-        if (consumeWhiteSpace) {
-            static CharParser p(true);
-            return p;
-        }
-        static CharParser p(false);
-        return p;
-    }
-
-
-    auto thisChar(char c, bool consumeWhiteSpace = true)
-    {
-        return doOnlyIf(anyChar(consumeWhiteSpace), [c](char d) { return c == d; });
-    }
-
-
-    StringParser thisString(const std::string& str, bool consumeWhiteSpace = true)
-    { return StringParser(str, consumeWhiteSpace); }
-
-    StringParser thisString(std::string&& str, bool consumeWhiteSpace = true)
-    { return StringParser(str, consumeWhiteSpace); }
-
-    StringParser thisString(const char *str, bool consumeWhiteSpace = true)
-    { return StringParser(str, consumeWhiteSpace); }
-
-
-    template <typename T>
-    LazyParser<T> lazy() { return LazyParser<T>(); }
-
-
     /**************************************************************************
      *                              COMBINATORS
      **************************************************************************/
@@ -107,14 +75,29 @@ namespace parsers
 
 
     template <typename P>
-    IgnoreParser<std::decay_t<P>> ignore(P&& parser)
+    auto some(P&& parser)
+    {
+        return transform(
+            seq(parser, many(parser)),
+            [](auto&& tup) {
+                auto& vec = std::get<1>(tup);
+                vec.insert(vec.begin(), std::move(std::get<0>(tup)));
+                return std::move(vec);
+            });
+    }
+
+
+
+    template <typename P>
+    IgnoreParser<std::decay_t<P>> skip(P&& parser)
     {
         return IgnoreParser<std::decay_t<P>>(std::forward<P>(parser));
     }
 
 
     template<typename P, typename F>
-    ConditionalParser<p_result_t<P>, F, P> doOnlyIf(P&& parser, F&& condFn)
+    ConditionalParser<p_result_t<P>, std::decay_t<F>, std::decay_t<P>>
+    doOnlyIf(P&& parser, F&& condFn)
     {
         return ConditionalParser<p_result_t<P>, std::decay_t<F>, std::decay_t<P>>(
             std::forward<P>(parser), std::forward<F>(condFn));
@@ -135,6 +118,52 @@ namespace parsers
         >
         (std::forward<P>(parser), std::forward<F>(mapFn));
     }
+
+
+    /**************************************************************************
+     *                            COMMON PARSERS
+     **************************************************************************/
+    CharParser anyChar()
+    {
+        static CharParser p;
+        return p;
+    }
+
+
+    auto thisChar(char c)
+    {
+        return doOnlyIf(anyChar(), [c](char d) { return c == d; });
+    }
+
+
+    StringParser thisString(const std::string& str) { return StringParser(str); }
+    StringParser thisString(std::string&& str) { return StringParser(str); }
+    StringParser thisString(const char *str) { return StringParser(str); }
+
+
+    // TODO: This is really inefficient and super common. Define a new parser (ignoreAndThen) instead.
+    template <typename P>
+    auto skipWs(P&& parser)
+    {
+        return transform(
+            seq(
+                many(doOnlyIf(anyChar(), [](char c) { return isspace(c); })),
+                std::forward<P>(parser)),
+            [](auto&& tup) { return std::move(std::get<1>(tup)); });
+
+    }
+
+
+    auto anyDigitChar = doOnlyIf(anyChar(), [](char c) { return '0' <= c && c <= '9'; });
+
+    auto anyULong =
+        transform(
+            skipWs(some(anyDigitChar)),
+            [](std::string&& str) { return stoul(str); });
+
+
+    template <typename T>
+    LazyParser<T> lazy() { return LazyParser<T>(); }
 }
 
 #endif

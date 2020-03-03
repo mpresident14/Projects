@@ -9,9 +9,9 @@ class StringParser;
 
 namespace parsers
 {
-    StringParser thisString(const std::string& str, bool consumeWhiteSpace);
-    StringParser thisString(std::string&& str, bool consumeWhiteSpace);
-    StringParser thisString(const char *str, bool consumeWhiteSpace);
+    StringParser thisString(const std::string& str);
+    StringParser thisString(std::string&& str);
+    StringParser thisString(const char *str);
 }
 
 class StringParser: public Parser<std::string> {
@@ -34,29 +34,22 @@ class StringParser: public Parser<std::string> {
     template <typename P2>
     friend class IgnoreParser;
 
-    friend StringParser parsers::thisString(const std::string& str, bool consumeWhiteSpace);
-    friend StringParser parsers::thisString(std::string&& str, bool consumeWhiteSpace);
-    friend StringParser parsers::thisString(const char *str, bool consumeWhiteSpace);
+    friend StringParser parsers::thisString(const std::string& str);
+    friend StringParser parsers::thisString(std::string&& str);
+    friend StringParser parsers::thisString(const char *str);
 
 private:
-    StringParser(const std::string& str, bool consumeWhiteSpace)
-        : str_(str), consumeWhiteSpace_{consumeWhiteSpace} {}
+    StringParser(const std::string& str)
+        : str_(str) {}
 
-    StringParser(std::string&& str, bool consumeWhiteSpace)
-        : str_(std::move(str)), consumeWhiteSpace_{consumeWhiteSpace} {}
+    StringParser(std::string&& str)
+        : str_(std::move(str)) {}
 
     virtual std::optional<std::string> apply(std::istream& input) const override
     {
         int oldPos = input.tellg();
-        char inC;
-        if (consumeWhiteSpace_) {
-            while (isspace(inC = input.peek())) {
-                input.get();
-            }
-        }
-
         for (const char& c : str_) {
-            inC = input.get();
+            char inC = input.get();
             if (inC == EOF || inC != c) {
                 input.clear();
                 input.seekg(oldPos);
@@ -68,7 +61,6 @@ private:
     }
 
     std::string str_;
-    bool consumeWhiteSpace_;
 };
 
 #endif
