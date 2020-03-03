@@ -57,7 +57,8 @@ private:
     virtual std::optional<T> apply(std::istream& input) const override
     {
         size_t oldPos = input.tellg();
-        std::optional<T> optResult = parser_.apply(input);
+        std::optional<T> optResult =
+            static_cast<const parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
         if (optResult.has_value() && condFn_(optResult.value())) {
             return optResult;
         }

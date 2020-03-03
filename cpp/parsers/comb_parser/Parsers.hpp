@@ -87,7 +87,6 @@ namespace parsers
     }
 
 
-
     template <typename P>
     IgnoreParser<std::decay_t<P>> skip(P&& parser)
     {

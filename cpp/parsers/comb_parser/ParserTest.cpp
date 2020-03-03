@@ -166,7 +166,7 @@ void testSeqParser()
 void testLazyParser()
 {
     auto rAssocAdd = lazy<unsigned long>();
-    auto plusNum = ignoreAndThen(skipWs(thisChar('+')), rAssocAdd);
+    auto plusNum = ignoreAndThen(skipWs(thisChar('+')), rAssocAdd.getRef());
     rAssocAdd.set(
         transform(
             seq(
@@ -178,8 +178,6 @@ void testLazyParser()
             [](auto&& nums) { return get<0>(nums) + get<1>(nums); }));
 
     tester.assertEquals(10, rAssocAdd.parse("1+ 2 + 3 +4"));
-    cout << rAssocAdd.parse("2+4+ 4+1412") << endl;
-
 }
 
 
@@ -193,7 +191,7 @@ int main()
     testIgnoreParser();
     testManyParser();
     testAltParser();
-    // testSeqParser();
+    testSeqParser();
     testLazyParser();
 
     return 0;

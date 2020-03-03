@@ -80,10 +80,11 @@ private:
         using PType = parsers::p_result_t<P>;
 
         std::vector<PType> v;
-        std::optional<PType> optResult = parser_.apply(input);
+        std::optional<PType> optResult =
+            static_cast<const parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
         while (optResult.has_value()) {
             v.push_back(std::move(optResult.value()));
-            optResult = parser_.apply(input);
+            optResult = static_cast<const parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
         }
 
         return std::optional(v);

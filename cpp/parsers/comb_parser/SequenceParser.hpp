@@ -96,7 +96,11 @@ private:
     >
     std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) const
     {
-        auto optResult = std::get<I>(parsers_).apply(input);
+        auto optResult =
+            static_cast<
+                const parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>
+                    (std::get<I>(parsers_)).apply(input);
+
         if (optResult.has_value()) {
             return applyHelper<I+1>(
                 input,
@@ -122,7 +126,7 @@ private:
     >
     std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) const
     {
-        auto optResult = std::get<I>(parsers_).apply(input);
+        auto optResult = static_cast<const parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>(std::get<I>(parsers_)).apply(input);
         if (optResult.has_value()) {
             return applyHelper<I+1>(
                 input,

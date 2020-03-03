@@ -44,7 +44,13 @@ public:
         if (parser_) {
             delete parser_;
         }
-        parser_ = new P(parser);
+        parser_ = new std::decay_t<P>(parser);
+    }
+
+    /* In all other parsers, we cast to a P& before calling apply(). */
+    auto getRef()
+    {
+        return std::reference_wrapper(*this);
     }
 
 

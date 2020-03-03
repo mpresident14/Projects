@@ -46,7 +46,7 @@ private:
 
     virtual std::optional<parsers::ignore_t> apply(std::istream& input) const override
     {
-        auto optResult = parser_.apply(input);
+        auto optResult = static_cast<const parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
         if (optResult.has_value()) {
             return std::optional(parsers::ignore_t());
         }

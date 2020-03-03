@@ -8,6 +8,7 @@
 #include <sstream>
 #include <tuple>
 #include <optional>
+#include <functional>
 
 
 template <typename T>
@@ -112,6 +113,7 @@ namespace parsers
     using p_results_filtered_t = typename p_results_filtered<ParserTypes...>::type;
 
 
+    /* Check whether element I of Tuple is a Parser<ignore_t> */
     template <int I, typename Tuple>
     struct is_ignore
     {
@@ -124,6 +126,16 @@ namespace parsers
     template <int I, typename Tuple>
     constexpr bool is_ignore_v = is_ignore<I, Tuple>::value;
 
+
+    /* Remove reference wrapper. */
+    template<typename P>
+    struct rm_ref_wrap { using type = P; };
+
+    template<typename P>
+    struct rm_ref_wrap<std::reference_wrapper<P>> { using type = P; };
+
+    template<typename P>
+    using rm_ref_wrap_t = typename rm_ref_wrap<P>::type;
 }
 
 #endif

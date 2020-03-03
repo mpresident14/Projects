@@ -67,7 +67,11 @@ private:
     template <int I, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
     std::optional<T> applyHelper(std::istream& input) const
     {
-        std::optional<T> optResult = std::get<I>(parsers_).apply(input);
+        std::optional<T> optResult =
+            static_cast<
+                const parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>
+                    (std::get<I>(parsers_)).apply(input);
+
         if (optResult.has_value()) {
             return optResult;
         }
