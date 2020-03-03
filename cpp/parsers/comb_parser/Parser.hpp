@@ -13,7 +13,7 @@
 template <typename T>
 class LazyParser;
 
-/* Main parser abstract base class */
+/* Parser abstract base class */
 template <typename T>
 class Parser {
 
