@@ -44,7 +44,7 @@ public:
         if (parser_) {
             delete parser_;
         }
-        parser_ = new std::decay_t<P>(parser);
+        parser_ = new std::decay_t<P>(std::forward<P>(parser));
     }
 
     /* In all other parsers, we cast to a P& before calling apply(). */

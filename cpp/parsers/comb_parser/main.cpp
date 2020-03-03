@@ -15,16 +15,20 @@ using namespace prez;
 
 int main()
 {
-    cout << anyULong.parse("1") << endl;
-    cout << anyULong.parse(" 1") << endl;
-    cout << anyULong.parse(" 1000") << endl;
+    cout << anyULong.parseAll("1") << endl;
+    cout << anyULong.parseAll(" 1") << endl;
+    cout << anyULong.parseAll(" 1000") << endl;
 
     auto manyNumbers = many(anyULong);
-    printContainer(manyNumbers.parse("1 100 1000"));
+    printContainer(manyNumbers.parseAll("1 100 1000"));
 
     auto seqNumbers = seq(anyULong, anyULong, anyULong);
-    auto t = seqNumbers.parse("123 456 78");
+    auto t = seqNumbers.parseAll("123 456 78");
     printTuple(t);
+
+    cout << sizeof(anyULong) << endl;
+    cout << sizeof(seqNumbers) << endl;
+    cout << sizeof(anyChar()) << endl;
 
     return 0;
 }

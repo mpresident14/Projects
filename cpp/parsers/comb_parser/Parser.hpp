@@ -10,6 +10,8 @@
 #include <optional>
 #include <functional>
 
+#include <iostream>
+
 
 template <typename T>
 class LazyParser;
@@ -24,13 +26,10 @@ class Parser {
 public:
     virtual ~Parser(){}
 
+
     T parse(std::istream& input) const
     {
         std::optional<T> optResult = apply(input);
-        if (input.peek() != EOF) {
-            // TODO: Replace with appropriate parse error.
-            throw std::invalid_argument("Characters remained.");
-        }
         if (optResult.has_value()) {
             return optResult.value();
         }
@@ -39,10 +38,21 @@ public:
     }
 
 
-    T parse(const std::string& input) const
+    T parseAll(std::istream& input) const
+    {
+        T result = parse(input);
+        if (input.peek() != EOF) {
+            // TODO: Replace with appropriate parse error.
+            throw std::invalid_argument("Characters remained.");
+        }
+        return result;
+    }
+
+
+    T parseAll(const std::string& input) const
     {
         std::istringstream strStream(input);
-        return parse(strStream);
+        return parseAll(strStream);
     }
 
 
