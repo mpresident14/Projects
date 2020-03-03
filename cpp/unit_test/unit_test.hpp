@@ -122,7 +122,19 @@ public:
 
 
   template<typename F>
-  void assertThrows(const F& fn, const std::string& errMsg, size_t line, const char *testName)
+  void assertThrows(const F& fn, size_t line, const char *testName)
+  {
+    try {
+      fn();
+      assertTrue(false, line, testName);
+    } catch (std::exception& e) {
+      assertTrue(true, line, testName);
+    }
+  }
+
+
+  template<typename F>
+  void assertThrowsWithMsg(const F& fn, const std::string& errMsg, size_t line, const char *testName)
   {
     try {
       fn();
@@ -219,7 +231,8 @@ public:
 #define assertTrue(statement) assertTrue(statement, __LINE__, __FUNCTION__)
 #define assertEquals(expected, actual) assertEquals(expected, actual, __LINE__, __FUNCTION__)
 #define assertNotEqual(obj, actual) assertNotEqual(obj, actual, __LINE__, __FUNCTION__)
-#define assertThrows(fn, errMsg) assertThrows(fn, errMsg, __LINE__, __FUNCTION__)
+#define assertThrowsWithMsg(fn, errMsg) assertThrowsWithMsg(fn, errMsg, __LINE__, __FUNCTION__)
+#define assertThrows(fn) assertThrows(fn, __LINE__, __FUNCTION__)
 
 #define createTester() createTester(__FILE__)
 

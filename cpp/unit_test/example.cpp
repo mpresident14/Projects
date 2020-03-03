@@ -37,10 +37,10 @@ void testAssertNotEqual()
 void testAssertThrows()
 {
   auto throwing = [](){ throw invalid_argument("Error!"); };
-  tester.assertThrows(throwing, "Error!");
+  tester.assertThrowsWithMsg(throwing, "Error!");
 
   auto nonThrowing = [](){ return 0; };
-  tester.assertThrows(nonThrowing, "Error!");
+  tester.assertThrowsWithMsg(nonThrowing, "Error!");
 }
 
 void testLoop()
