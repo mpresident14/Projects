@@ -22,7 +22,7 @@
 namespace parsers
 {
     /**************************************************************************
-     *                           PRECOMPUTED PARSERS
+     *                            COMMON PARSERS
      **************************************************************************/
     CharParser anyChar(bool consumeWhiteSpace = true)
     {
@@ -56,7 +56,7 @@ namespace parsers
 
 
     /**************************************************************************
-     *                           NONCHAINED COMBINATORS
+     *                              COMBINATORS
      **************************************************************************/
     template <typename... ParserTypes>
     AltParser<parsers::p_first_t<ParserTypes...>, std::decay_t<ParserTypes>...>
@@ -73,7 +73,9 @@ namespace parsers
     seq(ParserTypes&&... parsers)
     {
         return
-            SequenceParser<parsers::p_results_filtered_t<ParserTypes...>, std::decay_t<ParserTypes>...>
+            SequenceParser<
+                parsers::p_results_filtered_t<ParserTypes...>,
+                std::decay_t<ParserTypes>...>
             (std::forward<ParserTypes>(parsers)...);
     }
 
@@ -86,11 +88,8 @@ namespace parsers
             std::conditional_t<
                 std::is_same_v<parsers::p_result_t<P>, parsers::ignore_t>,
                 parsers::ignore_t,
-                std::vector<parsers::p_result_t<P>>
-            >
-        >,
-        std::decay_t<P>
-    >
+                std::vector<parsers::p_result_t<P>>>>,
+        std::decay_t<P>>
     many(P&& parser)
     {
         return
@@ -101,11 +100,8 @@ namespace parsers
                     std::conditional_t<
                         std::is_same_v<parsers::p_result_t<P>, parsers::ignore_t>,
                         parsers::ignore_t,
-                        std::vector<parsers::p_result_t<P>>
-                    >
-                >,
-                std::decay_t<P>
-            >
+                        std::vector<parsers::p_result_t<P>>>>,
+                std::decay_t<P>>
             (std::forward<P>(parser));
     }
 
@@ -114,6 +110,30 @@ namespace parsers
     IgnoreParser<std::decay_t<P>> ignore(P&& parser)
     {
         return IgnoreParser<std::decay_t<P>>(std::forward<P>(parser));
+    }
+
+
+    template<typename P, typename F>
+    ConditionalParser<p_result_t<P>, F, P> doOnlyIf(P&& parser, F&& condFn)
+    {
+        return ConditionalParser<p_result_t<P>, std::decay_t<F>, std::decay_t<P>>(
+            std::forward<P>(parser), std::forward<F>(condFn));
+    }
+
+
+    template<typename P, typename F>
+    MapParser<
+        std::decay_t<std::invoke_result_t<F, p_result_t<P>&&>>,
+        std::decay_t<F>,
+        std::decay_t<P>>
+    transform(P&& parser, F&& mapFn)
+    {
+        return MapParser<
+            std::decay_t<std::invoke_result_t<F, p_result_t<P>&&>>,
+            std::decay_t<F>,
+            std::decay_t<P>
+        >
+        (std::forward<P>(parser), std::forward<F>(mapFn));
     }
 }
 

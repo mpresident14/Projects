@@ -3,6 +3,16 @@
 
 #include "Parser.hpp"
 
+
+template <typename T, typename F, typename P>
+class ConditionalParser;
+
+namespace parsers
+{
+    template<typename P, typename F>
+    ConditionalParser<p_result_t<P>, F, P> doOnlyIf(P&& parser, F&& condFn);
+}
+
 template <typename T, typename F, typename P>
 class ConditionalParser: public Parser<T, ConditionalParser<T, F, P>> {
 
@@ -27,12 +37,23 @@ class ConditionalParser: public Parser<T, ConditionalParser<T, F, P>> {
     template<typename T2, typename Derived>
     friend class Parser;
 
+    template<typename P2, typename F2>
+    friend ConditionalParser<parsers::p_result_t<P2>, F2, P2>
+    parsers::doOnlyIf(P2&& parser, F2&& condFn);
+
 private:
+    ConditionalParser(const P& parser, const F& condFn)
+        : parser_(parser), condFn_(condFn) {}
+
     ConditionalParser(const P& parser, F&& condFn)
         : parser_(parser), condFn_(std::move(condFn)) {}
 
+    ConditionalParser(P&& parser, const F& condFn)
+        : parser_(std::move(parser)), condFn_(condFn) {}
+
     ConditionalParser(P&& parser, F&& condFn)
         : parser_(std::move(parser)), condFn_(std::move(condFn)) {}
+
 
 
     virtual std::optional<T> apply(std::istream& input) const override

@@ -6,6 +6,19 @@
 #include <utility>
 
 template <typename T, typename F, typename P>
+class MapParser;
+
+namespace parsers
+{
+    template<typename P, typename F>
+    MapParser<
+        std::decay_t<std::invoke_result_t<F, p_result_t<P>&&>>,
+        std::decay_t<F>,
+        std::decay_t<P>>
+    transform(P&& parser, F&& mapFn);
+}
+
+template <typename T, typename F, typename P>
 class MapParser: public Parser<T, MapParser<T, F, P>> {
 
     template<typename T2, typename F2, typename P2>
@@ -29,11 +42,24 @@ class MapParser: public Parser<T, MapParser<T, F, P>> {
     template<typename T2, typename Derived>
     friend class Parser;
 
+    template<typename P2, typename F2>
+    friend MapParser<
+        std::decay_t<std::invoke_result_t<F2, parsers::p_result_t<P2>&&>>,
+        std::decay_t<F2>,
+        std::decay_t<P2>>
+    parsers::transform(P2&& parser, F2&& mapFn);
+
 private:
     // Note that for member functions, the typename P has already been deduced at the
     // class level, so P&& is not a universal reference.
+    MapParser(const P& parser, const F& mapFn)
+        : parser_(parser), mapFn_(mapFn) {}
+
     MapParser(const P& parser, F&& mapFn)
         : parser_(parser), mapFn_(std::move(mapFn)) {}
+
+    MapParser(P&& parser, const F& mapFn)
+        : parser_(std::move(parser)), mapFn_(mapFn) {}
 
     MapParser(P&& parser, F&& mapFn)
         : parser_(std::move(parser)), mapFn_(std::move(mapFn)) {}
