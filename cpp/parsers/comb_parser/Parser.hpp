@@ -58,6 +58,16 @@ protected:
  **************************************************************************/
 namespace parsers
 {
+    /* Remove reference wrapper. */
+    template<typename P>
+    struct rm_ref_wrap { using type = P; };
+
+    template<typename P>
+    struct rm_ref_wrap<std::reference_wrapper<P>> { using type = P; };
+
+    template<typename P>
+    using rm_ref_wrap_t = typename rm_ref_wrap<P>::type;
+
     /* *
      * Get the type of the result the parser returns
      * NOTE: We can't use the strategy of using a template type Parser<T, Derived> in our
@@ -67,7 +77,7 @@ namespace parsers
     struct p_result;
 
     template<typename P>
-    struct p_result { using type = typename std::decay_t<P>::result_type; };
+    struct p_result { using type = typename rm_ref_wrap_t<std::decay_t<P>>::result_type; };
 
     template<typename P>
     using p_result_t = typename p_result<P>::type;
@@ -125,17 +135,6 @@ namespace parsers
 
     template <int I, typename Tuple>
     constexpr bool is_ignore_v = is_ignore<I, Tuple>::value;
-
-
-    /* Remove reference wrapper. */
-    template<typename P>
-    struct rm_ref_wrap { using type = P; };
-
-    template<typename P>
-    struct rm_ref_wrap<std::reference_wrapper<P>> { using type = P; };
-
-    template<typename P>
-    using rm_ref_wrap_t = typename rm_ref_wrap<P>::type;
 }
 
 #endif
