@@ -36,31 +36,27 @@ class LazyParser: public Parser<T> {
     friend LazyParser<T2> parsers::lazy();
 
 public:
-    ~LazyParser()
-    {
-        delete *parser_;
-        delete parser_;
-    }
+    ~LazyParser() { delete parser_; }
 
     template <typename P>
     void set(P&& parser)
     {
-        if (*parser_) {
-            delete *parser_;
+        if (parser_) {
+            delete parser_;
         }
-        parser_ = new Parser<T> *(std::forward<P>(parser));
+        parser_ = new P(parser);
     }
 
 
 private:
-    LazyParser() : parser_(new Parser<T> *(nullptr)) {}
+    LazyParser() : parser_(nullptr) {}
 
     virtual std::optional<T> apply(std::istream& input) const override
     {
-        return (*parser_)->apply(input);
+        return parser_->apply(input);
     }
 
-    Parser<T> **parser_;
+    Parser<T> *parser_;
 };
 
 #endif
