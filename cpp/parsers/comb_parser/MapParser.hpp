@@ -14,7 +14,7 @@ namespace parsers
     MapParser<
         std::decay_t<std::invoke_result_t<F, p_result_t<P>&&>>,
         std::decay_t<F>,
-        std::decay_t<P>>
+        decay_ifn_lazy_t<P>>
     transform(P&& parser, F&& mapFn);
 }
 
@@ -43,7 +43,7 @@ class MapParser: public Parser<T> {
     friend MapParser<
         std::decay_t<std::invoke_result_t<F2, parsers::p_result_t<P2>&&>>,
         std::decay_t<F2>,
-        std::decay_t<P2>>
+        parsers::decay_ifn_lazy_t<P2>>
     parsers::transform(P2&& parser, F2&& mapFn);
 
 private:

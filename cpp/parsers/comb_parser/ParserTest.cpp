@@ -165,20 +165,20 @@ void testSeqParser()
 
 void testLazyParser()
 {
-    auto rAssocAdd = lazy<unsigned long>();
-    auto plusNum = ignoreAndThen(thisChar('+'), rAssocAdd);
-    rAssocAdd.set(
-        transform(
-            seq(
-                anyULong,
-                transform(
-                    many(plusNum),
-                    [](auto&& v) { return accumulate(v.begin(), v.end(), 0); })
-            ),
-            [](auto&& nums) { return get<0>(nums) + get<1>(nums); }));
+    // auto rAssocAdd = lazy<unsigned long>();
+    // auto plusNum = ignoreAndThen(thisChar('+'), rAssocAdd);
+    // rAssocAdd.set(
+    //     transform(
+    //         seq(
+    //             anyULong,
+    //             transform(
+    //                 many(plusNum),
+    //                 [](auto&& v) { return accumulate(v.begin(), v.end(), 0); })
+    //         ),
+    //         [](auto&& nums) { return get<0>(nums) + get<1>(nums); }));
 
-    tester.assertEquals(10, rAssocAdd.parse("1+ 2 + 3 +4"));
-    cout << rAssocAdd.parse("2+4+ 4+1412") << endl;
+    // tester.assertEquals(10, rAssocAdd.parse("1+ 2 + 3 +4"));
+    // cout << rAssocAdd.parse("2+4+ 4+1412") << endl;
 
 }
 

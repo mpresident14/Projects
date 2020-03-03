@@ -27,23 +27,23 @@ namespace parsers
      *                              COMBINATORS
      **************************************************************************/
     template <typename... ParserTypes>
-    AltParser<parsers::p_first_t<ParserTypes...>, std::decay_t<ParserTypes>...>
+    AltParser<p_first_t<ParserTypes...>, decay_ifn_lazy_t<ParserTypes>...>
     alt(ParserTypes&&... parsers)
     {
         return
-            AltParser<parsers::p_first_t<ParserTypes...>, std::decay_t<ParserTypes>...>
+            AltParser<p_first_t<ParserTypes...>, decay_ifn_lazy_t<ParserTypes>...>
             (std::forward<ParserTypes>(parsers)...);
     }
 
 
     template <typename... ParserTypes>
-    SequenceParser<parsers::p_results_filtered_t<ParserTypes...>, std::decay_t<ParserTypes>...>
+    SequenceParser<p_results_filtered_t<ParserTypes...>, decay_ifn_lazy_t<ParserTypes>...>
     seq(ParserTypes&&... parsers)
     {
         return
             SequenceParser<
-                parsers::p_results_filtered_t<ParserTypes...>,
-                std::decay_t<ParserTypes>...>
+                p_results_filtered_t<ParserTypes...>,
+                decay_ifn_lazy_t<ParserTypes>...>
             (std::forward<ParserTypes>(parsers)...);
     }
 
@@ -51,25 +51,25 @@ namespace parsers
     template <typename P>
     ManyParser<
         std::conditional_t<
-            std::is_same_v<parsers::p_result_t<P>, char>,
+            std::is_same_v<p_result_t<P>, char>,
             std::string,
             std::conditional_t<
-                std::is_same_v<parsers::p_result_t<P>, parsers::ignore_t>,
-                parsers::ignore_t,
-                std::vector<parsers::p_result_t<P>>>>,
-        std::decay_t<P>>
+                std::is_same_v<p_result_t<P>, ignore_t>,
+                ignore_t,
+                std::vector<p_result_t<P>>>>,
+        decay_ifn_lazy_t<P>>
     many(P&& parser)
     {
         return
             ManyParser<
                 std::conditional_t<
-                    std::is_same_v<parsers::p_result_t<P>, char>,
+                    std::is_same_v<p_result_t<P>, char>,
                     std::string,
                     std::conditional_t<
-                        std::is_same_v<parsers::p_result_t<P>, parsers::ignore_t>,
-                        parsers::ignore_t,
-                        std::vector<parsers::p_result_t<P>>>>,
-                std::decay_t<P>>
+                        std::is_same_v<p_result_t<P>, ignore_t>,
+                        ignore_t,
+                        std::vector<p_result_t<P>>>>,
+                decay_ifn_lazy_t<P>>
             (std::forward<P>(parser));
     }
 
@@ -89,17 +89,17 @@ namespace parsers
 
 
     template <typename P>
-    IgnoreParser<std::decay_t<P>> skip(P&& parser)
+    IgnoreParser<decay_ifn_lazy_t<P>> skip(P&& parser)
     {
-        return IgnoreParser<std::decay_t<P>>(std::forward<P>(parser));
+        return IgnoreParser<decay_ifn_lazy_t<P>>(std::forward<P>(parser));
     }
 
 
     template<typename P, typename F>
-    ConditionalParser<p_result_t<P>, std::decay_t<F>, std::decay_t<P>>
+    ConditionalParser<p_result_t<P>, std::decay_t<F>, decay_ifn_lazy_t<P>>
     doOnlyIf(P&& parser, F&& condFn)
     {
-        return ConditionalParser<p_result_t<P>, std::decay_t<F>, std::decay_t<P>>(
+        return ConditionalParser<p_result_t<P>, std::decay_t<F>, decay_ifn_lazy_t<P>>(
             std::forward<P>(parser), std::forward<F>(condFn));
     }
 
@@ -108,13 +108,13 @@ namespace parsers
     MapParser<
         std::decay_t<std::invoke_result_t<F, p_result_t<P>&&>>,
         std::decay_t<F>,
-        std::decay_t<P>>
+        decay_ifn_lazy_t<P>>
     transform(P&& parser, F&& mapFn)
     {
         return MapParser<
             std::decay_t<std::invoke_result_t<F, p_result_t<P>&&>>,
             std::decay_t<F>,
-            std::decay_t<P>
+            decay_ifn_lazy_t<P>
         >
         (std::forward<P>(parser), std::forward<F>(mapFn));
     }

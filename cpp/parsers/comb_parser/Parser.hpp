@@ -137,7 +137,7 @@ namespace parsers
 
     template <typename P>
     struct decay_ifn_lazy {
-        using type = std::conditional_t<is_lazy_v<P>, P, std::decay<P>>
+        using type = std::conditional_t<is_lazy_v<P>, P, std::decay_t<P>>;
     };
 
     template <typename P>
