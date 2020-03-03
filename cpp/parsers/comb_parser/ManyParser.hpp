@@ -25,7 +25,7 @@ namespace parsers
 
 
 template <typename T, typename P>
-class ManyParser: public Parser<T, ManyParser<T, P>> {
+class ManyParser: public Parser<T> {
 
     template <typename T2, typename F2, typename P2>
     friend class MapParser;
@@ -44,9 +44,6 @@ class ManyParser: public Parser<T, ManyParser<T, P>> {
 
     template <typename P2>
     friend class IgnoreParser;
-
-    template<typename T2, typename Derived>
-    friend class Parser;
 
     template <typename P2>
     ManyParser<

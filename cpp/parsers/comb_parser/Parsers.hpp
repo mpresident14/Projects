@@ -37,7 +37,7 @@ namespace parsers
 
     auto thisChar(char c, bool consumeWhiteSpace = true)
     {
-        return anyChar(consumeWhiteSpace).onlyIf([c](char d) { return c == d; });
+        return doOnlyIf(anyChar(consumeWhiteSpace), [c](char d) { return c == d; });
     }
 
 

@@ -14,7 +14,7 @@ namespace parsers
     StringParser thisString(const char *str, bool consumeWhiteSpace);
 }
 
-class StringParser: public Parser<std::string, StringParser> {
+class StringParser: public Parser<std::string> {
 
     template<typename T2, typename F, typename P2>
     friend class ConditionalParser;

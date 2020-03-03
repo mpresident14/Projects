@@ -13,7 +13,7 @@ namespace parsers
 }
 
 template <typename P>
-class IgnoreParser: public Parser<parsers::ignore_t, IgnoreParser<P>> {
+class IgnoreParser: public Parser<parsers::ignore_t> {
 
     template <typename T2, typename F2, typename P2>
     friend class MapParser;
@@ -32,9 +32,6 @@ class IgnoreParser: public Parser<parsers::ignore_t, IgnoreParser<P>> {
 
     template <typename P2>
     friend class IgnoreParser;
-
-    template<typename T2, typename Derived>
-    friend class Parser;
 
     template <typename P2>
     friend IgnoreParser<std::decay_t<P2>> parsers::ignore(P2&& parser);

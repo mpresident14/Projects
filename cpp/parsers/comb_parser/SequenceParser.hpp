@@ -19,7 +19,7 @@ namespace parsers
 
 
 template <typename T, typename... ParserTypes>
-class SequenceParser: public Parser<T, SequenceParser<T, ParserTypes...>> {
+class SequenceParser: public Parser<T> {
 
     template<typename T2, typename F2, typename P2>
     friend class ConditionalParser;
@@ -38,9 +38,6 @@ class SequenceParser: public Parser<T, SequenceParser<T, ParserTypes...>> {
 
     template <typename P2>
     friend class IgnoreParser;
-
-    template<typename T2, typename Derived>
-    friend class Parser;
 
     template <typename... PTypes>
     friend SequenceParser<parsers::p_results_filtered_t<PTypes...>, std::decay_t<PTypes>...>

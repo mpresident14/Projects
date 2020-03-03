@@ -18,7 +18,7 @@ namespace parsers
 
 
 template <typename T, typename... ParserTypes>
-class AltParser: public Parser<T, AltParser<T, ParserTypes...>> {
+class AltParser: public Parser<T> {
 
     template<typename T2, typename F, typename P2>
     friend class ConditionalParser;
@@ -34,9 +34,6 @@ class AltParser: public Parser<T, AltParser<T, ParserTypes...>> {
 
     template <typename P2>
     friend class IgnoreParser;
-
-    template<typename T2, typename Derived>
-    friend class Parser;
 
     template <typename... PTypes>
     friend AltParser<parsers::p_first_t<PTypes...>, std::decay_t<PTypes>...>

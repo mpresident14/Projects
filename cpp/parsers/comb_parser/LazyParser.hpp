@@ -12,7 +12,7 @@ namespace parsers
 }
 
 template <typename T>
-class LazyParser: public Parser<T, LazyParser<T>> {
+class LazyParser: public Parser<T> {
 
     template <typename T2, typename F2, typename P2>
     friend class MapParser;
@@ -28,9 +28,6 @@ class LazyParser: public Parser<T, LazyParser<T>> {
 
     template <typename T2, typename P2>
     friend class ManyParser;
-
-    template<typename T2, typename Derived>
-    friend class Parser;
 
     template <typename P2>
     friend class IgnoreParser;
@@ -59,7 +56,7 @@ private:
         return parser_->apply(input);
     }
 
-    ParserBase<T> *parser_;
+    Parser<T> *parser_;
 };
 
 #endif

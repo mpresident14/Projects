@@ -14,13 +14,13 @@ void testAnyChar()
     auto anySkipWs = anyChar();
     auto anyNoSkipWs = anyChar(false);
 
-    tester.assertEquals(anySkipWs.parse("x"), 'x');
-    tester.assertEquals(anySkipWs.parse(" \n\tx"), 'x');
+    tester.assertEquals('x', anySkipWs.parse("x"));
+    tester.assertEquals('x', anySkipWs.parse(" \n\tx"));
     tester.assertThrows([&anySkipWs]() {
         anySkipWs.parse("xx");
     });
 
-    tester.assertEquals(anyNoSkipWs.parse("x"), 'x');
+    tester.assertEquals('x', anyNoSkipWs.parse("x"));
     tester.assertThrows([&anyNoSkipWs]() {
         anyNoSkipWs.parse(" \n\tx");
     });
@@ -33,7 +33,7 @@ void testThisChar()
 {
     auto a = thisChar('x');
 
-    tester.assertEquals(a.parse("x"), 'x');
+    tester.assertEquals('x', a.parse("x"));
     tester.assertThrows([&a]() {
         a.parse("y");
     });
