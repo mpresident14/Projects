@@ -5,72 +5,63 @@
 
 #include <utility>
 
-namespace parsers
-{
-    template <typename T>
-    LazyParser<T> lazy();
+namespace parsers {
+  template <typename T>
+  LazyParser<T> lazy();
 }
 
 template <typename T>
-class LazyParser: public Parser<T, LazyParser<T>> {
+class LazyParser : public Parser<T, LazyParser<T>> {
+  template <typename T2, typename F2, typename P2>
+  friend class MapParser;
 
-    template <typename T2, typename F2, typename P2>
-    friend class MapParser;
+  template <typename T2, typename F2, typename P2>
+  friend class ConditionalParser;
 
-    template<typename T2, typename F2, typename P2>
-    friend class ConditionalParser;
+  template <typename T2, typename... PTypes>
+  friend class AltParser;
 
-    template <typename T2, typename... PTypes>
-    friend class AltParser;
+  template <typename T2, typename... PTypes>
+  friend class SequenceParser;
 
-    template <typename T2, typename... PTypes>
-    friend class SequenceParser;
+  template <typename T2, typename P2>
+  friend class ManyParser;
 
-    template <typename T2, typename P2>
-    friend class ManyParser;
+  template <typename P2>
+  friend class IgnoreParser;
 
-    template <typename P2>
-    friend class IgnoreParser;
-
-    template <typename T2>
-    friend LazyParser<T2> parsers::lazy();
+  template <typename T2>
+  friend LazyParser<T2> parsers::lazy();
 
 public:
-    ~LazyParser() { delete parser_; }
+  ~LazyParser() { delete parser_; }
 
-    template <typename P>
-    void set(P&& parser)
-    {
-        if (parser_) {
-            delete parser_;
-        }
-        parser_ = new std::decay_t<P>(std::forward<P>(parser));
+  template <typename P>
+  void set(P&& parser) {
+    if (parser_) {
+      delete parser_;
     }
+    parser_ = new std::decay_t<P>(std::forward<P>(parser));
+  }
 
-    /* In all other parsers, we cast to a P& before calling apply(). */
-    auto getRef()
-    {
-        return std::reference_wrapper(*this);
-    }
-
+  /* In all other parsers, we cast to a P& before calling apply(). */
+  auto getRef() { return std::reference_wrapper(*this); }
 
 private:
-    LazyParser() : parser_(nullptr) {}
+  LazyParser() : parser_(nullptr) {}
 
-    virtual std::optional<T> apply(std::istream& input) override
-    {
-        return parser_->apply(input);
+  virtual std::optional<T> apply(std::istream& input) override {
+    return parser_->apply(input);
+  }
+
+  virtual std::string getErrMsgs(std::istream& input) override {
+    if (!this->customErrMsg_.empty()) {
+      return this->myErrMsg(input);
     }
+    return parser_->getErrMsgs(input);
+  }
 
-    virtual std::string getErrMsgs(std::istream& input) override
-    {
-        if (!this->customErrMsg_.empty()) {
-            return this->myErrMsg(input);
-        }
-        return parser_->getErrMsgs(input);
-    }
-
-    ParserBase2<T> *parser_;
+  ParserBase2<T>* parser_;
 };
 
 #endif
