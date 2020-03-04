@@ -44,14 +44,20 @@ private:
         : parser_(std::move(parser)) {}
 
 
-    virtual std::optional<parsers::ignore_t> apply(std::istream& input) const override
+    virtual std::optional<parsers::ignore_t> apply(std::istream& input) override
     {
-        auto optResult = static_cast<const parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
+        auto optResult = static_cast<parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
         if (optResult.has_value()) {
             return std::optional(parsers::ignore_t());
         }
 
         return {};
+    }
+
+
+    virtual std::string getErrMsgs(std::istream& input) override
+    {
+        return parser_.getErrMsgs(input);
     }
 
     P parser_;

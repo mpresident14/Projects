@@ -10,46 +10,64 @@
 #include <optional>
 #include <functional>
 
+#include <boost/type_index.hpp>
+
 #include <iostream>
 
 
 template <typename T>
 class LazyParser;
 
+/* Basest class (only for SequenceParser errors). */
+class ParserBase {
+    template <typename T2, typename... PTypes>
+    friend class SequenceParser;
+protected:
+    virtual std::string getErrMsgs(std::istream& input) = 0;
+};
+
 /* Parser abstract base class */
 template <typename T>
-class Parser {
+class Parser : public ParserBase {
 
     template <typename T2>
     friend class LazyParser;
 
 public:
+    Parser() : errPos_(0) {}
     virtual ~Parser(){}
 
 
-    T parse(std::istream& input) const
+    T parse(std::istream& input)
     {
         std::optional<T> optResult = apply(input);
         if (optResult.has_value()) {
             return optResult.value();
         }
-        // TODO: Replace with appropriate parse error.
-        throw std::invalid_argument("No parse for input.");
+        throw std::invalid_argument("Parse error: " + getErrMsgs(input));
     }
 
 
-    T parseAll(std::istream& input) const
+    T parse(const std::string& input)
+    {
+        std::istringstream strStream(input);
+        return parseAll(strStream);
+    }
+
+
+    T parseAll(std::istream& input)
     {
         T result = parse(input);
         if (input.peek() != EOF) {
-            // TODO: Replace with appropriate parse error.
-            throw std::invalid_argument("Characters remained.");
+            std::string s;
+            std::getline(input, s);
+            throw std::invalid_argument("Parse error: \"" + s + "\" remained.");
         }
         return result;
     }
 
 
-    T parseAll(const std::string& input) const
+    T parseAll(const std::string& input)
     {
         std::istringstream strStream(input);
         return parseAll(strStream);
@@ -59,7 +77,20 @@ public:
     using result_type = T;
 
 protected:
-    virtual std::optional<T> apply(std::istream& input) const = 0;
+    virtual std::optional<T> apply(std::istream& input) = 0;
+
+    std::string myErrMsg(std::istream& input, const std::string& expected = boost::typeindex::type_id_with_cvr<T>().pretty_name()) const
+    {
+        // TODO: set and reset may not be necessary b/c we reset after failure anyway
+        std::string nextLine;
+        input.seekg(errPos_);
+        std::getline(input, nextLine);
+        return
+            "Expected " +  expected +
+            ", got \"" + nextLine + "\".";
+    }
+
+    size_t errPos_;
 };
 
 // TODO: Separate these into namespaces "parsers" (public) and "detail" (private)

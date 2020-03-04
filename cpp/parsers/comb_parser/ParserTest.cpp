@@ -4,24 +4,31 @@
 
 #include <prez/unit_test.hpp>
 
-
 using namespace std;
 using namespace parsers;
 
 prez::UnitTest tester = prez::UnitTest::createTester();
 
 
+string noParseMsg(string expected, string got) {
+    return "Parse error: Expected " + expected + ", got \"" + got + "\".";
+}
+
+string remainingMsg(string remaining) {
+    return "Parse error: \"" + remaining + "\" remained.";
+}
+
 void testCharParser()
 {
     auto any = anyChar();
 
     tester.assertEquals('x', any.parseAll("x"));
-    tester.assertThrows([&any]() {
-        any.parseAll("xx");
-    });
-    tester.assertThrows([&any]() {
-        any.parseAll("");
-    });
+    tester.assertThrowsWithMsg(
+        [&any]() { any.parseAll("xx"); },
+        remainingMsg("x"));
+    tester.assertThrowsWithMsg(
+        [&any]() { any.parseAll(""); },
+        noParseMsg("char", ""));
 }
 
 
@@ -48,9 +55,9 @@ void testStringParser()
     tester.assertThrows([&hello]() {
         hello.parseAll("parsers");
     });
-    tester.assertThrows([&hello]() {
-        hello.parseAll("parse");
-    });
+    tester.assertThrowsWithMsg(
+        [&hello]() { hello.parseAll("parse"); },
+        noParseMsg("\"parser\"", "parse"));
     tester.assertThrows([&hello]() {
         hello.parseAll("hello");
     });
@@ -62,9 +69,9 @@ void testConditionalParser()
     auto lessThan100 = doOnlyIf(anyULong, [](unsigned long n) { return n < 100; });
 
     tester.assertEquals(30, lessThan100.parseAll("30"));
-    tester.assertThrows([&lessThan100]() {
-        lessThan100.parseAll("234");
-    });
+    tester.assertThrowsWithMsg(
+        [&lessThan100]() { lessThan100.parseAll("234"); },
+        noParseMsg("unsigned long", "234") + " (Failed condition)");
     tester.assertThrows([&lessThan100]() {
         lessThan100.parseAll("abc");
     });
@@ -76,9 +83,9 @@ void testMapParser()
     auto strLen = transform(thisString("hello"), [](string&& s) { return s.length(); });
 
     tester.assertEquals(5, strLen.parseAll("hello"));
-    tester.assertThrows([&strLen]() {
-        strLen.parseAll("goodbye");
-    });
+    tester.assertThrowsWithMsg(
+        [&strLen]() { strLen.parseAll("goodbye"); },
+        noParseMsg("\"hello\"", "goodbye"));
 }
 
 
@@ -89,6 +96,9 @@ void testIgnoreParser()
     tester.assertThrows([&ignoreChar]() {
         ignoreChar.parseAll("ab");
     });
+    tester.assertThrowsWithMsg(
+        [&ignoreChar]() { ignoreChar.parseAll(""); },
+        noParseMsg("char", ""));
 }
 
 
@@ -127,9 +137,16 @@ void testAltParser()
     tester.assertEquals('a', abc.parseAll("a"));
     tester.assertEquals('b', abc.parseAll("b"));
     tester.assertEquals('c', abc.parseAll("c"));
-    tester.assertThrows([&abc]() {
-        abc.parseAll("d");
-    });
+
+    stringstream errMsg;
+    string msg = noParseMsg("char", "d").substr(13);
+    errMsg << "Parse error: All alternatives failed.\n"
+        << "\t0: " << msg + " (Failed condition)\n"
+        << "\t1: " << msg + " (Failed condition)\n"
+        << "\t2: " << msg + " (Failed condition)\n";
+    tester.assertThrowsWithMsg(
+        [&abc]() { abc.parseAll("d"); },
+        errMsg.str());
     tester.assertEquals("ababcbcabb", many(abc).parseAll("ababcbcabb"));
 
 
@@ -147,9 +164,9 @@ void testSeqParser()
     auto hello = thisString("hello");
     auto hodgepodge = seq(hello, thisChar('a'), anyULong);
     tester.assertEquals(std::tuple(string("hello"), 'a', 1234), hodgepodge.parseAll("helloa  1234"));
-    tester.assertThrows([&hodgepodge]() {
-        hodgepodge.parseAll("helloa bye");
-    });
+    tester.assertThrowsWithMsg(
+        [&hodgepodge]() { hodgepodge.parseAll("helloa bye"); },
+        noParseMsg("char", "bye") + " (Failed condition)");
 
     auto hodgepodge2 = seq(hello, thisChar('b'), anyULong);
     auto withAlt = alt(hodgepodge, hodgepodge2);
@@ -178,6 +195,13 @@ void testLazyParser()
             [](auto&& nums) { return get<0>(nums) + get<1>(nums); }));
 
     tester.assertEquals(10, rAssocAdd.parseAll("1+ 2 + 3 +4"));
+    tester.assertThrowsWithMsg(
+        [&rAssocAdd]() { rAssocAdd.parseAll("1+ 2 + 3 - 4"); },
+        remainingMsg(" - 4"));
+    tester.assertThrowsWithMsg(
+        [&rAssocAdd]() { rAssocAdd.parseAll("+ 45"); },
+        noParseMsg("char", "+ 45") + " (Failed condition)");
+
 }
 
 

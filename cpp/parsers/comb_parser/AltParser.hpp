@@ -51,31 +51,64 @@ private:
         : parsers_(std::tuple<ParserTypes...>(std::forward<ParserTypes>(parsers)...)) {}
 
 
-    virtual std::optional<T> apply(std::istream& input) const override
+    virtual std::optional<T> apply(std::istream& input) override
     {
         return applyHelper<0>(input);
     }
 
 
-    // Recursive tuple iteration via templates
+    /* Recursive tuple iteration via templates */
+    // Base case
     template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
-    std::optional<T> applyHelper(std::istream&) const
+    std::optional<T> applyHelper(std::istream&)
     {
         return {};
     }
 
+    // General case
     template <int I, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
-    std::optional<T> applyHelper(std::istream& input) const
+    std::optional<T> applyHelper(std::istream& input)
     {
-        std::optional<T> optResult =
+        auto& p =
             static_cast<
-                const parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>
-                    (std::get<I>(parsers_)).apply(input);
+                parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>
+                    (std::get<I>(parsers_));
+
+        auto optResult = p.apply(input);
 
         if (optResult.has_value()) {
             return optResult;
         }
         return applyHelper<I+1>(input);
+    }
+
+
+    virtual std::string getErrMsgs(std::istream& input) override
+    {
+        // return this->myErrMsg(input);
+        std::stringstream sstream;
+        sstream << "All alternatives failed." << '\n';
+        getErrMsgsHelper<0>(input, sstream);
+        return sstream.str();
+    }
+
+
+    /* Recursive tuple iteration via templates */
+    // Base case
+    template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
+    void getErrMsgsHelper(std::istream&, std::stringstream&) {}
+
+    // General case
+    template <int I, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
+    void getErrMsgsHelper(std::istream& input, std::stringstream& sstream)
+    {
+        auto& p =
+            static_cast<
+                parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>
+                    (std::get<I>(parsers_));
+
+        sstream << "\t" << I << ": " << p.getErrMsgs(input) << '\n';
+        getErrMsgsHelper<I+1>(input, sstream);
     }
 
 

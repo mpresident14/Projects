@@ -52,7 +52,7 @@ private:
         : parsers_(std::tuple<ParserTypes...>(std::move(parsers)...)) {}
 
 
-    virtual std::optional<T> apply(std::istream& input) const override
+    virtual std::optional<T> apply(std::istream& input) override
     {
         size_t oldPos = input.tellg();
         std::optional<T> optResult = applyHelper<0>(input, std::tuple<>());
@@ -64,6 +64,7 @@ private:
         // Reset position if parse failed
         input.clear();
         input.seekg(oldPos);
+        this->errPos_ = oldPos;
         return optResult;
     }
 
@@ -71,7 +72,7 @@ private:
     /* Recursive tuple iteration via templates */
     // Base case
     template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
-    std::optional<T> applyHelper(std::istream&, T&& tup) const
+    std::optional<T> applyHelper(std::istream&, T&& tup)
     {
         return std::optional(tup);
     }
@@ -94,12 +95,14 @@ private:
             int
         > = 0
     >
-    std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) const
+    std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple)
     {
-        auto optResult =
+        auto& p =
             static_cast<
-                const parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>
-                    (std::get<I>(parsers_)).apply(input);
+                parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>
+                    (std::get<I>(parsers_));
+
+        auto optResult = p.apply(input);
 
         if (optResult.has_value()) {
             return applyHelper<I+1>(
@@ -108,6 +111,7 @@ private:
                     currentTuple,
                     std::tuple(std::move(optResult.value()))));
         }
+        failedParser_ = &p;
         return {};
     }
 
@@ -124,19 +128,32 @@ private:
             int
         > = 0
     >
-    std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) const
+    std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple)
     {
-        auto optResult = static_cast<const parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>(std::get<I>(parsers_)).apply(input);
+        auto& p =
+            static_cast<
+                parsers::rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>
+                    (std::get<I>(parsers_));
+
+        auto optResult = p.apply(input);
         if (optResult.has_value()) {
             return applyHelper<I+1>(
                 input,
                 std::forward<Tup>(currentTuple));
         }
+        failedParser_ = &p;
         return {};
     }
 
 
+    virtual std::string getErrMsgs(std::istream& input) override
+    {
+        return failedParser_->getErrMsgs(input);
+    }
+
+
     std::tuple<ParserTypes...> parsers_;
+    ParserBase *failedParser_;
 };
 
 

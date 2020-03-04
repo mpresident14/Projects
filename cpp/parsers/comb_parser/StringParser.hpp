@@ -45,7 +45,7 @@ private:
     StringParser(std::string&& str)
         : str_(std::move(str)) {}
 
-    virtual std::optional<std::string> apply(std::istream& input) const override
+    virtual std::optional<std::string> apply(std::istream& input) override
     {
         int oldPos = input.tellg();
         for (const char& c : str_) {
@@ -58,6 +58,12 @@ private:
         }
 
         return std::optional(str_);
+    }
+
+
+    virtual std::string getErrMsgs(std::istream& input) override
+    {
+        return this->myErrMsg(input, "\"" + str_ + "\"");
     }
 
     std::string str_;

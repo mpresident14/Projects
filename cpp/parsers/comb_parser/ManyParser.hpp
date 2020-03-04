@@ -62,7 +62,7 @@ private:
     ManyParser(const P& parser) : parser_(parser) {}
     ManyParser(P&& parser) : parser_(std::move(parser)) {}
 
-    virtual std::optional<T> apply(std::istream& input) const override
+    virtual std::optional<T> apply(std::istream& input) override
     {
         return applyHelper(input);
     }
@@ -75,16 +75,16 @@ private:
             !std::is_same_v<parsers::p_result_t<P1>, char>
                 && !std::is_same_v<parsers::p_result_t<P1>, parsers::ignore_t>,
             int> = 0>
-    std::optional<T> applyHelper(std::istream& input) const
+    std::optional<T> applyHelper(std::istream& input)
     {
         using PType = parsers::p_result_t<P>;
 
         std::vector<PType> v;
         std::optional<PType> optResult =
-            static_cast<const parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
+            static_cast<parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
         while (optResult.has_value()) {
             v.push_back(std::move(optResult.value()));
-            optResult = static_cast<const parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
+            optResult = static_cast<parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
         }
 
         return std::optional(v);
@@ -95,7 +95,7 @@ private:
     template <
         typename P1 = P,
         std::enable_if_t<std::is_same_v<parsers::p_result_t<P1>, char>, int> = 0>
-    std::optional<T> applyHelper(std::istream& input) const
+    std::optional<T> applyHelper(std::istream& input)
     {
         std::string s;
         std::optional<char> optResult = parser_.apply(input);
@@ -112,7 +112,7 @@ private:
     template <
         typename P1 = P,
         std::enable_if_t<std::is_same_v<parsers::p_result_t<P1>, parsers::ignore_t>, int> = 0>
-    std::optional<T> applyHelper(std::istream& input) const
+    std::optional<T> applyHelper(std::istream& input)
     {
         std::optional<parsers::ignore_t> optResult = parser_.apply(input);
         while (optResult.has_value()) {
@@ -120,6 +120,12 @@ private:
         }
 
         return std::optional(parsers::ignore_t());
+    }
+
+    /* ManyParser cannot fail */
+    virtual std::string getErrMsgs(std::istream&) override
+    {
+        return std::string();
     }
 
     P parser_;

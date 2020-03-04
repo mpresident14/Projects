@@ -54,13 +54,17 @@ private:
 
 
 
-    virtual std::optional<T> apply(std::istream& input) const override
+    virtual std::optional<T> apply(std::istream& input) override
     {
         size_t oldPos = input.tellg();
         std::optional<T> optResult =
-            static_cast<const parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
-        if (optResult.has_value() && condFn_(optResult.value())) {
-            return optResult;
+            static_cast<parsers::rm_ref_wrap_t<P>&>(parser_).apply(input);
+        if (optResult.has_value()) {
+            if (condFn_(optResult.value())) {
+                return optResult;
+            }
+            failedCondition_ = true;
+            this->errPos_ = oldPos;
         }
 
         // TODO: optResult will leak upon condFn failure if T is a pointer
@@ -71,8 +75,17 @@ private:
         return {};
     }
 
+    virtual std::string getErrMsgs(std::istream& input) override
+    {
+        if (failedCondition_) {
+            return this->myErrMsg(input) + std::string(" (Failed condition)");
+        }
+        return parser_.getErrMsgs(input);
+    }
+
     P parser_;
     F condFn_;
+    bool failedCondition_ = false;
 };
 
 #endif

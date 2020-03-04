@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>
 
+#include <bits/stdc++.h>
+
 #include <prez/print_stuff.hpp>
 
 #include <boost/type_index.hpp>
@@ -15,20 +17,46 @@ using namespace prez;
 
 int main()
 {
-    cout << anyULong.parseAll("1") << endl;
-    cout << anyULong.parseAll(" 1") << endl;
-    cout << anyULong.parseAll(" 1000") << endl;
-
     auto manyNumbers = many(anyULong);
-    printContainer(manyNumbers.parseAll("1 100 1000"));
+
+    try {
+        manyNumbers.parseAll("1 100 10q0");
+    } catch (invalid_argument& e) {
+        cout << e.what() << endl;
+    }
 
     auto seqNumbers = seq(anyULong, anyULong, anyULong);
-    auto t = seqNumbers.parseAll("123 456 78");
-    printTuple(t);
 
-    cout << sizeof(anyULong) << endl;
-    cout << sizeof(seqNumbers) << endl;
-    cout << sizeof(anyChar()) << endl;
+    try {
+        seqNumbers.parseAll("123 456 abc");
+    } catch (invalid_argument& e) {
+        cout << e.what() << endl;
+    }
+
+    auto rAssocAdd = lazy<unsigned long>();
+    auto plusNum = ignoreAndThen(skipWs(thisChar('+')), rAssocAdd.getRef());
+    rAssocAdd.set(
+        transform(
+            seq(
+                anyULong,
+                transform(
+                    many(plusNum),
+                    [](auto&& v) { return accumulate(v.begin(), v.end(), 0); })
+            ),
+            [](auto&& nums) { return get<0>(nums) + get<1>(nums); }));
+
+    try {
+        rAssocAdd.parseAll("1+ 2 + e +4");
+    } catch (invalid_argument& e) {
+        cout << e.what() << endl;
+    }
+
+    auto strP = alt(thisString("had"), thisString("good"), thisString("was"));
+    try {
+        strP.parseAll("ants");
+    } catch (invalid_argument& e) {
+        cout << e.what() << endl;
+    }
 
     return 0;
 }

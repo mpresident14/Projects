@@ -35,7 +35,7 @@ class CharParser: public Parser<char> {
 private:
     CharParser() {}
 
-    virtual std::optional<char> apply(std::istream& input) const override
+    virtual std::optional<char> apply(std::istream& input) override
     {
         int c = input.get();
         if (c != EOF) {
@@ -46,7 +46,13 @@ private:
         // so you need to clear the bit.
         input.clear();
         input.unget();
+        this->errPos_ = input.tellg();
         return {};
+    }
+
+    virtual std::string getErrMsgs(std::istream& input) override
+    {
+        return this->myErrMsg(input);
     }
 };
 
