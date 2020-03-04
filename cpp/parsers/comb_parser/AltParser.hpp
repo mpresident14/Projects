@@ -18,7 +18,7 @@ namespace parsers
 
 
 template <typename T, typename... ParserTypes>
-class AltParser: public Parser<T> {
+class AltParser: public Parser<T, AltParser<T, ParserTypes...>> {
 
     template<typename T2, typename F, typename P2>
     friend class ConditionalParser;

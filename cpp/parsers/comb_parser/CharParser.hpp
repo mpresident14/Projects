@@ -10,7 +10,7 @@ namespace parsers
     CharParser anyChar();
 }
 
-class CharParser: public Parser<char> {
+class CharParser: public Parser<char, CharParser> {
 
     template<typename T2, typename F, typename P2>
     friend class ConditionalParser;

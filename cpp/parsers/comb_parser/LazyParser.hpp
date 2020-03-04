@@ -12,7 +12,7 @@ namespace parsers
 }
 
 template <typename T>
-class LazyParser: public Parser<T> {
+class LazyParser: public Parser<T, LazyParser<T>> {
 
     template <typename T2, typename F2, typename P2>
     friend class MapParser;
@@ -70,7 +70,7 @@ private:
         return parser_->getErrMsgs(input);
     }
 
-    Parser<T> *parser_;
+    ParserBase2<T> *parser_;
 };
 
 #endif

@@ -131,9 +131,9 @@ namespace parsers
 
     auto thisChar(char c)
     {
-        auto p = doOnlyIf(anyChar(), [c](char d) { return c == d; });
-        p.setCustomErrMsg(std::string(1, c));
-        return p;
+        return
+            doOnlyIf(anyChar(), [c](char d) { return c == d; })
+            .setCustomErrMsg(std::string(1, c));
     }
 
 
@@ -170,7 +170,8 @@ namespace parsers
     auto anyULong =
         transform(
             skipWs(some(anyDigitChar)),
-            [](std::string&& str) { return stoul(str); });
+            [](std::string&& str) { return stoul(str); })
+        .setCustomErrMsg("an object of type <unsigned long>");
 
 
     template <typename T>

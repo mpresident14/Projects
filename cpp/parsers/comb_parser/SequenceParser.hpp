@@ -19,7 +19,7 @@ namespace parsers
 
 
 template <typename T, typename... ParserTypes>
-class SequenceParser: public Parser<T> {
+class SequenceParser: public Parser<T, SequenceParser<T, ParserTypes...>> {
 
     template<typename T2, typename F2, typename P2>
     friend class ConditionalParser;

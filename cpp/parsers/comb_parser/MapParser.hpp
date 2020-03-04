@@ -19,7 +19,7 @@ namespace parsers
 }
 
 template <typename T, typename F, typename P>
-class MapParser: public Parser<T> {
+class MapParser: public Parser<T, MapParser<T, F, P>> {
 
     template<typename T2, typename F2, typename P2>
     friend class ConditionalParser;
@@ -68,6 +68,7 @@ private:
         if (optResult.has_value()) {
             return std::optional<T>(mapFn_(std::move(optResult.value())));
         }
+        this->errPos_ = input.tellg();
         return {};
     }
 
@@ -77,7 +78,7 @@ private:
         if (!this->customErrMsg_.empty()) {
             return this->myErrMsg(input);
         }
-        return parser_.getErrMsgs(input);
+        return parser_.getErrMsgs(input) + " (To transform into type <" + boost::typeindex::type_id_with_cvr<T>().pretty_name() + ">)";
     }
 
 

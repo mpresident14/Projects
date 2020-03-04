@@ -13,7 +13,7 @@ namespace parsers
 }
 
 template <typename P>
-class IgnoreParser: public Parser<parsers::ignore_t> {
+class IgnoreParser: public Parser<parsers::ignore_t, IgnoreParser<P>> {
 
     template <typename T2, typename F2, typename P2>
     friend class MapParser;

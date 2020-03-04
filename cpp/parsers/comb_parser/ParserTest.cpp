@@ -14,6 +14,10 @@ string noParseMsg(string expected, string got) {
     return "Parse error: Expected " + expected + ", got \"" + got + "\".";
 }
 
+string noParseMsgType(string expected, string got) {
+    return "Parse error: Expected an object of type " + expected + ", got \"" + got + "\".";
+}
+
 string remainingMsg(string remaining) {
     return "Parse error: \"" + remaining + "\" remained.";
 }
@@ -28,7 +32,7 @@ void testCharParser()
         remainingMsg("x"));
     tester.assertThrowsWithMsg(
         [&any]() { any.parseAll(""); },
-        noParseMsg("char", ""));
+        noParseMsgType("<char>", ""));
 }
 
 
@@ -71,7 +75,7 @@ void testConditionalParser()
     tester.assertEquals(30, lessThan100.parseAll("30"));
     tester.assertThrowsWithMsg(
         [&lessThan100]() { lessThan100.parseAll("234"); },
-        noParseMsg("unsigned long", "234") + " (Failed condition)");
+        noParseMsgType("<unsigned long>", "234") + " (Failed condition)");
     tester.assertThrows([&lessThan100]() {
         lessThan100.parseAll("abc");
     });
@@ -80,12 +84,13 @@ void testConditionalParser()
 
 void testMapParser()
 {
-    auto strLen = transform(thisString("hello"), [](string&& s) { return s.length(); });
+    auto strLen =
+        transform(thisString("hello"), [](string&& s) { return (unsigned long) s.length(); });
 
     tester.assertEquals(5, strLen.parseAll("hello"));
     tester.assertThrowsWithMsg(
         [&strLen]() { strLen.parseAll("goodbye"); },
-        noParseMsg("\"hello\"", "goodbye"));
+        noParseMsg("\"hello\"", "goodbye") + " (To transform into type <unsigned long>)");
 }
 
 
@@ -98,7 +103,7 @@ void testIgnoreParser()
     });
     tester.assertThrowsWithMsg(
         [&ignoreChar]() { ignoreChar.parseAll(""); },
-        noParseMsg("char", ""));
+        noParseMsgType("<char>", ""));
 }
 
 
@@ -165,7 +170,7 @@ void testSeqParser()
     tester.assertEquals(std::tuple(string("hello"), 'a', 1234), hodgepodge.parseAll("helloa  1234"));
     tester.assertThrowsWithMsg(
         [&hodgepodge]() { hodgepodge.parseAll("helloa bye"); },
-        noParseMsg("char", "bye") + " (Failed condition)");
+        noParseMsgType("<unsigned long>", " bye"));
 
     auto hodgepodge2 = seq(hello, thisChar('b'), anyULong);
     auto withAlt = alt(hodgepodge, hodgepodge2);
@@ -199,7 +204,7 @@ void testLazyParser()
         remainingMsg(" - 4"));
     tester.assertThrowsWithMsg(
         [&rAssocAdd]() { rAssocAdd.parseAll("+ 45"); },
-        noParseMsg("char", "+ 45") + " (Failed condition)");
+        noParseMsgType("<unsigned long>", "+ 45") + " (To transform into type <unsigned long>)");
 
 }
 

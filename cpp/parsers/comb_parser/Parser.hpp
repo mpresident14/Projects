@@ -19,33 +19,43 @@
 template <typename T>
 class LazyParser;
 
-/* Basest class (only for SequenceParser errors). */
+/* Base class (only for SequenceParser errors). */
 class ParserBase {
     template <typename T2, typename... PTypes>
     friend class SequenceParser;
+public:
+    virtual ~ParserBase() {}
 protected:
     virtual std::string getErrMsgs(std::istream& input) = 0;
 };
 
-/* Parser abstract base class */
-template <typename T>
-class Parser : public ParserBase {
 
+/* Base class (only for LazyParser). */
+template<typename T>
+class ParserBase2 : public ParserBase {
     template <typename T2>
     friend class LazyParser;
-
 public:
-    Parser() : errPos_(0) {}
+    virtual ~ParserBase2() {}
+protected:
+    virtual std::optional<T> apply(std::istream& input) = 0;
+};
+
+
+/* Parser main abstract base class */
+template <typename T, typename Derived>
+class Parser : public ParserBase2<T> {
+public:
     virtual ~Parser() {}
 
 
     T parse(std::istream& input)
     {
-        std::optional<T> optResult = apply(input);
+        std::optional<T> optResult = this->apply(input);
         if (optResult.has_value()) {
             return optResult.value();
         }
-        throw std::invalid_argument("Parse error: " + getErrMsgs(input));
+        throw std::invalid_argument("Parse error: " + this->getErrMsgs(input));
     }
 
 
@@ -74,40 +84,51 @@ public:
         return parseAll(strStream);
     }
 
-
-    void setCustomErrMsg(const std::string& expected)
+    /*
+     * decltype is compile-time, so it cannot deduce the Parser type in the
+     * template of the derived class constructor. Therefore, we use the
+     * curiously recurring template pattern (CRTP) to allow the base class
+     * Parser to know what type of Parser it is at compile-time. See
+     * https://www.geeksforgeeks.org/curiously-recurring-template-pattern-crtp-2/)
+     * for more on CRTP.
+     *
+     * Note that we static_cast to a Derived&, rather than just casting to Derived,
+     * which would result in object slicing	(if we provided a Parser -> Derived
+     * constructor). Note that we could	also do *static_cast<Derived*> instead.
+     */
+    Derived& setCustomErrMsg(const std::string& expected)
     {
         customErrMsg_ = expected;
+        return static_cast<Derived&>(*this);
     }
 
 
     using result_type = T;
 
+
 protected:
-    virtual std::optional<T> apply(std::istream& input) = 0;
 
     std::string myErrMsg(std::istream& input) const
     {
         std::string nextLine;
         input.seekg(errPos_);
         std::getline(input, nextLine);
+
+        // Default to expected type
+        if (customErrMsg_.empty()) {
+            return
+            "Expected an object of type <"
+            + (customErrMsg_.empty()
+                ? boost::typeindex::type_id_with_cvr<T>().pretty_name()
+                : customErrMsg_)
+            + ">, got \"" + nextLine + "\".";
+        }
+
         return
-            "Expected " +  (customErrMsg_.empty() ? boost::typeindex::type_id_with_cvr<T>().pretty_name() : customErrMsg_) +
-            ", got \"" + nextLine + "\".";
+            "Expected " + customErrMsg_ + ", got \"" + nextLine + "\".";
     }
 
-
-    // template <typename P>
-    // P& customErr(const std::string& msg)
-    // {
-    //     size_t len = msg.length();
-    //     customErrMsg_ = new char[len + 1];
-    //     customErrMsg_[len] = '\0';
-    //     strncpy(customErrMsg_, msg.c_str(), len);
-    //     return *static_cast<P*>(this);
-    // }
-
-    size_t errPos_;
+    size_t errPos_ = 0;
     std::string customErrMsg_;
 };
 
@@ -140,6 +161,7 @@ namespace parsers
 
     template<typename P>
     using p_result_t = typename p_result<P>::type;
+
 
     /* Get the result type of the first parser in a parameter pack */
     template <typename... ParserTypes>
