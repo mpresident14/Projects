@@ -140,7 +140,7 @@ public:
       fn();
       assertTrue(false, line, testName);
     } catch (std::exception& e) {
-      assertTrue(std::string(e.what()) == errMsg, line, testName);
+      assertEquals(errMsg, std::string(e.what()), line, testName);
     }
   }
 
@@ -160,8 +160,12 @@ public:
   void assertEquals(const T1& expected, const T2& actual, size_t line, const char *testName)
   {
     std::ostringstream os;
-    os << "Expected " << expected << ", got " << actual;
-    assertTrue(expected == actual, line, testName, os.str());
+    bool b = expected == actual;
+    if (!b) {
+        os << "\t" << "EXPECTED: " << expected << '\n';
+        os << "\t" << "GOT:      " << actual;
+    }
+    assertTrue(b, line, testName, os.str());
   }
 
 
@@ -212,7 +216,7 @@ public:
       std::cerr << "FAILURE: " << fileName_ << ", line " << line << ": " << s
                 << std::endl;
       if (!errMsg.empty()) {
-        std::cerr << '\t' << errMsg << std::endl;
+        std::cerr << errMsg << std::endl;
       }
 
       // Update the total number of failed tests
