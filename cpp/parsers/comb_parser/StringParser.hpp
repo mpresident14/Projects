@@ -39,11 +39,8 @@ class StringParser: public Parser<std::string> {
     friend StringParser parsers::thisString(const char *str);
 
 private:
-    StringParser(const std::string& str)
-        : str_(str) {}
-
-    StringParser(std::string&& str)
-        : str_(std::move(str)) {}
+    StringParser(const std::string& str) : str_(str) {}
+    StringParser(std::string&& str) : str_(std::move(str)) {}
 
     virtual std::optional<std::string> apply(std::istream& input) override
     {
@@ -63,8 +60,12 @@ private:
 
     virtual std::string getErrMsgs(std::istream& input) override
     {
-        return this->myErrMsg(input, "\"" + str_ + "\"");
+        if (this->customErrMsg_.empty()) {
+            customErrMsg_ = "\"" + str_ + "\"";
+        }
+        return this->myErrMsg(input);
     }
+
 
     std::string str_;
 };

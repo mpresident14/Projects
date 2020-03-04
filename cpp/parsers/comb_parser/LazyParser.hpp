@@ -64,6 +64,9 @@ private:
 
     virtual std::string getErrMsgs(std::istream& input) override
     {
+        if (!this->customErrMsg_.empty()) {
+            return this->myErrMsg(input);
+        }
         return parser_->getErrMsgs(input);
     }
 

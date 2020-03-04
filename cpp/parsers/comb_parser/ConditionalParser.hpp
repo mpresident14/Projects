@@ -39,6 +39,7 @@ class ConditionalParser: public Parser<T> {
     friend ConditionalParser<parsers::p_result_t<P2>, std::decay_t<F2>, std::decay_t<P2>>
     parsers::doOnlyIf(P2&& parser, F2&& condFn);
 
+
 private:
     ConditionalParser(const P& parser, const F& condFn)
         : parser_(parser), condFn_(condFn) {}
@@ -77,11 +78,16 @@ private:
 
     virtual std::string getErrMsgs(std::istream& input) override
     {
+        if (!this->customErrMsg_.empty()) {
+            return this->myErrMsg(input);
+        }
+
         if (failedCondition_) {
-            return this->myErrMsg(input) + std::string(" (Failed condition)");
+            return this->myErrMsg(input) + " (Failed condition)";
         }
         return parser_.getErrMsgs(input);
     }
+
 
     P parser_;
     F condFn_;

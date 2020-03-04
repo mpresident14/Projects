@@ -139,11 +139,10 @@ void testAltParser()
     tester.assertEquals('c', abc.parseAll("c"));
 
     stringstream errMsg;
-    string msg = noParseMsg("char", "d").substr(13);
     errMsg << "Parse error: All alternatives failed.\n"
-        << "\t0: " << msg + " (Failed condition)\n"
-        << "\t1: " << msg + " (Failed condition)\n"
-        << "\t2: " << msg + " (Failed condition)\n";
+        << "\t0: " << noParseMsg("a", "d").substr(13) << "\n"
+        << "\t1: " << noParseMsg("b", "d").substr(13) << "\n"
+        << "\t2: " << noParseMsg("c", "d").substr(13) << "\n";
     tester.assertThrowsWithMsg(
         [&abc]() { abc.parseAll("d"); },
         errMsg.str());

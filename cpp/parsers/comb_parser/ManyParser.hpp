@@ -123,10 +123,7 @@ private:
     }
 
     /* ManyParser cannot fail */
-    virtual std::string getErrMsgs(std::istream&) override
-    {
-        return std::string();
-    }
+    virtual std::string getErrMsgs(std::istream&) override { return {}; }
 
     P parser_;
 };

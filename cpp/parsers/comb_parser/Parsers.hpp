@@ -131,7 +131,9 @@ namespace parsers
 
     auto thisChar(char c)
     {
-        return doOnlyIf(anyChar(), [c](char d) { return c == d; });
+        auto p = doOnlyIf(anyChar(), [c](char d) { return c == d; });
+        p.setCustomErrMsg(std::string(1, c));
+        return p;
     }
 
 

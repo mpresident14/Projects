@@ -85,7 +85,10 @@ private:
 
     virtual std::string getErrMsgs(std::istream& input) override
     {
-        // return this->myErrMsg(input);
+        if (!this->customErrMsg_.empty()) {
+            return this->myErrMsg(input);
+        }
+
         std::stringstream sstream;
         sstream << "All alternatives failed." << '\n';
         getErrMsgsHelper<0>(input, sstream);

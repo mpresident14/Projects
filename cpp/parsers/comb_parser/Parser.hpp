@@ -9,6 +9,7 @@
 #include <tuple>
 #include <optional>
 #include <functional>
+#include <cstring>
 
 #include <boost/type_index.hpp>
 
@@ -35,7 +36,7 @@ class Parser : public ParserBase {
 
 public:
     Parser() : errPos_(0) {}
-    virtual ~Parser(){}
+    virtual ~Parser() {}
 
 
     T parse(std::istream& input)
@@ -74,23 +75,40 @@ public:
     }
 
 
+    void setCustomErrMsg(const std::string& expected)
+    {
+        customErrMsg_ = expected;
+    }
+
+
     using result_type = T;
 
 protected:
     virtual std::optional<T> apply(std::istream& input) = 0;
 
-    std::string myErrMsg(std::istream& input, const std::string& expected = boost::typeindex::type_id_with_cvr<T>().pretty_name()) const
+    std::string myErrMsg(std::istream& input) const
     {
-        // TODO: set and reset may not be necessary b/c we reset after failure anyway
         std::string nextLine;
         input.seekg(errPos_);
         std::getline(input, nextLine);
         return
-            "Expected " +  expected +
+            "Expected " +  (customErrMsg_.empty() ? boost::typeindex::type_id_with_cvr<T>().pretty_name() : customErrMsg_) +
             ", got \"" + nextLine + "\".";
     }
 
+
+    // template <typename P>
+    // P& customErr(const std::string& msg)
+    // {
+    //     size_t len = msg.length();
+    //     customErrMsg_ = new char[len + 1];
+    //     customErrMsg_[len] = '\0';
+    //     strncpy(customErrMsg_, msg.c_str(), len);
+    //     return *static_cast<P*>(this);
+    // }
+
     size_t errPos_;
+    std::string customErrMsg_;
 };
 
 // TODO: Separate these into namespaces "parsers" (public) and "detail" (private)
