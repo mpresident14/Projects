@@ -201,6 +201,17 @@ namespace parsers {
 
   template <int I, typename Tuple>
   constexpr bool is_ignore_v = is_ignore<I, Tuple>::value;
+
+  // From Effective Modern C++, Item 3: "auto specifies that the type is to be
+  // deduced and decltype says that decltype rules should be used during the
+  // deduction." This allows the function to return a reference (auto return
+  // type deduction rules would strip the reference).
+  template <int I, typename... ParserTypes>
+  decltype(auto) getParser(std::tuple<ParserTypes...>& parsers) {
+    return static_cast<
+        rm_ref_wrap_t<std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>(
+        std::get<I>(parsers));
+  }
 }  // namespace parsers
 
 #endif

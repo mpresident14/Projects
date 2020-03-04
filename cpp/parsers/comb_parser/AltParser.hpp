@@ -62,9 +62,7 @@ private:
   // General case
   template <int I, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
   std::optional<T> applyHelper(std::istream& input) {
-    auto& p = static_cast<parsers::rm_ref_wrap_t<
-        std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>(
-        std::get<I>(parsers_));
+    auto& p = parsers::getParser<I>(parsers_);;
 
     auto optResult = p.apply(input);
 
@@ -93,9 +91,7 @@ private:
   // General case
   template <int I, std::enable_if_t<I != sizeof...(ParserTypes), int> = 0>
   void getErrMsgsHelper(std::istream& input, std::stringstream& sstream) {
-    auto& p = static_cast<parsers::rm_ref_wrap_t<
-        std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>(
-        std::get<I>(parsers_));
+    auto& p = parsers::getParser<I>(parsers_);
 
     sstream << "\t" << I << ": " << p.getErrMsgs(input) << '\n';
     getErrMsgsHelper<I + 1>(input, sstream);

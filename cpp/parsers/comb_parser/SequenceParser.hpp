@@ -81,10 +81,7 @@ private:
               std::negation<parsers::is_ignore<I, std::tuple<ParserTypes...>>>>,
           int> = 0>
   std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) {
-    auto& p = static_cast<parsers::rm_ref_wrap_t<
-        std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>(
-        std::get<I>(parsers_));
-
+    auto& p = parsers::getParser<I>(parsers_);
     auto optResult = p.apply(input);
 
     if (optResult.has_value()) {
@@ -92,6 +89,7 @@ private:
           input, std::tuple_cat(
                      currentTuple, std::tuple(std::move(optResult.value()))));
     }
+
     failedParser_ = &p;
     return {};
   }
@@ -105,14 +103,13 @@ private:
               parsers::is_ignore<I, std::tuple<ParserTypes...>>>,
           int> = 0>
   std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) {
-    auto& p = static_cast<parsers::rm_ref_wrap_t<
-        std::tuple_element_t<I, std::tuple<ParserTypes...>>>&>(
-        std::get<I>(parsers_));
-
+    auto& p = parsers::getParser<I>(parsers_);
     auto optResult = p.apply(input);
+
     if (optResult.has_value()) {
       return applyHelper<I + 1>(input, std::forward<Tup>(currentTuple));
     }
+
     failedParser_ = &p;
     return {};
   }
