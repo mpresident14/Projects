@@ -52,7 +52,7 @@ public:
   T parse(std::istream& input) {
     std::optional<T> optResult = this->apply(input);
     if (optResult.has_value()) {
-      return optResult.value();
+      return std::move(optResult.value());
     }
     throw std::invalid_argument("Parse error: " + this->getErrMsgs(input));
   }
@@ -86,8 +86,7 @@ public:
    * for more on CRTP.
    *
    * Note that we static_cast to a Derived&, rather than just casting to
-   * Derived,
-   * which would result in object slicing	(if we provided a Parser ->
+   * Derived, which would result in object slicing	(if we provided a Parser ->
    * Derived constructor). Note that we could	also do *static_cast<Derived*>
    * instead.
    */

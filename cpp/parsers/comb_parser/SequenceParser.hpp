@@ -66,7 +66,7 @@ private:
   // Base case
   template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
   std::optional<T> applyHelper(std::istream&, T&& tup) {
-    return std::optional(tup);
+    return std::optional(std::move(tup));
   }
 
   // If not an ignore_t (should go in result tuple)
@@ -87,7 +87,7 @@ private:
     if (optResult.has_value()) {
       return applyHelper<I + 1>(
           input, std::tuple_cat(
-                     currentTuple, std::tuple(std::move(optResult.value()))));
+                     std::move(currentTuple), std::tuple(std::move(optResult.value()))));
     }
 
     failedParser_ = &p;

@@ -25,3 +25,6 @@ main: main.cpp $(HEADERS)
 
 test: ParserTest.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) ParserTest.cpp -o test
+
+regex: examples/Regex.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) examples/Regex.cpp -o regex
