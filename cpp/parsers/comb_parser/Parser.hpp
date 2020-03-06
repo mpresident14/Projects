@@ -14,6 +14,8 @@
 #include <boost/type_index.hpp>
 
 #include <iostream>
+#include <prez/timeit.hpp>
+
 
 template <typename T>
 class LazyParser;
@@ -28,6 +30,7 @@ public:
 
 protected:
   virtual std::string getErrMsgs(std::istream& input) = 0;
+  virtual std::optional<T> apply(std::istream& input) = 0;
 };
 
 /* Base class (only for LazyParser). */
@@ -187,9 +190,11 @@ namespace parsers {
             std::tuple<p_result_t<ParserTypes>>>>()...));
   };
 
+
   template <typename... ParserTypes>
   using p_results_filtered_t =
       typename p_results_filtered<ParserTypes...>::type;
+
 
   /* Check whether element I of Tuple is a Parser<ignore_t> */
   template <int I, typename Tuple>
