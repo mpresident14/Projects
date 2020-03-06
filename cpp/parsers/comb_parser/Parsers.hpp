@@ -114,10 +114,15 @@ namespace parsers {
   // TODO: This is really inefficient and super common. Define a new parser
   // instead.
   template <typename P1, typename P2>
-  auto ignoreAndThen(P1&& toIgnore, P2&& parser) {
-    return transform(
-        seq(skip(std::forward<P1>(toIgnore)), std::forward<P2>(parser)),
-        [](auto&& tup) { return std::move(std::get<0>(tup)); });
+  SequenceParser<
+        parsers::p_result_t<P2>,
+        std::decay_t<decltype(skip(std::forward<P1>(std::declval<P1>())))>,
+        std::decay_t<P2>> ignoreAndThen(P1&& toIgnore, P2&& parser) {
+    return SequenceParser<
+        parsers::p_result_t<P2>,
+        std::decay_t<decltype(skip(std::forward<P1>(toIgnore)))>,
+        std::decay_t<P2>>
+        (skip(std::forward<P1>(toIgnore)), std::forward<P2>(parser));
   }
 
   template <typename P1, typename P2>
