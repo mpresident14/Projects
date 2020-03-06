@@ -201,15 +201,6 @@ namespace parsers {
   template <int I, typename Tuple>
   constexpr bool is_ignore_v = is_ignore<I, Tuple>::value;
 
-
-  /* Check whether element I of Tuple is a Parser<ignore_t> */
-  template <typename T>
-  struct is_tuple : std::false_type {};
-  template <typename T>
-  struct is_tuple<std::tuple<T>> : std::true_type {};
-  template <typename T>
-  constexpr bool is_tuple_v = is_tuple<T>::value;
-
   // From Effective Modern C++, Item 3: "auto specifies that the type is to be
   // deduced and decltype says that decltype rules should be used during the
   // deduction." This allows the function to return a reference (auto return
