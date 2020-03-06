@@ -5,7 +5,6 @@
 
 #include <tuple>
 #include <utility>
-#include <variant>
 
 template <typename T, typename... PTypes>
 class SequenceParser;
@@ -18,7 +17,6 @@ namespace parsers {
 
 template <typename T, typename... ParserTypes>
 class SequenceParser : public Parser<T, SequenceParser<T, ParserTypes...>> {
-
   template <typename T2, typename F2, typename P2>
   friend class ConditionalParser;
 
@@ -44,14 +42,14 @@ class SequenceParser : public Parser<T, SequenceParser<T, ParserTypes...>> {
 
 private:
   SequenceParser(const ParserTypes&... parsers)
-      : parsers_{ (new ParserTypes(static_cast<const parsers::rm_ref_wrap_t<ParserTypes>&>(parsers)))...  } {}
+      : parsers_(std::tuple<ParserTypes...>(parsers...)) {}
 
   SequenceParser(ParserTypes&&... parsers)
-      : parsers_{ (new ParserTypes(std::move(static_cast<const parsers::rm_ref_wrap_t<ParserTypes>&>(parsers))))... } {}
+      : parsers_(std::tuple<ParserTypes...>(std::move(parsers)...)) {}
 
   virtual std::optional<T> apply(std::istream& input) override {
     size_t oldPos = input.tellg();
-    std::optional<T> optResult = applyHelper(input, std::make_index_sequence<std::tuple_size_v<T>>());
+    std::optional<T> optResult = applyHelper<0>(input, std::tuple<>());
     if (optResult.has_value()) {
       return optResult;
     }
@@ -64,32 +62,67 @@ private:
     return optResult;
   }
 
-
-  template <size_t... Ints>
-  std::optional<T> applyHelper(std::istream& input, std::index_sequence<Ints...>) {
-    std::variant<std::remove_reference_t<decltype(std::get<Ints...>(std::declval<T>()))>> results[std::tuple_size_v<T>];
-    size_t varI = 0;
-    for (ParserBase *p : parsers_) {
-      auto optResult = p->apply(input);
-      if (!optResult.has_value()) {
-        return {};
-      }
-      results[varI] = std::move(optResult.value());
-      ++varI;
-    }
-    return std::optional(std::make_tuple(std::get<Ints>(results[Ints])...));
+  /* Recursive tuple iteration via templates */
+  // Base case
+  template <int I, std::enable_if_t<I == sizeof...(ParserTypes), int> = 0>
+  std::optional<T> applyHelper(std::istream&, T&& tup) {
+    return std::optional(std::move(tup));
   }
 
+  // If not an ignore_t (should go in result tuple)
+  template <
+      int I, typename Tup,
+      std::enable_if_t<
+          // conjunction short-circuits, i.e. doesn't instantiate ::value
+          // if it doesn't have to, so we hide the tuple_element_t request
+          // in the ::value member of is_ignore.
+          std::conjunction_v<
+              std::bool_constant<I != sizeof...(ParserTypes)>,
+              std::negation<parsers::is_ignore<I, std::tuple<ParserTypes...>>>>,
+          int> = 0>
+  std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) {
+    auto& p = parsers::getParser<I>(parsers_);
+    auto optResult = p.apply(input);
+
+    if (optResult.has_value()) {
+      return applyHelper<I + 1>(
+          input, std::tuple_cat(
+                     std::move(currentTuple), std::tuple(std::move(optResult.value()))));
+    }
+
+    failedParser_ = &p;
+    return {};
+  }
+
+  // If an ignore_t (should not go in result tuple)
+  template <
+      int I, typename Tup,
+      std::enable_if_t<
+          std::conjunction_v<
+              std::bool_constant<I != sizeof...(ParserTypes)>,
+              parsers::is_ignore<I, std::tuple<ParserTypes...>>>,
+          int> = 0>
+  std::optional<T> applyHelper(std::istream& input, Tup&& currentTuple) {
+    auto& p = parsers::getParser<I>(parsers_);
+    auto optResult = p.apply(input);
+
+    if (optResult.has_value()) {
+      return applyHelper<I + 1>(input, std::forward<Tup>(currentTuple));
+    }
+
+    failedParser_ = &p;
+    return {};
+  }
 
   virtual std::string getErrMsgs(std::istream& input) override {
     if (!this->customErrMsg_.empty()) {
       return this->myErrMsg(input);
     }
-    // return failedParser_->getErrMsgs(input);
-    return "";
+    return failedParser_->getErrMsgs(input);
   }
 
-  std::array<ParserBase *, sizeof...(ParserTypes)> parsers_;
+  std::tuple<ParserTypes...> parsers_;
+  ParserBase* failedParser_;
 };
 
 #endif

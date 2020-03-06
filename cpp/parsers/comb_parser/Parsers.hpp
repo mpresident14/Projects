@@ -108,7 +108,7 @@ namespace parsers {
   StringParser thisString(std::string&& str) { return StringParser(str); }
   StringParser thisString(const char* str) { return StringParser(str); }
 
-  auto whitespace =
+  auto whiteSpace =
       many(doOnlyIf(anyChar(), [](char c) { return isspace(c); }));
 
   // TODO: This is really inefficient and super common. Define a new parser
@@ -129,7 +129,7 @@ namespace parsers {
 
   template <typename P>
   auto skipWs(P&& parser) {
-    return ignoreAndThen(whitespace, std::forward<P>(parser));
+    return ignoreAndThen(whiteSpace, std::forward<P>(parser));
   }
 
   auto anyDigitChar =
