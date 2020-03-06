@@ -3,8 +3,6 @@
 
 #include "../Parsers.hpp"
 
-#include <prez/timeit.hpp>
-
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
@@ -153,12 +151,8 @@ private:
   RgxPtr rgx_;
 };
 
-int main(int argc, char** argv) {
-  if (argc != 3) {
-    cerr << "Enter a regex to parse and a string to match." << endl;
-    return 1;
-  }
 
+void doParse(const char *rgx) {
   /* Regex            := Concat | Alt | InitRgxWithStar
    * Concat           := InitRgxWithStar Regex
    * Alt              := InitRgxWithStar '|' Regex
@@ -169,10 +163,10 @@ int main(int argc, char** argv) {
    * Character        := char
    */
 
-
   auto regex = lazy<RgxPtr>();
   auto dot = transform(
       thisChar('.'), [](char) -> RgxPtr { return make_unique<Dot>(); });
+
   unordered_set<char> specialChars = {'(', ')', '|', '*'};
   auto character = transform(
       doOnlyIf(
@@ -182,12 +176,12 @@ int main(int argc, char** argv) {
 
   auto group =
       ignoreAndThen(thisChar('('), doThenIgnore(regex.getRef(), thisChar(')')));
-  auto initRgx = alt(dot, group, character);
+  auto initRgx = alt(move(dot), move(group), move(character));
   auto star = transform(
       doThenIgnore(initRgx, thisChar('*')),
       [](auto&& rgx) -> RgxPtr { return make_unique<Star>(move(rgx)); });
 
-  auto initRgxWithStar = alt(star, initRgx);
+  auto initRgxWithStar = alt(move(star), move(initRgx));
 
   auto concat = transform(
       seq(initRgxWithStar, regex.getRef()), [](auto&& rgxTup) -> RgxPtr {
@@ -200,18 +194,43 @@ int main(int argc, char** argv) {
         return make_unique<Alt>(move(get<0>(rgxTup)), move(get<1>(rgxTup)));
       });
 
-  regex.set(alt(concat, alternative, initRgxWithStar));
-
-  cout << sizeof(alternative) << endl;
-  cout << sizeof(regex) << endl;
+  regex.set(alt(move(concat), move(alternative), move(initRgxWithStar)));
 
   try {
-    auto result = regex.parse(argv[1]);
-    cout << result->toString() << endl;
-    cout << (result->matches(argv[2]) ? "Match" : "No Match") << endl;
+    regex.parse(rgx);
+    // auto result = regex.parse(rgx);
+    // cout << result->toString() << endl;
+    // cout << (result->matches(input) ? "Match" : "No Match") << endl;
   } catch (invalid_argument& e) {
-    cerr << e.what() << endl;
+    // cerr << e.what() << endl;
   }
+}
+
+
+int main(/* int argc, char** argv */) {
+  // if (argc != 3) {
+  //   cerr << "Enter a regex to parse and a string to match." << endl;
+  //   return 1;
+  // }
+
+  size_t trials = 1000;
+  size_t t;
+
+  // t = timeit<std::chrono::milliseconds>(trials, []() { doParse("a*b|cd|(ef)*(abc|d)"); });
+  // cout << "T1: " << t << " milliseconds." << endl;
+
+  // t = timeit<std::chrono::milliseconds>(trials, []() { doParse("a*b|cd|(ef)*(abc|d)"); });
+  // cout << "T2: " << t << " milliseconds." << endl;
+
+  // t = timeit<std::chrono::milliseconds>(trials, []() { doParse("a*b|cd|(ef)*(abc|d)"); });
+  // cout << "T3: " << t << " milliseconds." << endl;
+
+  // t = timeit<std::chrono::microseconds>(trials, []() { thisChar('a').parse("a"); });
+  // cout << "T3: " << t << " microseconds." << endl;
+
+  t = timeit<std::chrono::microseconds>(trials, []() { whitespace.parse("\t   \n  "); });
+  cout << "T3: " << t << " microseconds." << endl;
+
 }
 
 #endif
