@@ -3,6 +3,8 @@
 
 #include "../Parsers.hpp"
 
+#include <prez/timeit.hpp>
+
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
@@ -11,6 +13,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
 
 using namespace std;
 using namespace parsers;
@@ -216,19 +219,19 @@ int main(/* int argc, char** argv */) {
   size_t trials = 1000;
   size_t t;
 
-  // t = timeit<std::chrono::milliseconds>(trials, []() { doParse("a*b|cd|(ef)*(abc|d)"); });
-  // cout << "T1: " << t << " milliseconds." << endl;
+  t = timeit<chrono::milliseconds>(trials, []() { doParse("a*b|cd|(ef)*(abc|d)"); });
+  cout << "T1: " << t << " milliseconds." << endl;
 
-  // t = timeit<std::chrono::milliseconds>(trials, []() { doParse("a*b|cd|(ef)*(abc|d)"); });
-  // cout << "T2: " << t << " milliseconds." << endl;
+  t = timeit<chrono::milliseconds>(trials, []() { doParse("a*b|cd|(ef)*(abc|d)"); });
+  cout << "T2: " << t << " milliseconds." << endl;
 
-  // t = timeit<std::chrono::milliseconds>(trials, []() { doParse("a*b|cd|(ef)*(abc|d)"); });
-  // cout << "T3: " << t << " milliseconds." << endl;
+  t = timeit<chrono::milliseconds>(trials, []() { doParse("a*b|cd|(ef)*(abc|d)"); });
+  cout << "T3: " << t << " milliseconds." << endl;
 
-  // t = timeit<std::chrono::microseconds>(trials, []() { thisChar('a').parse("a"); });
-  // cout << "T3: " << t << " microseconds." << endl;
+  t = timeit<chrono::microseconds>(trials, []() { thisChar('a').parse("a"); });
+  cout << "T3: " << t << " microseconds." << endl;
 
-  t = timeit<std::chrono::microseconds>(trials, []() { whitespace.parse("\t   \n  "); });
+  t = timeit<chrono::microseconds>(trials, []() { whiteSpace.parse("\t   \n  "); });
   cout << "T3: " << t << " microseconds." << endl;
 
 }
