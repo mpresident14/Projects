@@ -30,6 +30,7 @@ public:
 
 protected:
   virtual std::string getErrMsgs(std::istream& input) = 0;
+  virtual std::optional<T> apply(std::istream& input) = 0;
 };
 
 /* Base class (only for LazyParser). */
