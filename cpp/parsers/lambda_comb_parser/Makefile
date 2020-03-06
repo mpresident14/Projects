@@ -1,10 +1,13 @@
+SHELL=/bin/bash
+
 CXX = clang++
 CXXV=17
 CXXFLAGS = -std=c++$(CXXV) -Wall -Wextra -pedantic -g
 
 all: widget expr regex main
 
-clean: find . -type f -executable -delete
+clean:
+	find . -type f -executable -delete
 
 widget: widget.cpp widget.hpp parser.hpp
 	$(CXX) $(CXXFLAGS) widget.cpp -o widget
