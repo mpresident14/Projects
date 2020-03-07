@@ -7,7 +7,7 @@ using namespace std;
 using namespace parsers;
 using RgxPtr = unique_ptr<Regex>;
 
-RgxPtr doParse(const char *rgx) {
+RgxPtr doParse(const char* rgx) {
   /* Regex            := Concat | Alt | InitRgxWithStar
    * Concat           := InitRgxWithStar Regex
    * Alt              := InitRgxWithStar '|' Regex
@@ -20,17 +20,15 @@ RgxPtr doParse(const char *rgx) {
 
   Parser<RgxPtr> regex = fail<RgxPtr>;
 
-  Parser<RgxPtr> dot = thisChar('.').andThenMap(
-      [](char) -> RgxPtr { return make_unique<Dot>(); });
+  Parser<RgxPtr> dot =
+      thisChar('.').andThenMap([](char) -> RgxPtr { return make_unique<Dot>(); });
 
   unordered_set<char> specialChars = {'(', ')', '|', '*'};
   Parser<RgxPtr> character =
       anyChar.verify([&specialChars](char c) { return !specialChars.count(c); })
-          .andThenMap(
-              [](char c) -> RgxPtr { return make_unique<Character>(c); });
+          .andThenMap([](char c) -> RgxPtr { return make_unique<Character>(c); });
 
-  Parser<RgxPtr> group =
-      thisChar('(').ignoreAndThenRef(regex).thenIgnore(thisChar(')'));
+  Parser<RgxPtr> group = thisChar('(').ignoreAndThenRef(regex).thenIgnore(thisChar(')'));
 
   Parser<RgxPtr> initRgx = dot.alt(group).alt(character);
 
@@ -41,8 +39,8 @@ RgxPtr doParse(const char *rgx) {
 
   Parser<RgxPtr> initRgxWithStar = star.alt(initRgx);
 
-  Parser<RgxPtr> concat = initRgxWithStar.combineRef(regex).andThenMap(
-      [](auto&& rgxPair) -> RgxPtr {
+  Parser<RgxPtr> concat =
+      initRgxWithStar.combineRef(regex).andThenMap([](auto&& rgxPair) -> RgxPtr {
         return make_unique<Concat>(move(rgxPair.first), move(rgxPair.second));
       });
 
@@ -64,7 +62,8 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  // cout << prez::timeit<std::chrono::milliseconds>(1000, doParse, argv[1]) << " milliseconds" << endl;
+  // cout << prez::timeit<std::chrono::milliseconds>(1000, doParse, argv[1]) << "
+  // milliseconds" << endl;
 
   try {
     auto result = doParse(argv[1]);

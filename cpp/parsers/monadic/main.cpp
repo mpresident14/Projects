@@ -15,11 +15,8 @@ using namespace parsers;
 using namespace std::chrono;
 
 int main() {
-
   try {
-    anyInt.combine(thisChar('a'))
-    .alt(anyInt.combine(thisChar('b')))
-    .parse("133c");
+    anyDigit.combine(thisChar('a')).alt(anyUnsigned.combine(thisChar('b'))).parse("133c");
   } catch (invalid_argument& e) {
     cerr << e.what() << endl;
   }

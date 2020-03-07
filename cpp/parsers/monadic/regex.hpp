@@ -70,8 +70,7 @@ private:
 
 class Concat : public Regex {
 public:
-  Concat(RgxPtr rgx1, RgxPtr rgx2)
-      : rgx1_{std::move(rgx1)}, rgx2_{std::move(rgx2)} {}
+  Concat(RgxPtr rgx1, RgxPtr rgx2) : rgx1_{std::move(rgx1)}, rgx2_{std::move(rgx2)} {}
   RgxPtr clone() const override {
     return std::make_unique<Concat>(rgx1_->clone(), rgx2_->clone());
   }
@@ -96,8 +95,7 @@ private:
 
 class Alt : public Regex {
 public:
-  Alt(RgxPtr rgx1, RgxPtr rgx2)
-      : rgx1_{std::move(rgx1)}, rgx2_{std::move(rgx2)} {}
+  Alt(RgxPtr rgx1, RgxPtr rgx2) : rgx1_{std::move(rgx1)}, rgx2_{std::move(rgx2)} {}
   RgxPtr clone() const override {
     return std::make_unique<Alt>(rgx1_->clone(), rgx2_->clone());
   }
@@ -131,17 +129,14 @@ private:
 class Star : public Regex {
 public:
   Star(RgxPtr rgx) : rgx_{std::move(rgx)} {}
-  RgxPtr clone() const override {
-    return std::make_unique<Star>(rgx_->clone());
-  }
+  RgxPtr clone() const override { return std::make_unique<Star>(rgx_->clone()); }
   std::string toString() override { return "STAR (" + rgx_->toString() + ")"; }
 
 private:
   std::vector<std::string_view> getMatches(std::string_view str) override {
     // "Star re" is equivalent to "Alt (Concat (re, Star re), Epsilon)"
     Alt equivRgx(
-        std::make_unique<Concat>(
-            rgx_->clone(), std::make_unique<Star>(rgx_->clone())),
+        std::make_unique<Concat>(rgx_->clone(), std::make_unique<Star>(rgx_->clone())),
         std::make_unique<Epsilon>());
 
     Regex* equivRgxPtr = &equivRgx;  // So we can access private member function

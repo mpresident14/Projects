@@ -24,9 +24,7 @@ public:
     return *this;
   };
 
-  Widget(Widget&& other) : nums_{std::move(other.nums_)} {
-    info("Move Constructor");
-  }
+  Widget(Widget&& other) : nums_{std::move(other.nums_)} { info("Move Constructor"); }
 
   Widget& operator=(Widget&& other) {
     nums_ = std::move(other.nums_);

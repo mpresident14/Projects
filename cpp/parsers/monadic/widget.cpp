@@ -56,16 +56,15 @@ int main(int argc, char** argv) {
             return w;
           });
 
-  auto linkedWidgetParser =
-      widgetParser.thenIgnore(arrowParser)
-          .many()
-          .combine(widgetParser)
-          .andThenMap([](pair<vector<Widget>, Widget>&& myPair) {
-            vector<Widget>& widgets = get<0>(myPair);
-            list<Widget> myList{widgets.begin(), widgets.end()};
-            myList.push_back(get<1>(myPair));
-            return myList;
-          });
+  auto linkedWidgetParser = widgetParser.thenIgnore(arrowParser)
+                                .many()
+                                .combine(widgetParser)
+                                .andThenMap([](pair<vector<Widget>, Widget>&& myPair) {
+                                  vector<Widget>& widgets = get<0>(myPair);
+                                  list<Widget> myList{widgets.begin(), widgets.end()};
+                                  myList.push_back(get<1>(myPair));
+                                  return myList;
+                                });
 
   try {
     auto widgets = linkedWidgetParser.parse(argv[1]);

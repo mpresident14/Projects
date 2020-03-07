@@ -1,17 +1,17 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
+#include <algorithm>
 #include <cctype>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-#include <sstream>
-#include <algorithm>
 
 template <typename T>
 class Parser;
@@ -37,7 +37,6 @@ static inline constexpr bool is_parser_v = parser_info<U>::value;
 
 template <typename U>
 using ptype_t = typename parser_info<U>::type;
-
 
 /***************************************************************************************
  *                                PARSER CLASS GUARANTEE
@@ -174,23 +173,17 @@ namespace parsers {
       [](input_t&, size_t*) { return createReturnObject(nullptr); }};
 
   template <typename U>
-  const Parser<U> fail{
-    [](input_t&, size_t*) -> result_t<U> {
+  const Parser<U> fail{[](input_t&, size_t*) -> result_t<U> { return {}; }};
+
+  const Parser<char> anyChar{[](input_t& input, size_t* errPos) -> result_t<char> {
+    if (input.peek() == EOF) {
+      input.clear();
+      *errPos = input.tellg();
       return {};
     }
-  };
 
-  const Parser<char> anyChar{
-    [](input_t& input, size_t* errPos) -> result_t<char> {
-      if (input.peek() == EOF) {
-        input.clear();
-        *errPos = input.tellg();
-        return {};
-      }
-
-      return createReturnObject(input.get());
-    }
-  };
+    return createReturnObject(input.get());
+  }};
 
   // TODO: Why?
   // "inline" to prevent redefinition linker error

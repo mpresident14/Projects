@@ -27,9 +27,9 @@ T Parser<T>::parse(const std::string& input) const {
   return move(optResult.value());
 }
 
-
-/* andThen makes the guarantee that the parser in creates will reset the input stream position if
- * either parser fails. Combinators using andThen do not have to reset the input stream */
+/* andThen makes the guarantee that the parser in creates will reset the input stream
+ * position if either parser fails. Combinators using andThen do not have to reset the
+ * input stream */
 template <typename T>
 template <typename Fn, typename Par>
 std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const {
@@ -39,20 +39,18 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const {
           [parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
            pGenFn = forward<Fn>(pGenFn)](
               input_t& input, size_t* errPos) mutable -> result_t<ptype_t<Par>> {
-            size_t pos = input.tellg();
-            cout << "POS 1: " << pos << endl;
+            // Always reset to original position if either parser fails
+            size_t origPos = input.tellg();
 
             // Run first parser
             result_t<T> optResult1 = (*parseFn)(input, errPos);
             // If first parser fails, reset the stream and fail entire thing
             if (!optResult1.has_value()) {
-              input.seekg(pos);
-              *errPos = max(*errPos, pos);
+              input.seekg(origPos);
+              *errPos = max(*errPos, origPos);
               return {};
             }
 
-            pos = input.tellg();
-            cout << "POS 2: " << pos << endl;
             // Run the next parser on the rest of the string
             auto nextParser = pGenFn(move(optResult1.value()));
             auto optResult2 = (*nextParser.parseFn_)(input, errPos);
@@ -60,8 +58,8 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const {
               return optResult2;
             }
 
-            *errPos = max(*errPos, pos);
-            input.seekg(pos);
+            *errPos = max(*errPos, origPos);
+            input.seekg(origPos);
             return optResult2;
           }};
 }
@@ -74,17 +72,19 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThenRef(Fn&& pGenFn) const
   return {// This must be mutable to call pGenFn's non-const () operator
           [this, pGenFn = forward<Fn>(pGenFn)](
               input_t& input, size_t* errPos) mutable -> result_t<ptype_t<Par>> {
-            size_t pos = input.tellg();
+            // Always reset to original position if either parser fails
+            size_t origPos = input.tellg();
+
             // Run first parser
             result_t<T> optResult1 = (*parseFn_)(input, errPos);
             // If first parser fails, reset the stream and fail entire thing
             if (!optResult1.has_value()) {
-              input.seekg(pos);
-              *errPos = max(*errPos, pos);
+              input.seekg(origPos);
+              *errPos = max(*errPos, origPos);
               return {};
             }
 
-            pos = input.tellg();
+            // Specify the error location at which the deepest parsing attempt failed
             // Run the next parser on the rest of the string
             auto nextParser = pGenFn(move(optResult1.value()));
             auto optResult2 = (*nextParser.parseFn_)(input, errPos);
@@ -92,12 +92,11 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThenRef(Fn&& pGenFn) const
               return optResult2;
             }
 
-            *errPos = max(*errPos, pos);
-            input.seekg(pos);
+            *errPos = max(*errPos, origPos);
+            input.seekg(origPos);
             return optResult2;
           }};
 }
-
 
 template <typename T>
 Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
@@ -105,6 +104,28 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
 
   return {[parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
            nextParser = move(nextParser)](input_t& input, size_t* errPos) {
+    // Run first parser
+    result_t<T> optResult1 = (*parseFn)(input, errPos);
+    // If first parser succeeds, return the result
+    if (optResult1.has_value()) {
+      return optResult1;
+    }
+
+    // Otherwise, try the next parser on the input
+    result_t<T> optResult2 = (*nextParser.parseFn_)(input, errPos);
+    if (optResult2.has_value()) {
+      return optResult2;
+    }
+    return optResult2;
+  }};
+}
+
+template <typename T>
+Parser<T> Parser<T>::altRef(const Parser<T>& nextParser) const {
+  using namespace std;
+
+  return {[parseFn = isThisRValue() ? move(parseFn_) : parseFn_, &nextParser](
+              input_t& input, size_t* errPos) {
     // Run first parser
     result_t<T> optResult1 = (*parseFn)(input, errPos);
     // If first parser succeeds, return the result
@@ -120,36 +141,6 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
     }
     // Set the error that was farther along
     *errPos = max(*errPos, firstErrPos);
-    return optResult2;
-  }};
-}
-
-template <typename T>
-Parser<T> Parser<T>::altRef(const Parser<T>& nextParser) const {
-  using namespace std;
-
-  return {[parseFn = isThisRValue() ? move(parseFn_) : parseFn_, &nextParser](
-              input_t& input, size_t* errPos) {
-    size_t pos = input.tellg();
-    // Run first parser
-    result_t<T> optResult1 = (*parseFn)(input, errPos);
-    // If first parser succeeds, return the result
-    if (optResult1.has_value()) {
-      return optResult1;
-    }
-
-    size_t firstErrPos = *errPos;
-    // Otherwise, reset the stream to the correct location and try the
-    // next parser on the input
-    input.seekg(pos);
-    result_t<T> optResult2 = (*nextParser.parseFn_)(input, errPos);
-    if (optResult2.has_value()) {
-      return optResult2;
-    }
-    // Set the error that was farther along
-    *errPos = max(*errPos, firstErrPos);
-    // Reset the stream location
-    input.seekg(pos);
     return optResult2;
   }};
 }
@@ -219,12 +210,10 @@ Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many()
     size_t oldErrPos = *errPos;
     // Run parser until it fails and put each result in the list
     string parsedChars;
-    size_t pos = input.tellg();
     result_t<char> optResult = (*parseFn)(input, errPos);
     while (optResult.has_value()) {
       // value() is a char, no need to move it
       parsedChars.append(1, optResult.value());
-      pos = input.tellg();
       optResult = (*parseFn)(input, errPos);
     }
 
@@ -245,11 +234,9 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
     size_t oldErrPos = *errPos;
     // Run parser until it fails and put each result in the list
     vector<T> parsedObjs;
-    size_t pos = input.tellg();
     result_t<T> optResult = (*parseFn)(input, errPos);
     while (optResult.has_value()) {
       parsedObjs.push_back(move(optResult.value()));
-      pos = input.tellg();
       optResult = (*parseFn)(input, errPos);
     }
 

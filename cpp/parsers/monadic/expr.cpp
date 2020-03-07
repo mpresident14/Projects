@@ -9,8 +9,7 @@ ExprPtr foldExprs(pair<ExprPtr, vector<pair<Op, ExprPtr>>> exprAndRestVec) {
   ExprPtr binop = move(exprAndRestVec.first);
 
   for (auto& opAndExpr : restVec) {
-    binop = make_unique<BinOp>(
-        move(binop), move(opAndExpr.second), opAndExpr.first);
+    binop = make_unique<BinOp>(move(binop), move(opAndExpr.second), opAndExpr.first);
   }
   return binop;
 }
@@ -29,8 +28,7 @@ void doParse(const char* input) {
   Parser<Op> power = skipws(thisChar('^').andThenMap([](char) { return POW; }));
 
   Parser<ExprPtr> single = skipws(
-      anyUDouble
-          .andThenMap([](double n) -> ExprPtr { return make_unique<Num>(n); })
+      anyUDouble.andThenMap([](double n) -> ExprPtr { return make_unique<Num>(n); })
           .alt(thisChar('(')
                    .ignoreAndThenRef(expr)  // Needs to be a reference b/c expr
                                             // is not yet defined
@@ -42,12 +40,10 @@ void doParse(const char* input) {
           .andThenMap(foldExprs)
           .alt(thisChar('-').ignoreAndThenRef(factor).andThenMap(
               [](ExprPtr expr) -> ExprPtr {
-                return make_unique<BinOp>(
-                    make_unique<Num>(-1), move(expr), TIMES);
+                return make_unique<BinOp>(make_unique<Num>(-1), move(expr), TIMES);
               }));
 
-  Parser<vector<pair<Op, ExprPtr>>> restFactors =
-      timesDiv.combine(factor).many();
+  Parser<vector<pair<Op, ExprPtr>>> restFactors = timesDiv.combine(factor).many();
 
   Parser<ExprPtr> term = factor.combine(restFactors).andThenMap(foldExprs);
   Parser<vector<pair<Op, ExprPtr>>> restTerms = plusMinus.combine(term).many();
