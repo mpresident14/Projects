@@ -40,41 +40,36 @@ int main(int argc, char** argv) {
   }
 
   const auto arrowParser = skipws(thisChar('-')).thenIgnore(thisChar('>'));
-
   const auto intParser = skipws(anyInt).thenIgnore(skipws(thisChar(',')));
 
   const auto widgetParser =
-   /*    skipws(thisChar('{'))
-          .ignoreAndThen( */intParser.many();
-          // .combine(anyInt);
-          // .combine(skipws(anyInt));
-  //         .thenIgnore(skipws(thisChar('}')))
-  //         .thenIgnore(whitespace)
-  //         .andThenMap([](pair<vector<int>, int>&& myPair) {
-  //           Widget w;
-  //           vector<int>& nums = get<0>(myPair);
-  //           for_each(nums.begin(), nums.end(), [&w](int& n) { w.store(n); });
-  //           w.store(get<1>(myPair));
-  //           return w;
-  //         });
+      skipws(thisChar('{'))
+          .ignoreAndThen(intParser.many())
+          .combine(skipws(anyInt))
+          .thenIgnore(skipws(thisChar('}')))
+          .thenIgnore(whitespace)
+          .andThenMap([](pair<vector<int>, int>&& myPair) {
+            Widget w;
+            vector<int>& nums = get<0>(myPair);
+            for_each(nums.begin(), nums.end(), [&w](int& n) { w.store(n); });
+            w.store(get<1>(myPair));
+            return w;
+          });
 
-  // auto linkedWidgetParser =
-  //     widgetParser.thenIgnore(arrowParser)
-  //         .many()
-  //         .combine(widgetParser)
-  //         .andThenMap([](pair<vector<Widget>, Widget>&& myPair) {
-  //           vector<Widget>& widgets = get<0>(myPair);
-  //           list<Widget> myList{widgets.begin(), widgets.end()};
-  //           myList.push_back(get<1>(myPair));
-  //           return myList;
-  //         });
-
-
+  auto linkedWidgetParser =
+      widgetParser.thenIgnore(arrowParser)
+          .many()
+          .combine(widgetParser)
+          .andThenMap([](pair<vector<Widget>, Widget>&& myPair) {
+            vector<Widget>& widgets = get<0>(myPair);
+            list<Widget> myList{widgets.begin(), widgets.end()};
+            myList.push_back(get<1>(myPair));
+            return myList;
+          });
 
   try {
-    widgetParser.parse(argv[1]);
-    // auto widgets = linkedWidgetParser.parse(argv[1]);
-    // printElements(widgets);
+    auto widgets = linkedWidgetParser.parse(argv[1]);
+    printElements(widgets);
   } catch (invalid_argument& e) {
     cerr << e.what() << endl;
   }

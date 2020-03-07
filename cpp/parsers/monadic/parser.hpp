@@ -38,6 +38,15 @@ static inline constexpr bool is_parser_v = parser_info<U>::value;
 template <typename U>
 using ptype_t = typename parser_info<U>::type;
 
+
+/***************************************************************************************
+ *                                PARSER CLASS GUARANTEE
+ * -------------------------------------------------------------------------------------
+ * Upon failure, the parser shall reset the input stream to the point at which it began
+ * parsing and set errPos to this value if this value is larger than (i.e., further
+ * along in the input) errPos (see andThen() for the only exception).
+ ***************************************************************************************/
+
 template <typename T>
 class Parser {
 private:
@@ -167,9 +176,6 @@ namespace parsers {
   template <typename U>
   const Parser<U> fail{
     [](input_t&, size_t*) -> result_t<U> {
-      // TODO: Maybe pass errPos into this function
-      // Do not set the error because then the error position will be at the end of
-      // the failure, not at the chars before
       return {};
     }
   };
@@ -186,6 +192,7 @@ namespace parsers {
     }
   };
 
+  // TODO: Why?
   // "inline" to prevent redefinition linker error
   inline Parser<char> thisChar(char c) {
     return anyChar.verify([c](char k) { return k == c; });

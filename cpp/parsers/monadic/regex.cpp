@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  cout << prez::timeit<std::chrono::milliseconds>(1000, doParse, argv[1]) << " milliseconds" << endl;
+  // cout << prez::timeit<std::chrono::milliseconds>(1000, doParse, argv[1]) << " milliseconds" << endl;
 
   try {
     auto result = doParse(argv[1]);
