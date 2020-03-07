@@ -1,11 +1,13 @@
 #include "regex.hpp"
 #include "parser.hpp"
 
+#include <prez/timeit.hpp>
+
 using namespace std;
 using namespace parsers;
 using RgxPtr = unique_ptr<Regex>;
 
-void doParse(const char* rgx, const char* input) {
+RgxPtr doParse(const char *rgx) {
   /* Regex            := Concat | Alt | InitRgxWithStar
    * Concat           := InitRgxWithStar Regex
    * Alt              := InitRgxWithStar '|' Regex
@@ -53,13 +55,7 @@ void doParse(const char* rgx, const char* input) {
 
   regex = concat.alt(alternative).alt(initRgxWithStar);
 
-  try {
-    auto result = regex.parse(rgx);
-    cout << result->toString() << endl;
-    cout << (result->matches(input) ? "Match" : "No Match") << endl;
-  } catch (invalid_argument& e) {
-    cerr << e.what() << endl;
-  }
+  return regex.parse(rgx);
 }
 
 int main(int argc, char** argv) {
@@ -68,5 +64,13 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  doParse(argv[1], argv[2]);
+  cout << prez::timeit<std::chrono::milliseconds>(1000, doParse, argv[1]) << " milliseconds" << endl;
+
+  try {
+    auto result = doParse(argv[1]);
+    cout << result->toString() << endl;
+    cout << (result->matches(argv[2]) ? "Match" : "No Match") << endl;
+  } catch (invalid_argument& e) {
+    cerr << e.what() << endl;
+  }
 }
