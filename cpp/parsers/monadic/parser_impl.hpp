@@ -8,9 +8,10 @@ template <typename T>
 T Parser<T>::parse(const std::string& input) const {
   using namespace std;
 
-  result_t<T> optResult = (*parseFn_)(input);
+  size_t errPos = 0;
+  result_t<T> optResult = (*parseFn_)(input, &errPos);
   if (!optResult.has_value()) {
-    throw invalid_argument("No parse for input \"" + input + "\"");
+    throw invalid_argument("Parse error: failed at: \"" + input.substr(errPos) + "\"");
   }
 
   pair<T, string_view>& pairResult = optResult.value();
@@ -32,9 +33,9 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const {
   return {// This must be mutable to call pGenFn's non-const () operator
           [parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
            pGenFn = forward<Fn>(pGenFn)](
-              input_t& input) mutable -> result_t<is_parser_pt<Par>> {
+              input_t& input, size_t *errPos) mutable -> result_t<ptype_t<Par>> {
             // Run first parser
-            result_t<T> optResult = (*parseFn)(input);
+            result_t<T> optResult = (*parseFn)(input, errPos);
             // If first parser fails, fail entire thing
             if (!optResult.has_value()) {
               return {};
@@ -44,7 +45,7 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const {
             T& result = get<0>(pairResult);
             auto nextParser = pGenFn(move(result));
             // Run the next parser on the rest of the string
-            return (*nextParser.parseFn_)(get<1>(pairResult));
+            return (*nextParser.parseFn_)(get<1>(pairResult), errPos);
           }};
 }
 
@@ -56,9 +57,9 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThenRef(
 
   return {// This must be mutable to call pGenFn's non-const () operator
           [this, pGenFn = forward<Fn>(pGenFn)](
-              input_t& input) mutable -> result_t<is_parser_pt<Par>> {
+              input_t& input, size_t *errPos) mutable -> result_t<ptype_t<Par>> {
             // Run first parser
-            result_t<T> optResult = (*parseFn_)(input);
+            result_t<T> optResult = (*parseFn_)(input, errPos);
             // If first parser fails, fail entire thing
             if (!optResult.has_value()) {
               return {};
@@ -68,7 +69,7 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThenRef(
             T& result = get<0>(pairResult);
             auto nextParser = pGenFn(move(result));
             // Run the next parser on the rest of the string
-            return (*nextParser.parseFn_)(get<1>(pairResult));
+            return (*nextParser.parseFn_)(get<1>(pairResult), errPos);
           }};
 }
 
@@ -77,16 +78,16 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
   using namespace std;
 
   return {[parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
-           nextParser = move(nextParser)](input_t& input) {
+           nextParser = move(nextParser)](input_t& input, size_t *errPos) {
     // Run first parser
-    result_t<T> optResult = (*parseFn)(input);
+    result_t<T> optResult = (*parseFn)(input, errPos);
     // If first parser succeeds, return the result
     if (optResult.has_value()) {
       return optResult;
     }
 
     // Otherwise, try the next parser on the input
-    return (*nextParser.parseFn_)(input);
+    return (*nextParser.parseFn_)(input, errPos);
   }};
 }
 
@@ -95,16 +96,16 @@ Parser<T> Parser<T>::altRef(const Parser<T>& nextParser) const {
   using namespace std;
 
   return {[parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
-           &nextParser](input_t& input) {
+           &nextParser](input_t& input, size_t *errPos) {
     // Run first parser
-    result_t<T> optResult = (*parseFn)(input);
+    result_t<T> optResult = (*parseFn)(input, errPos);
     // If first parser succeeds, return the result
     if (optResult.has_value()) {
       return optResult;
     }
 
     // Otherwise, try the next parser on the input
-    return (*nextParser.parseFn_)(input);
+    return (*nextParser.parseFn_)(input, errPos);
   }};
 }
 
@@ -173,12 +174,13 @@ Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many()
   using namespace std;
 
   return Parser<string>{
-      [parseFn = isThisRValue() ? move(parseFn_) : parseFn_](input_t& input) {
+      [parseFn = isThisRValue() ? move(parseFn_) : parseFn_](input_t& input, size_t *errPos) {
         // Run parser until it fails and put each result in the list
         unsigned i = 0;
-        while ((*parseFn)(input.substr(i)).has_value()) {
+        while ((*parseFn)(input.substr(i), errPos).has_value()) {
           ++i;
         }
+        // TODO: RESET errPos HERE BECAUSE MANY WILL NEVER FAIL
 
         return parsers::createReturnObject(
             string(input.substr(0, i)), input.substr(i));
@@ -192,16 +194,16 @@ Parser<T>::many() const {
   using namespace std;
 
   return Parser<vector<T>>{
-      [parseFn = isThisRValue() ? move(parseFn_) : parseFn_](input_t& input) {
+      [parseFn = isThisRValue() ? move(parseFn_) : parseFn_](input_t& input, size_t *errPos) {
         // Run parser until it fails and put each result in the list
         vector<T> listResult;
         unsigned i = 0;
-        result_t<T> optResult = (*parseFn)(input);
+        result_t<T> optResult = (*parseFn)(input, errPos);
         while (optResult.has_value()) {
           pair<T, string_view>& pairResult = optResult.value();
           listResult.push_back(move(get<0>(pairResult)));
           i = input.size() - get<1>(pairResult).size();
-          optResult = (*parseFn)(get<1>(pairResult));
+          optResult = (*parseFn)(get<1>(pairResult), errPos);
         }
 
         return parsers::createReturnObject(move(listResult), input.substr(i));

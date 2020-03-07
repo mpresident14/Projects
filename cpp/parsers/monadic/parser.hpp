@@ -22,26 +22,27 @@ using input_t = const std::string_view;
 
 // These templates allow detection of a Parser of any type and get the type of
 // the Parser.
-template <typename>
-struct is_parser : std::false_type {};
+template <typename U>
+struct parser_info;
 
 template <typename U>
-struct is_parser<Parser<U>> : std::true_type {
-  using parser_type = U;
+struct parser_info<Parser<U>> {
+  using type = U;
+  static constexpr bool value = true;
 };
 
 template <typename U>
-static inline constexpr bool is_parser_v = is_parser<U>::value;
+static inline constexpr bool is_parser_v = parser_info<U>::value;
 
 template <typename U>
-using is_parser_pt = typename is_parser<U>::parser_type;
+using ptype_t = typename parser_info<U>::type;
 
 template <typename T>
 class Parser {
 private:
   struct FnContainerAbstract {
     virtual ~FnContainerAbstract() {}
-    virtual result_t<T> operator()(input_t&) = 0;
+    virtual result_t<T> operator()(input_t&, size_t *) = 0;
   };
 
   template <typename Fn>
@@ -50,7 +51,7 @@ private:
     // Since we have a mutable lambdas (e.g. in createBasic() and combine()),
     // the () operator can change the variables in the closure (i.e. change f_),
     // so the () operator cannot be const.
-    result_t<T> operator()(input_t& input) override { return f_(input); }
+    result_t<T> operator()(input_t& input, size_t *errPos) override { return f_(input, errPos); }
 
     Fn f_;
   };
@@ -69,7 +70,7 @@ public:
   // interfere with the move and copy constructors.
   template <
       typename Fn, typename = std::enable_if_t<std::is_convertible_v<
-                       result_t<T>, std::invoke_result_t<Fn, input_t&>>>>
+                       result_t<T>, std::invoke_result_t<Fn, input_t&, size_t *>>>>
   Parser(Fn&& f);
   ~Parser() = default;
   Parser(const Parser&) = default;
@@ -150,18 +151,18 @@ namespace parsers {
   template <typename U>
   Parser<decay_t<U>> createBasic(U&& obj) {
     // Lambda is mutable so we can forward obj
-    return Parser<decay_t<U>>{[obj = forward<U>(obj)](input_t& input) mutable {
+    return Parser<decay_t<U>>{[obj = forward<U>(obj)](input_t& input, size_t *) mutable {
       return createReturnObject(forward<U>(obj), input);
     }};
   }
 
   const Parser<nullptr_t> success{
-      [](input_t& input) { return createReturnObject(nullptr, input); }};
+      [](input_t& input, size_t *) { return createReturnObject(nullptr, input); }};
 
   template <typename U>
-  const Parser<U> fail{[](input_t&) -> result_t<U> { return {}; }};
+  const Parser<U> fail{[](input_t&, size_t *) -> result_t<U> { return {}; }};
 
-  const Parser<char> anyChar{[](input_t& input) -> result_t<char> {
+  const Parser<char> anyChar{[](input_t& input, size_t *) -> result_t<char> {
     if (input.empty()) {
       return {};
     }
