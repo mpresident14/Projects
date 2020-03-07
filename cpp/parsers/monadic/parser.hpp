@@ -8,17 +8,18 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <vector>
+#include <sstream>
+#include <algorithm>
 
 template <typename T>
 class Parser;
 
 // TODO: This might not be good practice for header files.
 template <typename T>
-using result_t = std::optional<std::pair<T, std::string_view>>;
-using input_t = const std::string_view;
+using result_t = std::optional<T>;
+using input_t = std::istream;
 
 // These templates allow detection of a Parser of any type and get the type of
 // the Parser.
@@ -42,7 +43,7 @@ class Parser {
 private:
   struct FnContainerAbstract {
     virtual ~FnContainerAbstract() {}
-    virtual result_t<T> operator()(input_t&, size_t *) = 0;
+    virtual result_t<T> operator()(input_t&, size_t*) = 0;
   };
 
   template <typename Fn>
@@ -51,7 +52,9 @@ private:
     // Since we have a mutable lambdas (e.g. in createBasic() and combine()),
     // the () operator can change the variables in the closure (i.e. change f_),
     // so the () operator cannot be const.
-    result_t<T> operator()(input_t& input, size_t *errPos) override { return f_(input, errPos); }
+    result_t<T> operator()(input_t& input, size_t* errPos) override {
+      return f_(input, errPos);
+    }
 
     Fn f_;
   };
@@ -69,8 +72,10 @@ public:
   // (implements operator()). This ensures that this constructor doesn't
   // interfere with the move and copy constructors.
   template <
-      typename Fn, typename = std::enable_if_t<std::is_convertible_v<
-                       result_t<T>, std::invoke_result_t<Fn, input_t&, size_t *>>>>
+      typename Fn,
+      typename = std::enable_if_t<std::is_convertible_v<
+          result_t<T>,
+          std::invoke_result_t<Fn, input_t&, size_t*>>>>
   Parser(Fn&& f);
   ~Parser() = default;
   Parser(const Parser&) = default;
@@ -100,8 +105,9 @@ public:
   Parser<std::pair<T, R>> combineRef(const Parser<R>& nextParser) const;
 
   template <
-      typename Fn, typename = std::enable_if_t<std::is_convertible_v<
-                       bool, std::invoke_result_t<Fn, T>>>>
+      typename Fn,
+      typename =
+          std::enable_if_t<std::is_convertible_v<bool, std::invoke_result_t<Fn, T>>>>
   Parser<T> verify(Fn&& boolFn) const;
 
   // Hacky method to enable the correct overload depending on whether T is a
@@ -110,14 +116,12 @@ public:
   template <typename U = T>
   Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> many() const;
   template <typename U = T>
-  Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> many()
-      const;
+  Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> many() const;
 
   template <typename U = T>
   Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> some() const;
   template <typename U = T>
-  Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> some()
-      const;
+  Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> some() const;
 
   Parser<std::nullptr_t> ignore() const;
 
@@ -144,31 +148,43 @@ namespace parsers {
   using namespace std;
 
   template <typename U>
-  result_t<decay_t<U>> createReturnObject(U&& obj, input_t input) {
-    return make_optional(make_pair(forward<U>(obj), input));
+  result_t<decay_t<U>> createReturnObject(U&& obj) {
+    return make_optional(forward<U>(obj));
   }
 
   template <typename U>
   Parser<decay_t<U>> createBasic(U&& obj) {
     // Lambda is mutable so we can forward obj
-    return Parser<decay_t<U>>{[obj = forward<U>(obj)](input_t& input, size_t *) mutable {
-      return createReturnObject(forward<U>(obj), input);
+    return Parser<decay_t<U>>{[obj = forward<U>(obj)](input_t&, size_t*) mutable {
+      return createReturnObject(forward<U>(obj));
     }};
   }
 
+  // TODO: WHY A NULLPTR
   const Parser<nullptr_t> success{
-      [](input_t& input, size_t *) { return createReturnObject(nullptr, input); }};
+      [](input_t&, size_t*) { return createReturnObject(nullptr); }};
 
   template <typename U>
-  const Parser<U> fail{[](input_t&, size_t *) -> result_t<U> { return {}; }};
-
-  const Parser<char> anyChar{[](input_t& input, size_t *) -> result_t<char> {
-    if (input.empty()) {
+  const Parser<U> fail{
+    [](input_t&, size_t*) -> result_t<U> {
+      // TODO: Maybe pass errPos into this function
+      // Do not set the error because then the error position will be at the end of
+      // the failure, not at the chars before
       return {};
     }
+  };
 
-    return createReturnObject(input[0], input.substr(1));
-  }};
+  const Parser<char> anyChar{
+    [](input_t& input, size_t* errPos) -> result_t<char> {
+      if (input.peek() == EOF) {
+        input.clear();
+        *errPos = input.tellg();
+        return {};
+      }
+
+      return createReturnObject(input.get());
+    }
+  };
 
   // "inline" to prevent redefinition linker error
   inline Parser<char> thisChar(char c) {
@@ -176,8 +192,9 @@ namespace parsers {
   }
 
   const Parser<unsigned> anyDigit{
-      anyChar.verify([](char c) { return (bool)isdigit(c); })
-          .andThenMap([](char c) { return unsigned(c - '0'); })};
+      anyChar.verify([](char c) { return (bool)isdigit(c); }).andThenMap([](char c) {
+        return unsigned(c - '0');
+      })};
 
   // Not worrying about overflow
   const Parser<unsigned> anyUnsigned{
@@ -191,24 +208,23 @@ namespace parsers {
       })};
 
   // Not worrying about overflow or conversion errors
-  const Parser<int> anyInt{
-      thisChar('-')
-          .ignoreAndThen(anyUnsigned)
-          .andThenMap([](unsigned&& num) { return -num; })
-          .alt(anyUnsigned)
-          .andThenMap([](unsigned&& num) { return (int)num; })};
+  const Parser<int> anyInt{thisChar('-')
+                               .ignoreAndThen(anyUnsigned)
+                               .andThenMap([](unsigned&& num) { return -num; })
+                               .alt(anyUnsigned)
+                               .andThenMap([](unsigned&& num) { return (int)num; })};
 
-  const Parser<double> decimal{thisChar('.')
+  const Parser<double> decimal(thisChar('.')
                                    .ignoreAndThen(anyDigit.many())
                                    .andThenMap([](vector<unsigned>&& nums) {
                                      double dec = 0;
-                                     for (auto iter = nums.rbegin();
-                                          iter != nums.rend(); ++iter) {
+                                     for (auto iter = nums.rbegin(); iter != nums.rend();
+                                          ++iter) {
                                        dec += *iter;
                                        dec /= 10;
                                      }
                                      return dec;
-                                   })};
+                                   }));
 
   const Parser<double> anyUDouble{
       anyUnsigned.combine(decimal)

@@ -44,48 +44,38 @@ int main(int argc, char** argv) {
   const auto intParser = skipws(anyInt).thenIgnore(skipws(thisChar(',')));
 
   const auto widgetParser =
-      skipws(thisChar('{'))
-          .ignoreAndThen(intParser.many())
-          .combine(skipws(anyInt))
-          .thenIgnore(skipws(thisChar('}')))
-          .thenIgnore(whitespace)
-          .andThenMap([](pair<vector<int>, int>&& myPair) {
-            Widget w;
-            vector<int>& nums = get<0>(myPair);
-            for_each(nums.begin(), nums.end(), [&w](int& n) { w.store(n); });
-            w.store(get<1>(myPair));
-            return w;
-          });
+   /*    skipws(thisChar('{'))
+          .ignoreAndThen( */intParser.many();
+          // .combine(anyInt);
+          // .combine(skipws(anyInt));
+  //         .thenIgnore(skipws(thisChar('}')))
+  //         .thenIgnore(whitespace)
+  //         .andThenMap([](pair<vector<int>, int>&& myPair) {
+  //           Widget w;
+  //           vector<int>& nums = get<0>(myPair);
+  //           for_each(nums.begin(), nums.end(), [&w](int& n) { w.store(n); });
+  //           w.store(get<1>(myPair));
+  //           return w;
+  //         });
 
-  auto linkedWidgetParser =
-      widgetParser.thenIgnore(arrowParser)
-          .many()
-          .combine(widgetParser)
-          .andThenMap([](pair<vector<Widget>, Widget>&& myPair) {
-            vector<Widget>& widgets = get<0>(myPair);
-            list<Widget> myList{widgets.begin(), widgets.end()};
-            myList.push_back(get<1>(myPair));
-            return myList;
-          });
+  // auto linkedWidgetParser =
+  //     widgetParser.thenIgnore(arrowParser)
+  //         .many()
+  //         .combine(widgetParser)
+  //         .andThenMap([](pair<vector<Widget>, Widget>&& myPair) {
+  //           vector<Widget>& widgets = get<0>(myPair);
+  //           list<Widget> myList{widgets.begin(), widgets.end()};
+  //           myList.push_back(get<1>(myPair));
+  //           return myList;
+  //         });
 
-  auto start = clock();
-  auto start_chr = high_resolution_clock::now();
 
-  for (int i = 0; i < 1; ++i) {
-    try {
-      auto widgets = linkedWidgetParser.parse(argv[1]);
-      printElements(widgets);
-    } catch (invalid_argument& e) {
-      cerr << e.what() << endl;
-    }
+
+  try {
+    widgetParser.parse(argv[1]);
+    // auto widgets = linkedWidgetParser.parse(argv[1]);
+    // printElements(widgets);
+  } catch (invalid_argument& e) {
+    cerr << e.what() << endl;
   }
-
-  auto stop = clock();
-  auto stop_chr = high_resolution_clock::now();
-
-  cout << "Chrono: Took "
-       << duration<double, milli>(stop_chr - start_chr).count() / 1000
-       << " seconds" << endl;
-  cout << "Clock: Took " << (stop - start) * 1.0 / CLOCKS_PER_SEC << " seconds"
-       << endl;
 }
