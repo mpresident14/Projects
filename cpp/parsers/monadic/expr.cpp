@@ -28,8 +28,8 @@ void doParse(const char* input) {
   Parser<Op> power = skipws(thisChar('^').andThenMap([](char) { return POW; }));
 
   Parser<ExprPtr> single = skipws(
-      anyUDouble.andThenMap([](double n) -> ExprPtr { return make_unique<Num>(n); })
-          .alt(thisChar('(').ignoreAndThen(expr).thenIgnore(skipws(thisChar(')')))));
+      anyUDouble.andThenMap([](double n) -> ExprPtr { return make_unique<Num>(n); }))
+          .alt(thisChar('(').ignoreAndThen(expr).thenIgnore(skipws(thisChar(')'))));
   Parser<vector<pair<Op, ExprPtr>>> restPowers = power.combine(single).many();
 
   Parser<ExprPtr> factor = fail<ExprPtr>();
@@ -46,6 +46,7 @@ void doParse(const char* input) {
   Parser<vector<pair<Op, ExprPtr>>> restTerms = plusMinus.combine(term).many();
 
   expr.set(term.combine(restTerms).thenIgnore(whitespace).andThenMap(foldExprs));
+  // auto e = term.combine(restTerms).thenIgnore(whitespace).andThenMap(foldExprs);
 
   try {
     ExprPtr result = expr.parse(input);
