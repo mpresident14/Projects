@@ -31,37 +31,37 @@ T Parser<T>::parse(const std::string& input) const {
  * position if either parser fails. Combinators using andThen do not have to reset the
  * input stream */
 template <typename T>
-template <typename Fn, typename P>
-P Parser<T>::andThen(Fn&& pGenFn) const {
+template <typename Fn, typename Par>
+std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThen(Fn&& pGenFn) const {
   using namespace std;
 
   return {// This must be mutable to call pGenFn's non-const () operator
-      [parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
-          pGenFn = forward<Fn>(pGenFn)](
-          input_t& input, size_t* errPos) mutable -> result_t<ptype_t<P>> {
-        // Always reset to original position if either parser fails
-        size_t origPos = input.tellg();
+          [parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
+           pGenFn = forward<Fn>(pGenFn)](
+              input_t& input, size_t* errPos) mutable -> result_t<ptype_t<Par>> {
+            // Always reset to original position if either parser fails
+            size_t origPos = input.tellg();
 
-        // Run first parser
-        result_t<T> optResult1 = (*parseFn)(input, errPos);
-        // If first parser fails, reset the stream and fail entire thing
-        if (!optResult1.has_value()) {
-          input.seekg(origPos);
-          *errPos = max(*errPos, origPos);
-          return {};
-        }
+            // Run first parser
+            result_t<T> optResult1 = (*parseFn)(input, errPos);
+            // If first parser fails, reset the stream and fail entire thing
+            if (!optResult1.has_value()) {
+              input.seekg(origPos);
+              *errPos = max(*errPos, origPos);
+              return {};
+            }
 
-        // Run the next parser on the rest of the string
-        auto nextParser = pGenFn(move(optResult1.value()));
-        auto optResult2 = (*static_cast<const rm_ref_wrap_t<decltype(nextParser)>&>(nextParser).parseFn_)(input, errPos);
-        if (optResult2.has_value()) {
-          return optResult2;
-        }
+            // Run the next parser on the rest of the string
+            auto nextParser = pGenFn(move(optResult1.value()));
+            auto optResult2 = (*nextParser.parseFn_)(input, errPos);
+            if (optResult2.has_value()) {
+              return optResult2;
+            }
 
-        *errPos = max(*errPos, origPos);
-        input.seekg(origPos);
-        return optResult2;
-      }};
+            *errPos = max(*errPos, origPos);
+            input.seekg(origPos);
+            return optResult2;
+          }};
 }
 
 template <typename T>
@@ -70,41 +70,40 @@ std::enable_if_t<is_parser_v<Par>, Par> Parser<T>::andThenRef(Fn&& pGenFn) const
   using namespace std;
 
   return {// This must be mutable to call pGenFn's non-const () operator
-      [this, pGenFn = forward<Fn>(pGenFn)](
-          input_t& input, size_t* errPos) mutable -> result_t<ptype_t<Par>> {
-        // Always reset to original position if either parser fails
-        size_t origPos = input.tellg();
+          [this, pGenFn = forward<Fn>(pGenFn)](
+              input_t& input, size_t* errPos) mutable -> result_t<ptype_t<Par>> {
+            // Always reset to original position if either parser fails
+            size_t origPos = input.tellg();
 
-        // Run first parser
-        result_t<T> optResult1 = (*parseFn_)(input, errPos);
-        // If first parser fails, reset the stream and fail entire thing
-        if (!optResult1.has_value()) {
-          input.seekg(origPos);
-          *errPos = max(*errPos, origPos);
-          return {};
-        }
+            // Run first parser
+            result_t<T> optResult1 = (*parseFn_)(input, errPos);
+            // If first parser fails, reset the stream and fail entire thing
+            if (!optResult1.has_value()) {
+              input.seekg(origPos);
+              *errPos = max(*errPos, origPos);
+              return {};
+            }
 
-        // Specify the error location at which the deepest parsing attempt failed
-        // Run the next parser on the rest of the string
-        auto nextParser = pGenFn(move(optResult1.value()));
-        auto optResult2 = (*nextParser.parseFn_)(input, errPos);
-        if (optResult2.has_value()) {
-          return optResult2;
-        }
+            // Specify the error location at which the deepest parsing attempt failed
+            // Run the next parser on the rest of the string
+            auto nextParser = pGenFn(move(optResult1.value()));
+            auto optResult2 = (*nextParser.parseFn_)(input, errPos);
+            if (optResult2.has_value()) {
+              return optResult2;
+            }
 
-        *errPos = max(*errPos, origPos);
-        input.seekg(origPos);
-        return optResult2;
-      }};
+            *errPos = max(*errPos, origPos);
+            input.seekg(origPos);
+            return optResult2;
+          }};
 }
 
 template <typename T>
-template <typename P>
-Parser<T> Parser<T>::alt(P&& nextParser) const {
+Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
   using namespace std;
 
   return {[parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
-              nextParser = forward<P>(nextParser)](input_t& input, size_t* errPos) {
+           nextParser = move(nextParser)](input_t& input, size_t* errPos) {
     // Run first parser
     result_t<T> optResult1 = (*parseFn)(input, errPos);
     // If first parser succeeds, return the result
@@ -113,11 +112,7 @@ Parser<T> Parser<T>::alt(P&& nextParser) const {
     }
 
     // Otherwise, try the next parser on the input
-    // Here, we are casting the reference wrapper (if it exists) to a
-    // reference to the underlying object
-    result_t<T> optResult2 =
-        (*static_cast<const rm_ref_wrap_t<decltype(nextParser)>&>(nextParser).parseFn_)(
-            input, errPos);
+    result_t<T> optResult2 = (*nextParser.parseFn_)(input, errPos);
     if (optResult2.has_value()) {
       return optResult2;
     }
@@ -165,15 +160,15 @@ Parser<std::decay_t<R>> Parser<T>::andThenMap(Fn&& mapFn) const {
 
 // Pass nextParser by value since we have to copy it into the lambda anyways.
 template <typename T>
-template <typename P>
-Parser<std::pair<T, ptype_t<P>>> Parser<T>::combine(P&& nextParser) const {
+template <typename R>
+Parser<std::pair<T, R>> Parser<T>::combine(Parser<R> nextParser) const {
   using namespace std;
 
-  return andThen([nextParser = forward<P>(nextParser)](T&& obj1) {
+  return andThen([nextParser = move(nextParser)](T&& obj1) {
     return nextParser.andThen(
         // In order to forward obj1, the lambda must be mutable
-        [obj1 = forward<T>(obj1)](ptype_t<P>&& obj2) mutable {
-          return parsers::createBasic(make_pair(forward<T>(obj1), forward<ptype_t<P>>(obj2)));
+        [obj1 = forward<T>(obj1)](R&& obj2) mutable {
+          return parsers::createBasic(make_pair(forward<T>(obj1), forward<R>(obj2)));
         });
   });
 }
@@ -205,8 +200,6 @@ Parser<T> Parser<T>::verify(Fn&& boolFn) const {
   });
 }
 
-// TODO: If we call many on Lazy parser, parseFn_ will be copied and that is incorrect.
-// Same for all other functions of this form.
 template <typename T>
 template <typename U>
 Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many() const {
@@ -285,11 +278,23 @@ Parser<std::nullptr_t> Parser<T>::ignore() const {
 }
 
 template <typename T>
-template <typename P>
-Parser<ptype_t<P>> Parser<T>::ignoreAndThen(P&& nextParser) const {
+template <typename R>
+Parser<R> Parser<T>::ignoreAndThen(Parser<R> nextParser) const {
   using namespace std;
 
-  return andThen([nextParser = forward<P>(nextParser)](T&&) { return move(nextParser); });
+  return andThen([nextParser = move(nextParser)](T&&) { return move(nextParser); });
+}
+
+template <typename T>
+template <typename R>
+Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const {
+  using namespace std;
+
+  return andThen([nextParser = move(nextParser)](T&& obj1) {
+    return nextParser.andThenMap(
+        // In order to forward obj1, the lambda must be mutable
+        [obj1 = forward<T>(obj1)](R&&) mutable { return forward<T>(obj1); });
+  });
 }
 
 template <typename T>
@@ -301,18 +306,6 @@ Parser<R> Parser<T>::ignoreAndThenRef(const Parser<R>& nextParser) const {
 }
 
 template <typename T>
-template <typename P>
-Parser<T> Parser<T>::thenIgnore(P&& nextParser) const {
-  using namespace std;
-
-  return andThen([nextParser = forward<P>(nextParser)](T&& obj1) {
-    return nextParser.andThenMap(
-        // In order to forward obj1, the lambda must be mutable
-        [obj1 = forward<T>(obj1)](ptype_t<P>&&) mutable { return move(obj1); });
-  });
-}
-
-template <typename T>
 template <typename R>
 Parser<T> Parser<T>::thenIgnoreRef(const Parser<R>& nextParser) const {
   using namespace std;
@@ -320,7 +313,8 @@ Parser<T> Parser<T>::thenIgnoreRef(const Parser<R>& nextParser) const {
   return andThen([&nextParser](T&& obj1) {
     return nextParser.andThenRef(
         // In order to forward obj1, the lambda must be mutable
-        [obj1 = forward<T>(obj1)](
-            R&&) mutable { return parsers::createBasic(forward<T>(obj1)); });
+        [obj1 = forward<T>(obj1)](R&&) mutable {
+          return parsers::createBasic(forward<T>(obj1));
+        });
   });
 }
