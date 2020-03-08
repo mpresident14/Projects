@@ -92,30 +92,25 @@ public:
   Parser& operator=(Parser&&) = default;
 
   /* Combinators */
-  template <typename Fn, typename Par = std::invoke_result_t<Fn, T>>
-  std::enable_if_t<is_parser_v<Par>, Par> andThen(Fn&& pGenFn) const;
-
-  template <typename Fn, typename Par = std::invoke_result_t<Fn, T>>
-  std::enable_if_t<is_parser_v<Par>, Par> andThenRef(Fn&& pGenFn) const;
+  template <typename Fn, typename P = std::invoke_result_t<Fn, T&&>>
+  P andThen(Fn&& pGenFn) const;
 
   Parser<T> alt(Parser<T> nextParser) const;
 
-  Parser<T> altRef(const Parser<T>& nextParser) const;
 
   // mapFn must accept an rvalue reference
+  // TODO: Decay is questionable
   template <typename Fn, typename R = std::invoke_result_t<Fn, T&&>>
   Parser<std::decay_t<R>> andThenMap(Fn&& mapFn) const;
 
   template <typename R>
   Parser<std::pair<T, R>> combine(Parser<R> nextParser) const;
 
-  template <typename R>
-  Parser<std::pair<T, R>> combineRef(const Parser<R>& nextParser) const;
-
+  // TODO: Replace with c++20 concepts (and everywhere else where applicable)
   template <
       typename Fn,
       typename =
-          std::enable_if_t<std::is_convertible_v<bool, std::invoke_result_t<Fn, T>>>>
+          std::enable_if_t<std::is_same_v<bool, std::invoke_result_t<Fn, T>>>>
   Parser<T> verify(Fn&& boolFn) const;
 
   // Hacky method to enable the correct overload depending on whether T is a
@@ -137,13 +132,7 @@ public:
   Parser<R> ignoreAndThen(Parser<R> nextParser) const;
 
   template <typename R>
-  Parser<R> ignoreAndThenRef(const Parser<R>& nextParser) const;
-
-  template <typename R>
   Parser<T> thenIgnore(Parser<R> nextParser) const;
-
-  template <typename R>
-  Parser<T> thenIgnoreRef(const Parser<R>& nextParser) const;
 
   T parse(const std::string&) const;
 
@@ -152,8 +141,7 @@ public:
 
   // Shared pointer makes a Parser copyable. If did not care about
   // that, we could use a unique pointer instead.
-  std::shared_ptr<std::unique_ptr<FnContainerAbstract>> parseFn_;
-  // std::shared_ptr<std::function<result_t<T>(input_t&, size_t*)>> parseFn_;
+  std::shared_ptr<std::shared_ptr<FnContainerAbstract>> parseFn_;
 };
 
 namespace parsers {
