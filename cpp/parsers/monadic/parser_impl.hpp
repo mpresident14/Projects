@@ -1,5 +1,15 @@
-template <typename T, template <typename> class PtrType>
-T Parser<T, PtrType>::parse(const std::string& input) const {
+// Only need to specify default template arg (Void) once (in header file)
+template <typename T>
+template <typename Fn, typename Void>
+Parser<T>::Parser(Fn&& f)
+    : parseFn_(std::make_shared<std::shared_ptr<FnContainerAbstract>>(
+          std::make_shared<FnContainer<Fn>>(std::forward<Fn>(f)))) {}
+
+// : parseFn_(std::make_shared<std::function<result_t<T>(input_t&, size_t*)>>(
+//       std::forward<Fn>(f))) {}
+
+template <typename T>
+T Parser<T>::parse(const std::string& input) const {
   using namespace std;
 
   size_t errPos = 0;
@@ -24,9 +34,9 @@ T Parser<T, PtrType>::parse(const std::string& input) const {
 /* andThen makes the guarantee that the parser in creates will reset the input stream
  * position if either parser fails. Combinators using andThen do not have to reset the
  * input stream */
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename Fn, typename P>
-P Parser<T, PtrType>::andThen(Fn&& pGenFn) const {
+P Parser<T>::andThen(Fn&& pGenFn) const {
   using namespace std;
 
   return {// This must be mutable to call pGenFn's non-const () operator
@@ -58,8 +68,8 @@ P Parser<T, PtrType>::andThen(Fn&& pGenFn) const {
       }};
 }
 
-template <typename T, template <typename> class PtrType>
-Parser<T> Parser<T, PtrType>::alt(Parser<T> nextParser) const {
+template <typename T>
+Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
   using namespace std;
 
   return {[parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
@@ -80,9 +90,9 @@ Parser<T> Parser<T, PtrType>::alt(Parser<T> nextParser) const {
   }};
 }
 
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename Fn, typename R>
-Parser<std::decay_t<R>> Parser<T, PtrType>::andThenMap(Fn&& mapFn) const {
+Parser<std::decay_t<R>> Parser<T>::andThenMap(Fn&& mapFn) const {
   using namespace std;
 
   // Safe to move obj because andThen() will not need it again.
@@ -94,9 +104,9 @@ Parser<std::decay_t<R>> Parser<T, PtrType>::andThenMap(Fn&& mapFn) const {
 // varargs)
 
 // Pass nextParser by value since we have to copy it into the lambda anyways.
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename R>
-Parser<std::pair<T, R>> Parser<T, PtrType>::combine(Parser<R> nextParser) const {
+Parser<std::pair<T, R>> Parser<T>::combine(Parser<R> nextParser) const {
   using namespace std;
 
   return andThen([nextParser = move(nextParser)](T&& obj1) {
@@ -110,9 +120,9 @@ Parser<std::pair<T, R>> Parser<T, PtrType>::combine(Parser<R> nextParser) const 
   });
 }
 
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename Fn, typename Void>
-Parser<T> Parser<T, PtrType>::verify(Fn&& boolFn) const {
+Parser<T> Parser<T>::verify(Fn&& boolFn) const {
   using namespace std;
 
   return andThen([boolFn = forward<Fn>(boolFn)](T&& obj) mutable -> Parser<T> {
@@ -124,9 +134,9 @@ Parser<T> Parser<T, PtrType>::verify(Fn&& boolFn) const {
   });
 }
 
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename U>
-Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T, PtrType>::many() const {
+Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many() const {
   using namespace std;
 
   return Parser<string>{[parseFn = isThisRValue() ? move(parseFn_) : parseFn_](
@@ -147,9 +157,9 @@ Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T, PtrType
   }};
 }
 
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename U>
-Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T, PtrType>::many()
+Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::many()
     const {
   using namespace std;
 
@@ -171,9 +181,9 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T, Ptr
 }
 
 // TODO: Could use a deque here (and thus for many() as well)
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename U>
-Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T, PtrType>::some() const {
+Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::some() const {
   using namespace std;
 
   return combine(many()).andThenMap([](auto&& charAndString) {
@@ -183,9 +193,9 @@ Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T, PtrType
   });
 }
 
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename U>
-Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T, PtrType>::some()
+Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::some()
     const {
   using namespace std;
 
@@ -196,22 +206,22 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T, Ptr
   });
 }
 
-template <typename T, template <typename> class PtrType>
-Parser<std::nullptr_t> Parser<T, PtrType>::ignore() const {
+template <typename T>
+Parser<std::nullptr_t> Parser<T>::ignore() const {
   return andThenMap([](T&&) { return nullptr; });
 }
 
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename R>
-Parser<R> Parser<T, PtrType>::ignoreAndThen(Parser<R> nextParser) const {
+Parser<R> Parser<T>::ignoreAndThen(Parser<R> nextParser) const {
   using namespace std;
 
   return andThen([nextParser = move(nextParser)](T&&) { return move(nextParser); });
 }
 
-template <typename T, template <typename> class PtrType>
+template <typename T>
 template <typename R>
-Parser<T> Parser<T, PtrType>::thenIgnore(Parser<R> nextParser) const {
+Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const {
   using namespace std;
 
   return andThen([nextParser = move(nextParser)](T&& obj) {
@@ -222,8 +232,8 @@ Parser<T> Parser<T, PtrType>::thenIgnore(Parser<R> nextParser) const {
   });
 }
 
-// template <typename T, template <typename> class PtrType>
-// template <typename R>
-// void Parser<T, PtrType>::set(const Parser<R>& other) {
-//   parseFn_->setToShared = *other.parseFn_;
-// }
+template <typename T>
+template <typename R>
+void Parser<T>::set(const Parser<R>& other) {
+  *parseFn_ = *other.parseFn_;
+}

@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-template <typename T, template <typename> class PtrType>
+template <typename T>
 class Parser;
 
 // TODO: why isn't this inside the class?
@@ -21,54 +21,22 @@ template <typename T>
 using result_t = std::optional<T>;
 using input_t = std::istream;
 
-template <typename T>
-struct RawPtr {
-  RawPtr() : ptr_(nullptr){}
-  ~RawPtr() { delete ptr_; }
-  void setToShared(std::shared_ptr<T> sPtr) {
-    if (ptr_) {
-      delete ptr_;
-    }
-    ptr_ = sPtr.get();
-  }
-  T operator*() { return *ptr_; }
-  T* ptr_;
-};
-
-
 // These templates allow detection of a Parser of any type and get the type of
 // the Parser.
-template <typename P>
-struct parser_info {
-  using type = typename P::result_type;
-  // static constexpr bool value = true;
+template <typename U>
+struct parser_info;
+
+template <typename U>
+struct parser_info<Parser<U>> {
+  using type = U;
+  static constexpr bool value = true;
 };
 
-// template <typename T>
-// static inline constexpr bool is_parser_v = parser_info<T>::value;
+template <typename U>
+static inline constexpr bool is_parser_v = parser_info<U>::value;
 
-template <typename P>
-using ptype_t = typename parser_info<P>::type;
-
-template <typename T>
-struct ptr_type;
-template <typename T>
-struct ptr_type<std::shared_ptr<T>> {
-  using type = T;
-};
-template <typename T>
-struct ptr_type<RawPtr<T>> {
-  using type = T;
-};
-template <typename T>
-using ptrtype_t = typename ptr_type<T>::type;
-
-template <typename T>
-struct is_rawptr : std::false_type {};
-template <typename T>
-struct is_rawptr<RawPtr<T>> : std::true_type {};
-template <typename T>
-constexpr bool is_rawptr_v = is_rawptr<T>::value;
+template <typename U>
+using ptype_t = typename parser_info<U>::type;
 
 /***************************************************************************************
  *                                PARSER CLASS GUARANTEE
@@ -78,7 +46,7 @@ constexpr bool is_rawptr_v = is_rawptr<T>::value;
  * along in the input) errPos (see andThen() for the only exception).
  ***************************************************************************************/
 
-template <typename T, template <typename> class PtrType = std::shared_ptr>
+template <typename T>
 class Parser {
 private:
   struct FnContainerAbstract {
@@ -106,23 +74,15 @@ private:
   }
 
 public:
-  using result_type = T;
-
-  template <typename U = PtrType<FnContainerAbstract>,
-      std::enable_if_t<is_rawptr_v<U>, int> = 0>
-  Parser() : parseFn_(std::make_shared<RawPtr<FnContainerAbstract>>(RawPtr<FnContainerAbstract>())) {}
+  // Unneccesary, but being explicit never hurts
+  Parser() = delete;
   // The "invoke_result" part ensures that the parameter is a function
   // (implements operator()). This ensures that this constructor doesn't
   // interfere with the move and copy constructors.
   template <typename Fn,
-      typename U = PtrType<FnContainerAbstract>,
-      std::enable_if_t<!is_rawptr_v<U> &&
-                           std::is_convertible_v<result_t<T>,
-                               std::invoke_result_t<Fn, input_t&, size_t*>>,
-          int> = 0>
-  Parser(Fn&& f)
-      : parseFn_(std::make_shared<std::shared_ptr<FnContainerAbstract>>(
-            std::make_shared<FnContainer<Fn>>(std::forward<Fn>(f)))) {}
+      typename = std::enable_if_t<std::is_convertible_v<result_t<T>,
+          std::invoke_result_t<Fn, input_t&, size_t*>>>>
+  Parser(Fn&& f);
   ~Parser() = default;
   Parser(const Parser&) = default;
   Parser(Parser&&) = default;
@@ -178,19 +138,11 @@ public:
   template <typename R>
   void set(const Parser<R>& other);
 
-  // template <typename R>
-  // void set(Parser<R>&& other);
-
-  static Parser<T, RawPtr> lazy() {
-    return Parser<T, RawPtr>();
-  }
-
   // Second shared_ptr is specifically to make it possible to
   // assign the parser lazily, which makes recursive grammars
   // easier to implement.
-  std::shared_ptr<PtrType<FnContainerAbstract>> parseFn_;
+  std::shared_ptr<std::shared_ptr<FnContainerAbstract>> parseFn_;
 };
-
 
 namespace parsers {
   using namespace std;
@@ -210,6 +162,7 @@ namespace parsers {
     }};
   }
 
+  // TODO: WHY A NULLPTR
   Parser<nullptr_t> success() {
     return [](input_t&, size_t*) { return createReturnObject(nullptr); };
   };
