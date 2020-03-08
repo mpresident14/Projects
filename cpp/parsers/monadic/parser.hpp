@@ -16,7 +16,7 @@
 template <typename T>
 class Parser;
 
-// TODO: This might not be good practice for header files.
+// TODO: why isn't this inside the class?
 template <typename T>
 using result_t = std::optional<T>;
 using input_t = std::istream;
@@ -147,9 +147,13 @@ public:
 
   T parse(const std::string&) const;
 
+  template <typename R>
+  void set(Parser<R>&& other);
+
   // Shared pointer makes a Parser copyable. If did not care about
   // that, we could use a unique pointer instead.
-  std::shared_ptr<FnContainerAbstract> parseFn_;
+  std::shared_ptr<std::unique_ptr<FnContainerAbstract>> parseFn_;
+  // std::shared_ptr<std::function<result_t<T>(input_t&, size_t*)>> parseFn_;
 };
 
 namespace parsers {
@@ -157,14 +161,16 @@ namespace parsers {
 
   template <typename U>
   result_t<decay_t<U>> createReturnObject(U&& obj) {
-    return make_optional(forward<U>(obj));
+    // TODO: For all functions with similar comments, restrict the value to rvalue refs only.
+    // Safe to move obj because functions calling it will not need it again.
+    return make_optional(move(obj));
   }
 
   template <typename U>
   Parser<decay_t<U>> createBasic(U&& obj) {
-    // Lambda is mutable so we can forward obj
-    return Parser<decay_t<U>>{[obj = forward<U>(obj)](input_t&, size_t*) mutable {
-      return createReturnObject(forward<U>(obj));
+    // Lambda is mutable so we can move obj
+    return Parser<decay_t<U>>{[obj = move(obj)](input_t&, size_t*) mutable {
+      return createReturnObject(move(obj));
     }};
   }
 

@@ -1,6 +1,7 @@
 #include "regex.hpp"
 #include "parser.hpp"
 
+
 #include <prez/timeit.hpp>
 
 using namespace std;
@@ -28,7 +29,7 @@ RgxPtr doParse(const char* rgx) {
       anyChar.verify([&specialChars](char c) { return !specialChars.count(c); })
           .andThenMap([](char c) -> RgxPtr { return make_unique<Character>(c); });
 
-  Parser<RgxPtr> group = thisChar('(').ignoreAndThenRef(regex).thenIgnore(thisChar(')'));
+  Parser<RgxPtr> group = thisChar('(').ignoreAndThen(regex).thenIgnore(thisChar(')'));
 
   Parser<RgxPtr> initRgx = dot.alt(group).alt(character);
 
@@ -40,30 +41,32 @@ RgxPtr doParse(const char* rgx) {
   Parser<RgxPtr> initRgxWithStar = star.alt(initRgx);
 
   Parser<RgxPtr> concat =
-      initRgxWithStar.combineRef(regex).andThenMap([](auto&& rgxPair) -> RgxPtr {
+      initRgxWithStar.combine(regex).andThenMap([](auto&& rgxPair) -> RgxPtr {
         return make_unique<Concat>(move(rgxPair.first), move(rgxPair.second));
       });
 
   Parser<RgxPtr> alternative =
       initRgxWithStar.thenIgnore(thisChar('|'))
-          .combineRef(regex)
+          .combine(regex)
           .andThenMap([](auto&& rgxPair) -> RgxPtr {
             return make_unique<Alt>(move(rgxPair.first), move(rgxPair.second));
           });
 
-  regex = concat.alt(alternative).alt(initRgxWithStar);
+  regex.set(concat.alt(alternative).alt(initRgxWithStar));
 
   return regex.parse(rgx);
 }
 
+// for i in {1..10}; do ./regex "a*b|cd|(ef)*(abc|d)" a | grep milliseconds >>
+// <filename>.txt; done
 int main(int argc, char** argv) {
   if (argc != 3) {
     cerr << "Enter a regex to parse and a string to match." << endl;
     return 1;
   }
 
-  // cout << prez::timeit<std::chrono::milliseconds>(1000, doParse, argv[1]) << "
-  // milliseconds" << endl;
+  // cout << prez::timeit<std::chrono::milliseconds>(1000, doParse, argv[1])
+  //      << " milliseconds" << endl;
 
   try {
     auto result = doParse(argv[1]);
