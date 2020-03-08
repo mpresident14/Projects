@@ -1,0 +1,10 @@
+2807 milliseconds
+2805 milliseconds
+3132 milliseconds
+2894 milliseconds
+2751 milliseconds
+2797 milliseconds
+2860 milliseconds
+3560 milliseconds
+2907 milliseconds
+2760 milliseconds

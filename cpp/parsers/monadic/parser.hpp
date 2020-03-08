@@ -79,15 +79,16 @@ public:
   // The "invoke_result" part ensures that the parameter is a function
   // (implements operator()). This ensures that this constructor doesn't
   // interfere with the move and copy constructors.
-  template <
-      typename Fn,
-      typename = std::enable_if_t<std::is_convertible_v<
-          result_t<T>,
+  template <typename Fn,
+      typename = std::enable_if_t<std::is_convertible_v<result_t<T>,
           std::invoke_result_t<Fn, input_t&, size_t*>>>>
   Parser(Fn&& f);
   ~Parser() = default;
   Parser(const Parser&) = default;
   Parser(Parser&&) = default;
+  // All parser copies are shallow by design. The only non-const method is
+  // set(), which will change all other shallow copies as well, but set()
+  // should only be called on fail<T> for recursive grammars.
   Parser& operator=(const Parser&) = default;
   Parser& operator=(Parser&&) = default;
 
@@ -96,7 +97,6 @@ public:
   P andThen(Fn&& pGenFn) const;
 
   Parser<T> alt(Parser<T> nextParser) const;
-
 
   // mapFn must accept an rvalue reference
   // TODO: Decay is questionable
@@ -107,10 +107,8 @@ public:
   Parser<std::pair<T, R>> combine(Parser<R> nextParser) const;
 
   // TODO: Replace with c++20 concepts (and everywhere else where applicable)
-  template <
-      typename Fn,
-      typename =
-          std::enable_if_t<std::is_same_v<bool, std::invoke_result_t<Fn, T>>>>
+  template <typename Fn,
+      typename = std::enable_if_t<std::is_same_v<bool, std::invoke_result_t<Fn, T>>>>
   Parser<T> verify(Fn&& boolFn) const;
 
   // Hacky method to enable the correct overload depending on whether T is a
@@ -136,11 +134,13 @@ public:
 
   T parse(const std::string&) const;
 
+  // Lazily assign parser for recursive grammars
   template <typename R>
-  void set(Parser<R>&& other);
+  void set(const Parser<R>& other);
 
-  // Shared pointer makes a Parser copyable. If did not care about
-  // that, we could use a unique pointer instead.
+  // Second shared_ptr is specifically to make it possible to
+  // assign the parser lazily, which makes recursive grammars
+  // easier to implement.
   std::shared_ptr<std::shared_ptr<FnContainerAbstract>> parseFn_;
 };
 
@@ -149,8 +149,8 @@ namespace parsers {
 
   template <typename U>
   result_t<decay_t<U>> createReturnObject(U&& obj) {
-    // TODO: For all functions with similar comments, restrict the value to rvalue refs only.
-    // Safe to move obj because functions calling it will not need it again.
+    // TODO: For all functions with similar comments, restrict the value to rvalue refs
+    // only. Safe to move obj because functions calling it will not need it again.
     return make_optional(move(obj));
   }
 
@@ -163,11 +163,14 @@ namespace parsers {
   }
 
   // TODO: WHY A NULLPTR
-  const Parser<nullptr_t> success{
-      [](input_t&, size_t*) { return createReturnObject(nullptr); }};
+  Parser<nullptr_t> success() {
+    return [](input_t&, size_t*) { return createReturnObject(nullptr); };
+  };
 
   template <typename U>
-  const Parser<U> fail{[](input_t&, size_t*) -> result_t<U> { return {}; }};
+  Parser<U> fail() {
+    return [](input_t&, size_t*) -> result_t<U> { return {}; };
+  };
 
   const Parser<char> anyChar{[](input_t& input, size_t* errPos) -> result_t<char> {
     if (input.peek() == EOF) {

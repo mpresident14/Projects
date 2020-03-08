@@ -2,7 +2,8 @@
 template <typename T>
 template <typename Fn, typename Void>
 Parser<T>::Parser(Fn&& f)
-    : parseFn_(std::make_shared<std::shared_ptr<FnContainerAbstract>>(std::make_shared<FnContainer<Fn>>(std::forward<Fn>(f)))) {}
+    : parseFn_(std::make_shared<std::shared_ptr<FnContainerAbstract>>(
+          std::make_shared<FnContainer<Fn>>(std::forward<Fn>(f)))) {}
 
 // : parseFn_(std::make_shared<std::function<result_t<T>(input_t&, size_t*)>>(
 //       std::forward<Fn>(f))) {}
@@ -89,7 +90,6 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
   }};
 }
 
-
 template <typename T>
 template <typename Fn, typename R>
 Parser<std::decay_t<R>> Parser<T>::andThenMap(Fn&& mapFn) const {
@@ -120,7 +120,6 @@ Parser<std::pair<T, R>> Parser<T>::combine(Parser<R> nextParser) const {
   });
 }
 
-
 template <typename T>
 template <typename Fn, typename Void>
 Parser<T> Parser<T>::verify(Fn&& boolFn) const {
@@ -129,7 +128,7 @@ Parser<T> Parser<T>::verify(Fn&& boolFn) const {
   return andThen([boolFn = forward<Fn>(boolFn)](T&& obj) mutable -> Parser<T> {
     // Safe to move obj because andThen() will not need it again.
     if (!boolFn(move(obj))) {
-      return parsers::fail<T>;
+      return parsers::fail<T>();
     }
     return parsers::createBasic(move(obj));
   });
@@ -235,6 +234,6 @@ Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const {
 
 template <typename T>
 template <typename R>
-void Parser<T>::set(Parser<R>&& other) {
-  *parseFn_ = std::move(*other.parseFn_);
+void Parser<T>::set(const Parser<R>& other) {
+  *parseFn_ = *other.parseFn_;
 }

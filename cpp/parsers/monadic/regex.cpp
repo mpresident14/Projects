@@ -1,7 +1,6 @@
 #include "regex.hpp"
 #include "parser.hpp"
 
-
 #include <prez/timeit.hpp>
 
 using namespace std;
@@ -19,7 +18,7 @@ RgxPtr doParse(const char* rgx) {
    * Character        := char
    */
 
-  Parser<RgxPtr> regex = fail<RgxPtr>;
+  Parser<RgxPtr> regex = fail<RgxPtr>();
 
   Parser<RgxPtr> dot =
       thisChar('.').andThenMap([](char) -> RgxPtr { return make_unique<Dot>(); });
