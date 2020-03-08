@@ -1,6 +1,8 @@
 #include "regex.hpp"
 #include "parser.hpp"
 
+#include <functional>
+
 #include <prez/timeit.hpp>
 
 using namespace std;
@@ -28,7 +30,7 @@ RgxPtr doParse(const char* rgx) {
       anyChar.verify([&specialChars](char c) { return !specialChars.count(c); })
           .andThenMap([](char c) -> RgxPtr { return make_unique<Character>(c); });
 
-  Parser<RgxPtr> group = thisChar('(').ignoreAndThenRef(regex).thenIgnore(thisChar(')'));
+  Parser<RgxPtr> group = thisChar('(').ignoreAndThen(ref(regex)).thenIgnore(thisChar(')'));
 
   Parser<RgxPtr> initRgx = dot.alt(group).alt(character);
 
@@ -56,14 +58,16 @@ RgxPtr doParse(const char* rgx) {
   return regex.parse(rgx);
 }
 
+// for i in {1..10}; do ./regex "a*b|cd|(ef)*(abc|d)" a | grep milliseconds >>
+// <filename>.txt; done
 int main(int argc, char** argv) {
   if (argc != 3) {
     cerr << "Enter a regex to parse and a string to match." << endl;
     return 1;
   }
 
-  // cout << prez::timeit<std::chrono::milliseconds>(1000, doParse, argv[1]) << "
-  // milliseconds" << endl;
+  // cout << prez::timeit<std::chrono::milliseconds>(1000, doParse, argv[1])
+  //      << " milliseconds" << endl;
 
   try {
     auto result = doParse(argv[1]);

@@ -21,22 +21,37 @@ template <typename T>
 using result_t = std::optional<T>;
 using input_t = std::istream;
 
-// These templates allow detection of a Parser of any type and get the type of
-// the Parser.
-template <typename U>
+
+/* Remove reference and reference wrapper if they exist. */
+template <typename P>
+struct rm_ref_wrap {
+  using type = P;
+};
+
+template <typename P>
+struct rm_ref_wrap<std::reference_wrapper<P>> {
+  using type = P;
+};
+
+template <typename P>
+using rm_ref_wrap_t = typename rm_ref_wrap<P>::type;
+
+
+/* Detect if parser and its value, even if it enclosed in a referene wrapper */
+template <typename T>
 struct parser_info;
 
-template <typename U>
-struct parser_info<Parser<U>> {
-  using type = U;
+template <typename T>
+struct parser_info<Parser<T>> {
+  using type = T;
   static constexpr bool value = true;
 };
 
-template <typename U>
-static inline constexpr bool is_parser_v = parser_info<U>::value;
+template <typename T>
+static inline constexpr bool is_parser_v = parser_info<rm_ref_wrap_t<std::decay_t<T>>>::value;
 
-template <typename U>
-using ptype_t = typename parser_info<U>::type;
+template <typename T>
+using ptype_t = typename parser_info<rm_ref_wrap_t<std::decay_t<T>>>::type;
 
 /***************************************************************************************
  *                                PARSER CLASS GUARANTEE
@@ -46,6 +61,8 @@ using ptype_t = typename parser_info<U>::type;
  * along in the input) errPos (see andThen() for the only exception).
  ***************************************************************************************/
 
+
+// TODO: use a concept for parser
 template <typename T>
 class Parser {
 private:
@@ -79,10 +96,8 @@ public:
   // The "invoke_result" part ensures that the parameter is a function
   // (implements operator()). This ensures that this constructor doesn't
   // interfere with the move and copy constructors.
-  template <
-      typename Fn,
-      typename = std::enable_if_t<std::is_convertible_v<
-          result_t<T>,
+  template <typename Fn,
+      typename = std::enable_if_t<std::is_convertible_v<result_t<T>,
           std::invoke_result_t<Fn, input_t&, size_t*>>>>
   Parser(Fn&& f);
   ~Parser() = default;
@@ -92,34 +107,33 @@ public:
   Parser& operator=(Parser&&) = default;
 
   /* Combinators */
-  template <typename Fn, typename Par = std::invoke_result_t<Fn, T>>
-  std::enable_if_t<is_parser_v<Par>, Par> andThen(Fn&& pGenFn) const;
+  template <typename Fn, typename P = std::invoke_result_t<Fn, T&&>>
+  P andThen(Fn&& pGenFn) const;
 
   template <typename Fn, typename Par = std::invoke_result_t<Fn, T>>
   std::enable_if_t<is_parser_v<Par>, Par> andThenRef(Fn&& pGenFn) const;
 
-  Parser<T> alt(Parser<T> nextParser) const;
+  template <typename P>
+  Parser<T> alt(P&& nextParser) const;
 
   Parser<T> altRef(const Parser<T>& nextParser) const;
 
   // mapFn must accept an rvalue reference
+  // TODO: the decay here is questionable
   template <typename Fn, typename R = std::invoke_result_t<Fn, T&&>>
   Parser<std::decay_t<R>> andThenMap(Fn&& mapFn) const;
 
-  template <typename R>
-  Parser<std::pair<T, R>> combine(Parser<R> nextParser) const;
+  template <typename P>
+  Parser<std::pair<T, ptype_t<P>>> combine(P&& nextParser) const;
 
   template <typename R>
   Parser<std::pair<T, R>> combineRef(const Parser<R>& nextParser) const;
 
-  template <
-      typename Fn,
+  template <typename Fn,
       typename =
           std::enable_if_t<std::is_convertible_v<bool, std::invoke_result_t<Fn, T>>>>
   Parser<T> verify(Fn&& boolFn) const;
 
-  // Hacky method to enable the correct overload depending on whether T is a
-  // char.
   // https://stackoverflow.com/questions/52077051/sfinae-enable-if-cannot-be-used-to-disable-this-declaration
   template <typename U = T>
   Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> many() const;
@@ -133,14 +147,14 @@ public:
 
   Parser<std::nullptr_t> ignore() const;
 
-  template <typename R>
-  Parser<R> ignoreAndThen(Parser<R> nextParser) const;
+  template <typename P>
+  Parser<ptype_t<P>> ignoreAndThen(P&& nextParser) const;
 
   template <typename R>
   Parser<R> ignoreAndThenRef(const Parser<R>& nextParser) const;
 
-  template <typename R>
-  Parser<T> thenIgnore(Parser<R> nextParser) const;
+  template <typename P>
+  Parser<T> thenIgnore(P&& nextParser) const;
 
   template <typename R>
   Parser<T> thenIgnoreRef(const Parser<R>& nextParser) const;
@@ -168,12 +182,11 @@ namespace parsers {
     }};
   }
 
-  // TODO: WHY A NULLPTR
-  const Parser<nullptr_t> success{
-      [](input_t&, size_t*) { return createReturnObject(nullptr); }};
+  const Parser<nullptr_t> success(
+      [](input_t&, size_t*) { return createReturnObject(nullptr); });
 
-  template <typename U>
-  const Parser<U> fail{[](input_t&, size_t*) -> result_t<U> { return {}; }};
+  template <typename T>
+  const Parser<T> fail([](input_t&, size_t*) -> result_t<T> { return {}; });
 
   const Parser<char> anyChar{[](input_t& input, size_t* errPos) -> result_t<char> {
     if (input.peek() == EOF) {
@@ -191,13 +204,13 @@ namespace parsers {
     return anyChar.verify([c](char k) { return k == c; });
   }
 
-  const Parser<unsigned> anyDigit{
+  const Parser<unsigned> anyDigit =
       anyChar.verify([](char c) { return (bool)isdigit(c); }).andThenMap([](char c) {
         return unsigned(c - '0');
-      })};
+      });
 
   // Not worrying about overflow
-  const Parser<unsigned> anyUnsigned{
+  const Parser<unsigned> anyUnsigned =
       anyDigit.some().andThenMap([](vector<unsigned>&& nums) {
         unsigned result = 0;
         for (auto iter = nums.begin(); iter != nums.end(); ++iter) {
@@ -205,41 +218,47 @@ namespace parsers {
           result += *iter;
         }
         return result;
-      })};
+      });
 
+  // clang-format off
   // Not worrying about overflow or conversion errors
-  const Parser<int> anyInt{thisChar('-')
-                               .ignoreAndThen(anyUnsigned)
-                               .andThenMap([](unsigned&& num) { return -num; })
-                               .alt(anyUnsigned)
-                               .andThenMap([](unsigned&& num) { return (int)num; })};
+  const Parser<int> anyInt =
+      thisChar('-')
+          .ignoreAndThen(anyUnsigned)
+          .andThenMap([](unsigned&& num) { return -num; })
+          .alt(anyUnsigned)
+          .andThenMap([](unsigned&& num) { return (int)num; });
+  // clang-format on
 
-  const Parser<double> decimal(thisChar('.')
-                                   .ignoreAndThen(anyDigit.many())
-                                   .andThenMap([](vector<unsigned>&& nums) {
-                                     double dec = 0;
-                                     for (auto iter = nums.rbegin(); iter != nums.rend();
-                                          ++iter) {
-                                       dec += *iter;
-                                       dec /= 10;
-                                     }
-                                     return dec;
-                                   }));
+  const Parser<double> decimal =
+      thisChar('.')
+          .ignoreAndThen(anyDigit.many())
+          .andThenMap([](vector<unsigned>&& nums) {
+            double dec = 0;
+            for (auto iter = nums.rbegin(); iter != nums.rend(); ++iter) {
+              dec += *iter;
+              dec /= 10;
+            }
+            return dec;
+          });
 
-  const Parser<double> anyUDouble{
+  const Parser<double> anyUDouble =
       anyUnsigned.combine(decimal)
           .andThenMap([](pair<unsigned, double>&& wholeAndDec) {
             return wholeAndDec.first + wholeAndDec.second;
           })
-          .alt(anyUnsigned.andThenMap([](int n) { return (double)n; }))};
+          .alt(anyUnsigned.andThenMap([](int n) { return (double)n; }));
 
-  const Parser<double> anyDouble{thisChar('-')
-                                     .ignoreAndThen(anyUDouble)
-                                     .andThenMap([](double d) { return -d; })
-                                     .alt(anyUDouble)};
+  // clang-format off
+  const Parser<double> anyDouble =
+      thisChar('-')
+          .ignoreAndThen(anyUDouble)
+          .andThenMap([](double d) { return -d; })
+          .alt(anyUDouble);
+  // clang-format on
 
-  const Parser<string> whitespace{
-      anyChar.verify([](char c) { return (bool)isspace(c); }).many()};
+  const Parser<string> whitespace =
+      anyChar.verify([](char c) { return (bool)isspace(c); }).many();
 
   template <typename U>
   Parser<U> skipws(Parser<U> p) {
