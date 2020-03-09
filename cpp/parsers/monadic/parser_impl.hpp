@@ -134,6 +134,7 @@ Parser<R> Parser<T>::transform(Fn&& mapFn) const {
                      T&& obj) mutable { return parsers::createBasic(mapFn(move(obj))); });
 }
 
+
 // Pass nextParser by value since we have to copy it into the lambda anyways.
 template <typename T>
 template <typename R>
@@ -167,18 +168,15 @@ Parser<std::tuple<T, A, B>> Parser<T>::combine(Parser<A> p1, Parser<B> p2) const
 
 template <typename T>
 template <typename A, typename B, typename C>
-Parser<std::tuple<T, A, B, C>> Parser<T>::combine(
-    Parser<A> p1, Parser<B> p2, Parser<C> p3) const {
+Parser<std::tuple<T, A, B, C>> Parser<T>::combine(Parser<A> p1, Parser<B> p2, Parser<C> p3) const {
   using namespace std;
 
   return andThen([p1 = move(p1), p2 = move(p2), p3 = move(p3)](T&& obj) {
     return p1.andThen([obj = move(obj), p2 = move(p2), p3 = move(p3)](A&& obj1) {
       return p2.andThen([obj = move(obj), obj1 = move(obj1), p3 = move(p3)](B&& obj2) {
-        return p3.andThen(
-            [obj = move(obj), obj1 = move(obj1), obj2 = move(obj2)](C&& obj3) {
-              return parsers::createBasic(
-                  make_tuple(move(obj), move(obj1), move(obj2), move(obj3)));
-            });
+        return p3.andThen([obj = move(obj), obj1 = move(obj1), obj2 = move(obj2)](C&& obj3) {
+          return parsers::createBasic(make_tuple(move(obj), move(obj1), move(obj2), move(obj3)));
+        });
       });
     });
   });

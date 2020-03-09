@@ -1,5 +1,5 @@
 SHELL = /bin/bash
-PHEADERS = parser.hpp parser_impl.hpp simple_shptr.hpp
+PHEADERS = parser.hpp parser_impl.hpp
 CXX = clang++
 CXXFLAGS = -std=c++2a -Wall -Wextra -pedantic -g
 
