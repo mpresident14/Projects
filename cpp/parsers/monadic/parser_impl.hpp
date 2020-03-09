@@ -1,12 +1,13 @@
+template <typename T>
+Parser<T>::Parser()
+    : parseFn_(std::make_shared<FnLazy>(FnLazy())) {}
+
 // Only need to specify default template arg (Void) once (in header file)
 template <typename T>
 template <typename Fn, typename Void>
 Parser<T>::Parser(Fn&& f)
-    : parseFn_(std::make_shared<std::shared_ptr<FnContainerAbstract>>(
-          std::make_shared<FnContainer<Fn>>(std::forward<Fn>(f)))) {}
+    : parseFn_(std::make_shared<FnNormal<Fn>>(std::forward<Fn>(f))) {}
 
-// : parseFn_(std::make_shared<std::function<result_t<T>(input_t&, size_t*)>>(
-//       std::forward<Fn>(f))) {}
 
 template <typename T>
 T Parser<T>::parse(const std::string& input) const {
@@ -14,7 +15,7 @@ T Parser<T>::parse(const std::string& input) const {
 
   size_t errPos = 0;
   stringstream inputStream(input);
-  result_t<T> optResult = (**parseFn_)(inputStream, &errPos);
+  result_t<T> optResult = (*parseFn_)(inputStream, &errPos);
   if (!optResult.has_value()) {
     string line;
     inputStream.seekg(errPos);
@@ -47,7 +48,7 @@ P Parser<T>::andThen(Fn&& pGenFn) const {
         size_t origPos = input.tellg();
 
         // Run first parser
-        result_t<T> optResult1 = (**parseFn)(input, errPos);
+        result_t<T> optResult1 = (*parseFn)(input, errPos);
         // If first parser fails, reset the stream and fail entire thing
         if (!optResult1.has_value()) {
           input.seekg(origPos);
@@ -57,7 +58,7 @@ P Parser<T>::andThen(Fn&& pGenFn) const {
 
         // Run the next parser on the rest of the string
         auto nextParser = pGenFn(move(optResult1.value()));
-        auto optResult2 = (**nextParser.parseFn_)(input, errPos);
+        auto optResult2 = (*nextParser.parseFn_)(input, errPos);
         if (optResult2.has_value()) {
           return optResult2;
         }
@@ -75,14 +76,14 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
   return {[parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
               parseFn2 = move(nextParser.parseFn_)](input_t& input, size_t* errPos) {
     // Run first parser
-    result_t<T> optResult1 = (**parseFn)(input, errPos);
+    result_t<T> optResult1 = (*parseFn)(input, errPos);
     // If first parser succeeds, return the result
     if (optResult1.has_value()) {
       return optResult1;
     }
 
     // Otherwise, try the next parser on the input
-    result_t<T> optResult2 = (**parseFn2)(input, errPos);
+    result_t<T> optResult2 = (*parseFn2)(input, errPos);
     if (optResult2.has_value()) {
       return optResult2;
     }
@@ -144,11 +145,11 @@ Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many()
     size_t oldErrPos = *errPos;
     // Run parser until it fails and put each result in the list
     string parsedChars;
-    result_t<char> optResult = (**parseFn)(input, errPos);
+    result_t<char> optResult = (*parseFn)(input, errPos);
     while (optResult.has_value()) {
       // value() is a char, no need to move it
       parsedChars.append(1, optResult.value());
-      optResult = (**parseFn)(input, errPos);
+      optResult = (*parseFn)(input, errPos);
     }
 
     // Reset errPos because many() does not fail when the underlying parser fails.
@@ -168,10 +169,10 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
     size_t oldErrPos = *errPos;
     // Run parser until it fails and put each result in the list
     vector<T> parsedObjs;
-    result_t<T> optResult = (**parseFn)(input, errPos);
+    result_t<T> optResult = (*parseFn)(input, errPos);
     while (optResult.has_value()) {
       parsedObjs.push_back(move(optResult.value()));
-      optResult = (**parseFn)(input, errPos);
+      optResult = (*parseFn)(input, errPos);
     }
 
     // Reset errPos because many() does not fail when the underlying parser fails
@@ -235,5 +236,5 @@ Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const {
 template <typename T>
 template <typename R>
 void Parser<T>::set(const Parser<R>& other) {
-  *parseFn_ = *other.parseFn_;
+  parseFn_->setPtr(*other.parseFn_);
 }
