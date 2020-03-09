@@ -83,7 +83,7 @@ public:
       typename = std::enable_if_t<std::is_convertible_v<result_t<T>,
           std::invoke_result_t<Fn, input_t&, size_t*>>>>
   Parser(Fn&& f);
-  ~Parser() = default;
+  ~Parser();
   Parser(const Parser&) = default;
   Parser(Parser&&) = default;
   // All parser copies are shallow by design. The only non-const method is
@@ -142,7 +142,7 @@ public:
   // assign the parser lazily, which makes recursive grammars
   // easier to implement.
   std::shared_ptr<std::unique_ptr<FnContainerAbstract>> parseFn_;
-  bool lazy = false;
+  bool lazySet_ = false;
 };
 
 namespace parsers {

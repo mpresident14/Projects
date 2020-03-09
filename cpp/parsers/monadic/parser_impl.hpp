@@ -5,8 +5,13 @@ Parser<T>::Parser(Fn&& f)
     : parseFn_(std::make_shared<std::unique_ptr<FnContainerAbstract>>(
           std::make_unique<FnContainer<Fn>>(std::forward<Fn>(f)))) {}
 
-// : parseFn_(std::make_shared<std::function<result_t<T>(input_t&, size_t*)>>(
-//       std::forward<Fn>(f))) {}
+template <typename T>
+Parser<T>::~Parser() {
+  if (lazySet_ && parseFn_.use_count() == 2) {
+    FnContainerAbstract* fPtr = parseFn_->release();
+    delete fPtr;
+  }
+}
 
 template <typename T>
 T Parser<T>::parse(const std::string& input) const {
@@ -235,5 +240,7 @@ Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const {
 template <typename T>
 template <typename R>
 void Parser<T>::set(Parser<R>&& other) {
+  // TODO: throw error if already set???
   *parseFn_ = std::move(*other.parseFn_);
+  lazySet_ = true;
 }

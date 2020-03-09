@@ -17,11 +17,11 @@ using namespace std::chrono;
 int main() {
   Parser<char> p1 = fail<char>();
   auto p2 = thisChar('a').thenIgnore(p1).alt(thisChar('b'));
-  // p1.set(move(p2));
+  p1.set(move(p2));
 
 
   try {
-    p2.parse("abb");
+    p1.parse("abb");
   } catch (invalid_argument& e) {
     cerr << e.what() << endl;
   }
