@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
           .combine(skipws(anyInt))
           .thenIgnore(skipws(thisChar('}')))
           .thenIgnore(whitespace)
-          .andThenMap([](pair<vector<int>, int>&& myPair) {
+          .transform([](pair<vector<int>, int>&& myPair) {
             Widget w;
             vector<int>& nums = get<0>(myPair);
             for_each(nums.begin(), nums.end(), [&w](int& n) { w.store(n); });
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
   auto linkedWidgetParser = widgetParser.thenIgnore(arrowParser)
                                 .many()
                                 .combine(widgetParser)
-                                .andThenMap([](pair<vector<Widget>, Widget>&& myPair) {
+                                .transform([](pair<vector<Widget>, Widget>&& myPair) {
                                   vector<Widget>& widgets = get<0>(myPair);
                                   list<Widget> myList{widgets.begin(), widgets.end()};
                                   myList.push_back(get<1>(myPair));

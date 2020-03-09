@@ -126,7 +126,7 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
 
 template <typename T>
 template <typename Fn, typename R>
-Parser<R> Parser<T>::andThenMap(Fn&& mapFn) const {
+Parser<R> Parser<T>::transform(Fn&& mapFn) const {
   using namespace std;
 
   // Safe to move obj because andThen() will not need it again.
@@ -134,8 +134,6 @@ Parser<R> Parser<T>::andThenMap(Fn&& mapFn) const {
                      T&& obj) mutable { return parsers::createBasic(mapFn(move(obj))); });
 }
 
-// TODO: expand this to use a tuple instead of a pair (for longer chains) (use
-// varargs)
 
 // Pass nextParser by value since we have to copy it into the lambda anyways.
 template <typename T>
@@ -151,6 +149,36 @@ Parser<std::pair<T, R>> Parser<T>::combine(Parser<R> nextParser) const {
         [obj1 = move(obj1)](R&& obj2) mutable {
           return parsers::createBasic(make_pair(move(obj1), move(obj2)));
         });
+  });
+}
+
+template <typename T>
+template <typename A, typename B>
+Parser<std::tuple<T, A, B>> Parser<T>::combine(Parser<A> p1, Parser<B> p2) const {
+  using namespace std;
+
+  return andThen([p1 = move(p1), p2 = move(p2)](T&& obj) {
+    return p1.andThen([obj = move(obj), p2 = move(p2)](A&& obj1) {
+      return p2.andThen([obj = move(obj), obj1 = move(obj1)](B&& obj2) {
+        return parsers::createBasic(make_tuple(move(obj), move(obj1), move(obj2)));
+      });
+    });
+  });
+}
+
+template <typename T>
+template <typename A, typename B, typename C>
+Parser<std::tuple<T, A, B, C>> Parser<T>::combine(Parser<A> p1, Parser<B> p2, Parser<C> p3) const {
+  using namespace std;
+
+  return andThen([p1 = move(p1), p2 = move(p2), p3 = move(p3)](T&& obj) {
+    return p1.andThen([obj = move(obj), p2 = move(p2), p3 = move(p3)](A&& obj1) {
+      return p2.andThen([obj = move(obj), obj1 = move(obj1), p3 = move(p3)](B&& obj2) {
+        return p3.andThen([obj = move(obj), obj1 = move(obj1), obj2 = move(obj2)](C&& obj3) {
+          return parsers::createBasic(make_tuple(move(obj), move(obj1), move(obj2), move(obj3)));
+        });
+      });
+    });
   });
 }
 
@@ -219,7 +247,7 @@ template <typename U>
 Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::some() const {
   using namespace std;
 
-  return combine(many()).andThenMap([](auto&& charAndString) {
+  return combine(many()).transform([](auto&& charAndString) {
     auto& str = get<1>(charAndString);
     str.insert(str.cbegin(), move(get<0>(charAndString)));
     return move(str);
@@ -232,7 +260,7 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::so
     const {
   using namespace std;
 
-  return combine(many()).andThenMap([](auto&& objAndObjVec) {
+  return combine(many()).transform([](auto&& objAndObjVec) {
     auto& objVec = get<1>(objAndObjVec);
     objVec.insert(objVec.begin(), move(get<0>(objAndObjVec)));
     return move(objVec);
@@ -253,7 +281,7 @@ Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const {
   using namespace std;
 
   return andThen([nextParser = move(nextParser)](T&& obj) {
-    return nextParser.andThenMap(
+    return nextParser.transform(
         // In order to forward obj, the lambda must be mutable
         // Safe to move obj because andThen() will not need it again.
         [obj = move(obj)](R&&) mutable { return move(obj); });

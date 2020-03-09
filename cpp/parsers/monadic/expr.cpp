@@ -19,24 +19,24 @@ void doParse(const char* input) {
 
   Parser<Op> plusMinus =
       skipws(thisChar('+')
-                 .andThenMap([](char) { return PLUS; })
-                 .alt(thisChar('-').andThenMap([](char) { return MINUS; })));
+                 .transform([](char) { return PLUS; })
+                 .alt(thisChar('-').transform([](char) { return MINUS; })));
   Parser<Op> timesDiv =
       skipws(thisChar('*')
-                 .andThenMap([](char) { return TIMES; })
-                 .alt(thisChar('/').andThenMap([](char) { return DIVIDE; })));
-  Parser<Op> power = skipws(thisChar('^').andThenMap([](char) { return POW; }));
+                 .transform([](char) { return TIMES; })
+                 .alt(thisChar('/').transform([](char) { return DIVIDE; })));
+  Parser<Op> power = skipws(thisChar('^').transform([](char) { return POW; }));
 
   Parser<ExprPtr> single = skipws(
-      anyUDouble.andThenMap([](double n) -> ExprPtr { return make_unique<Num>(n); })
+      anyUDouble.transform([](double n) -> ExprPtr { return make_unique<Num>(n); })
           .alt(thisChar('(').ignoreAndThen(expr).thenIgnore(skipws(thisChar(')')))));
   Parser<vector<pair<Op, ExprPtr>>> restPowers = power.combine(single).many();
 
   Parser<ExprPtr> factor = fail<ExprPtr>();
   factor.set(
       single.combine(restPowers)
-          .andThenMap(foldExprs)
-          .alt(thisChar('-').ignoreAndThen(factor).andThenMap([](ExprPtr exp) -> ExprPtr {
+          .transform(foldExprs)
+          .alt(thisChar('-').ignoreAndThen(factor).transform([](ExprPtr exp) -> ExprPtr {
             return make_unique<BinOp>(make_unique<Num>(-1), move(exp), TIMES);
           })));
 
@@ -44,10 +44,10 @@ void doParse(const char* input) {
   // set.
   Parser<vector<pair<Op, ExprPtr>>> restFactors = timesDiv.combine(factor).many();
 
-  Parser<ExprPtr> term = factor.combine(restFactors).andThenMap(foldExprs);
+  Parser<ExprPtr> term = factor.combine(restFactors).transform(foldExprs);
   Parser<vector<pair<Op, ExprPtr>>> restTerms = plusMinus.combine(term).many();
 
-  expr.set(term.combine(restTerms).thenIgnore(whitespace).andThenMap(foldExprs));
+  expr.set(term.combine(restTerms).thenIgnore(whitespace).transform(foldExprs));
 
   try {
     ExprPtr result = expr.parse(input);

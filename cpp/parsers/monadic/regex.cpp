@@ -21,33 +21,33 @@ RgxPtr doParse(const char* rgx) {
   Parser<RgxPtr> regex = lazy<RgxPtr>();
 
   Parser<RgxPtr> dot =
-      thisChar('.').andThenMap([](char) -> RgxPtr { return make_unique<Dot>(); });
+      thisChar('.').transform([](char) -> RgxPtr { return make_unique<Dot>(); });
 
   unordered_set<char> specialChars = {'(', ')', '|', '*'};
   Parser<RgxPtr> character =
       anyChar.verify([&specialChars](char c) { return !specialChars.count(c); })
-          .andThenMap([](char c) -> RgxPtr { return make_unique<Character>(c); });
+          .transform([](char c) -> RgxPtr { return make_unique<Character>(c); });
 
   Parser<RgxPtr> group = thisChar('(').ignoreAndThen(regex).thenIgnore(thisChar(')'));
 
   Parser<RgxPtr> initRgx = dot.alt(group).alt(character);
 
   Parser<RgxPtr> star =
-      initRgx.thenIgnore(thisChar('*')).andThenMap([](auto&& rgx) -> RgxPtr {
+      initRgx.thenIgnore(thisChar('*')).transform([](auto&& rgx) -> RgxPtr {
         return make_unique<Star>(move(rgx));
       });
 
   Parser<RgxPtr> initRgxWithStar = star.alt(initRgx);
 
   Parser<RgxPtr> concat =
-      initRgxWithStar.combine(regex).andThenMap([](auto&& rgxPair) -> RgxPtr {
+      initRgxWithStar.combine(regex).transform([](auto&& rgxPair) -> RgxPtr {
         return make_unique<Concat>(move(rgxPair.first), move(rgxPair.second));
       });
 
   Parser<RgxPtr> alternative =
       initRgxWithStar.thenIgnore(thisChar('|'))
           .combine(regex)
-          .andThenMap([](auto&& rgxPair) -> RgxPtr {
+          .transform([](auto&& rgxPair) -> RgxPtr {
             return make_unique<Alt>(move(rgxPair.first), move(rgxPair.second));
           });
 

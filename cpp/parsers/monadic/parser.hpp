@@ -75,10 +75,16 @@ public:
 
   // mapFn must accept an rvalue reference and return a non-reference
   template <typename Fn, typename R = std::invoke_result_t<Fn, T&&>> requires !std::is_lvalue_reference_v<R>
-  Parser<R> andThenMap(Fn&& mapFn) const;
+  Parser<R> transform(Fn&& mapFn) const;
 
   template <typename R>
   Parser<std::pair<T, R>> combine(Parser<R> nextParser) const;
+
+  template <typename A, typename B>
+  Parser<std::tuple<T, A, B>> combine(Parser<A> p1, Parser<B> p2) const;
+
+  template <typename A, typename B, typename C>
+  Parser<std::tuple<T, A, B, C>> combine(Parser<A> p1, Parser<B> p2, Parser<C> p3) const;
 
   template <typename Fn,
       typename = std::enable_if_t<std::is_same_v<bool, std::invoke_result_t<Fn, T>>>>
@@ -196,13 +202,13 @@ namespace parsers {
   }
 
   const Parser<unsigned> anyDigit =
-      anyChar.verify([](char c) { return (bool)isdigit(c); }).andThenMap([](char c) {
+      anyChar.verify([](char c) { return (bool)isdigit(c); }).transform([](char c) {
         return unsigned(c - '0');
       });
 
   // Not worrying about overflow
   const Parser<unsigned> anyUnsigned =
-      anyDigit.some().andThenMap([](vector<unsigned>&& nums) {
+      anyDigit.some().transform([](vector<unsigned>&& nums) {
         unsigned result = 0;
         for (auto iter = nums.begin(); iter != nums.end(); ++iter) {
           result *= 10;
@@ -216,15 +222,15 @@ namespace parsers {
   const Parser<int> anyInt =
       thisChar('-')
         .ignoreAndThen(anyUnsigned)
-        .andThenMap([](unsigned&& num) { return -num; })
+        .transform([](unsigned&& num) { return -num; })
         .alt(anyUnsigned)
-        .andThenMap([](unsigned&& num) { return (int)num; });
+        .transform([](unsigned&& num) { return (int)num; });
   // clang-format on
 
   const Parser<double> decimal =
       thisChar('.')
           .ignoreAndThen(anyDigit.many())
-          .andThenMap([](vector<unsigned>&& nums) {
+          .transform([](vector<unsigned>&& nums) {
             double dec = 0;
             for (auto iter = nums.rbegin(); iter != nums.rend(); ++iter) {
               dec += *iter;
@@ -235,16 +241,16 @@ namespace parsers {
 
   const Parser<double> anyUDouble =
       anyUnsigned.combine(decimal)
-          .andThenMap([](pair<unsigned, double>&& wholeAndDec) {
+          .transform([](pair<unsigned, double>&& wholeAndDec) {
             return wholeAndDec.first + wholeAndDec.second;
           })
-          .alt(anyUnsigned.andThenMap([](int n) { return (double)n; }));
+          .alt(anyUnsigned.transform([](int n) { return (double)n; }));
 
   // clang-format off
   const Parser<double> anyDouble =
       thisChar('-')
           .ignoreAndThen(anyUDouble)
-          .andThenMap([](double d) { return -d; })
+          .transform([](double d) { return -d; })
           .alt(anyUDouble);
   // clang-format on
 

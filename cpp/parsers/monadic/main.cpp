@@ -12,6 +12,8 @@
 
 #include <boost/type_index.hpp>
 
+#include <prez/print_stuff.hpp>
+
 using namespace std;
 using namespace parsers;
 using namespace std::chrono;
@@ -26,10 +28,10 @@ int main() {
   auto p2 = thisChar('a').thenIgnore(p1).alt(thisChar('b'));
   p1.set(move(p2));
   f(p1);
-  auto p3 = anyChar.combine(thisString("hello").alt(thisString("goodbye")));
+  auto p3 = anyChar.combine(anyChar, thisString("hello").thenIgnore(thisString("goodbye")), anyDouble);
 
   try {
-    p3.parse("hello");
+    prez::printTuple(p3.parse("yzhellogoodbye2.3"));
   } catch (invalid_argument& e) {
     cerr << e.what() << endl;
   }
