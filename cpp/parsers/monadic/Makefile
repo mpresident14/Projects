@@ -1,8 +1,7 @@
 SHELL = /bin/bash
 PHEADERS = parser.hpp parser_impl.hpp
 CXX = clang++
-CXXV=17
-CXXFLAGS = -std=c++$(CXXV) -Wall -Wextra -pedantic -g
+CXXFLAGS = -std=c++2a -Wall -Wextra -pedantic -g
 
 all: widget expr regex main
 

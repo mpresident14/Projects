@@ -5,6 +5,12 @@ Parser<T>::Parser(Fn&& f)
     : parseFn_(std::make_shared<std::unique_ptr<FnContainerAbstract>>(
           std::make_unique<FnContainer<Fn>>(std::forward<Fn>(f)))) {}
 
+/*
+ * When we set a parser recursively, it creates a cycle between a
+ * shared_ptr and unique_ptr that we have to delete manually to
+ * prevent a memory leak. We delete the function to which the unique_ptr
+ * points if this is the last lazy parser referring to it.
+ */
 template <typename T>
 Parser<T>::~Parser() {
   using namespace std;
@@ -40,7 +46,7 @@ T Parser<T>::parse(const std::string& input) const {
 
   size_t errPos = 0;
   stringstream inputStream(input);
-  result_t<T> optResult = (**parseFn_)(inputStream, &errPos);
+  std::optional<T> optResult = (**parseFn_)(inputStream, &errPos);
   if (!optResult.has_value()) {
     string line;
     inputStream.seekg(errPos);
@@ -57,9 +63,11 @@ T Parser<T>::parse(const std::string& input) const {
   return move(optResult.value());
 }
 
-/* andThen makes the guarantee that the parser in creates will reset the input stream
+/*
+ * andThen makes the guarantee that the parser in creates will reset the input stream
  * position if either parser fails. Combinators using andThen do not have to reset the
- * input stream */
+ * input stream
+ */
 template <typename T>
 template <typename Fn, typename P>
 P Parser<T>::andThen(Fn&& pGenFn) const {
@@ -68,12 +76,12 @@ P Parser<T>::andThen(Fn&& pGenFn) const {
   return {// This must be mutable to call pGenFn's non-const () operator
       [parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
           pGenFn = forward<Fn>(pGenFn)](
-          input_t& input, size_t* errPos) mutable -> result_t<ptype_t<P>> {
+          std::istream& input, size_t* errPos) mutable -> optional<parsers::ptype_t<P>> {
         // Always reset to original position if either parser fails
         size_t origPos = input.tellg();
 
         // Run first parser
-        result_t<T> optResult1 = (**parseFn)(input, errPos);
+        std::optional<T> optResult1 = (**parseFn)(input, errPos);
         // If first parser fails, reset the stream and fail entire thing
         if (!optResult1.has_value()) {
           input.seekg(origPos);
@@ -99,16 +107,16 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
   using namespace std;
 
   return {[parseFn = isThisRValue() ? move(parseFn_) : parseFn_,
-              parseFn2 = move(nextParser.parseFn_)](input_t& input, size_t* errPos) {
+              parseFn2 = move(nextParser.parseFn_)](std::istream& input, size_t* errPos) {
     // Run first parser
-    result_t<T> optResult1 = (**parseFn)(input, errPos);
+    std::optional<T> optResult1 = (**parseFn)(input, errPos);
     // If first parser succeeds, return the result
     if (optResult1.has_value()) {
       return optResult1;
     }
 
     // Otherwise, try the next parser on the input
-    result_t<T> optResult2 = (**parseFn2)(input, errPos);
+    std::optional<T> optResult2 = (**parseFn2)(input, errPos);
     if (optResult2.has_value()) {
       return optResult2;
     }
@@ -118,7 +126,7 @@ Parser<T> Parser<T>::alt(Parser<T> nextParser) const {
 
 template <typename T>
 template <typename Fn, typename R>
-Parser<std::decay_t<R>> Parser<T>::andThenMap(Fn&& mapFn) const {
+Parser<R> Parser<T>::andThenMap(Fn&& mapFn) const {
   using namespace std;
 
   // Safe to move obj because andThen() will not need it again.
@@ -166,11 +174,11 @@ Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::many()
   using namespace std;
 
   return Parser<string>{[parseFn = isThisRValue() ? move(parseFn_) : parseFn_](
-                            input_t& input, size_t* errPos) {
+                            std::istream& input, size_t* errPos) {
     size_t oldErrPos = *errPos;
     // Run parser until it fails and put each result in the list
     string parsedChars;
-    result_t<char> optResult = (**parseFn)(input, errPos);
+    std::optional<char> optResult = (**parseFn)(input, errPos);
     while (optResult.has_value()) {
       // value() is a char, no need to move it
       parsedChars.append(1, optResult.value());
@@ -190,11 +198,11 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
   using namespace std;
 
   return Parser<vector<T>>{[parseFn = isThisRValue() ? move(parseFn_) : parseFn_](
-                               input_t& input, size_t* errPos) {
+                               std::istream& input, size_t* errPos) {
     size_t oldErrPos = *errPos;
     // Run parser until it fails and put each result in the list
     vector<T> parsedObjs;
-    result_t<T> optResult = (**parseFn)(input, errPos);
+    std::optional<T> optResult = (**parseFn)(input, errPos);
     while (optResult.has_value()) {
       parsedObjs.push_back(move(optResult.value()));
       optResult = (**parseFn)(input, errPos);
@@ -206,7 +214,6 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::ma
   }};
 }
 
-// TODO: Could use a deque here (and thus for many() as well)
 template <typename T>
 template <typename U>
 Parser<std::enable_if_t<std::is_same_v<U, char>, std::string>> Parser<T>::some() const {
@@ -233,11 +240,6 @@ Parser<std::enable_if_t<!std::is_same_v<U, char>, std::vector<T>>> Parser<T>::so
 }
 
 template <typename T>
-Parser<std::nullptr_t> Parser<T>::ignore() const {
-  return andThenMap([](T&&) { return nullptr; });
-}
-
-template <typename T>
 template <typename R>
 Parser<R> Parser<T>::ignoreAndThen(Parser<R> nextParser) const {
   using namespace std;
@@ -259,9 +261,10 @@ Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const {
 }
 
 template <typename T>
-template <typename R>
-void Parser<T>::set(Parser<R>&& other) {
-  // TODO: throw error if already set
+void Parser<T>::set(Parser&& other) {
+  if (lazyCount_) {
+    throw std::runtime_error("Setting a parser that has already been set");
+  }
   *parseFn_ = std::move(*other.parseFn_);
   lazyCount_ = new size_t(1);
 }

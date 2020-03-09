@@ -18,7 +18,7 @@ RgxPtr doParse(const char* rgx) {
    * Character        := char
    */
 
-  Parser<RgxPtr> regex = fail<RgxPtr>();
+  Parser<RgxPtr> regex = lazy<RgxPtr>();
 
   Parser<RgxPtr> dot =
       thisChar('.').andThenMap([](char) -> RgxPtr { return make_unique<Dot>(); });
