@@ -1,6 +1,8 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
+#include "simple_shptr.hpp"
+
 #include <algorithm>
 #include <cctype>
 #include <functional>
