@@ -84,8 +84,8 @@ public:
           std::invoke_result_t<Fn, input_t&, size_t*>>>>
   Parser(Fn&& f);
   ~Parser();
-  Parser(const Parser&) = default;
-  Parser(Parser&&) = default;
+  Parser(const Parser&);
+  Parser(Parser&&);
   // All parser copies are shallow by design. The only non-const method is
   // set(), which will change all other shallow copies as well, but set()
   // should only be called on fail<T> for recursive grammars.
@@ -142,7 +142,7 @@ public:
   // assign the parser lazily, which makes recursive grammars
   // easier to implement.
   std::shared_ptr<std::unique_ptr<FnContainerAbstract>> parseFn_;
-  bool lazySet_ = false;
+  size_t* lazyCount_ = nullptr;
 };
 
 namespace parsers {

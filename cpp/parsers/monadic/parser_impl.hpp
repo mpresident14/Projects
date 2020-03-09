@@ -9,10 +9,29 @@ template <typename T>
 Parser<T>::~Parser() {
   using namespace std;
 
-  if (lazySet_ && parseFn_.use_count() >= 2) {
-    FnContainerAbstract* fPtr = parseFn_->release();
-    delete fPtr;
+  if (lazyCount_) {
+    if (*lazyCount_ == 1) {
+      FnContainerAbstract* fPtr = parseFn_->release();
+      delete fPtr;
+      delete lazyCount_;
+    } else {
+      --(*lazyCount_);
+    }
   }
+}
+
+template <typename T>
+Parser<T>::Parser(const Parser& other)
+    : parseFn_(other.parseFn_), lazyCount_(other.lazyCount_) {
+  if (lazyCount_) {
+    ++(*lazyCount_);
+  }
+}
+
+template <typename T>
+Parser<T>::Parser(Parser&& other)
+    : parseFn_(std::move(other.parseFn_)), lazyCount_(other.lazyCount_) {
+  other.lazyCount_ = nullptr;
 }
 
 template <typename T>
@@ -242,7 +261,7 @@ Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const {
 template <typename T>
 template <typename R>
 void Parser<T>::set(Parser<R>&& other) {
-  // TODO: throw error if already set???
+  // TODO: throw error if already set
   *parseFn_ = std::move(*other.parseFn_);
-  lazySet_ = true;
+  lazyCount_ = new size_t(1);
 }
