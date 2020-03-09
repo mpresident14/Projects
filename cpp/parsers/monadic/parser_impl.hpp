@@ -7,7 +7,9 @@ Parser<T>::Parser(Fn&& f)
 
 template <typename T>
 Parser<T>::~Parser() {
-  if (lazySet_ && parseFn_.use_count() == 2) {
+  using namespace std;
+
+  if (lazySet_ && parseFn_.use_count() >= 2) {
     FnContainerAbstract* fPtr = parseFn_->release();
     delete fPtr;
   }

@@ -14,10 +14,16 @@ using namespace std;
 using namespace parsers;
 using namespace std::chrono;
 
+
+// void f(Parser<char> p) {
+//   cout << "hi" << endl;
+// }
+
 int main() {
   Parser<char> p1 = fail<char>();
   auto p2 = thisChar('a').thenIgnore(p1).alt(thisChar('b'));
   p1.set(move(p2));
+  // f(p1);
 
 
   try {

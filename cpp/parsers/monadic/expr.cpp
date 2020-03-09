@@ -40,6 +40,7 @@ void doParse(const char* input) {
             return make_unique<BinOp>(make_unique<Num>(-1), move(exp), TIMES);
           })));
 
+  // TODO: This should fail but doesn't. Shouldn't be able to copy "factor" after being set.
   Parser<vector<pair<Op, ExprPtr>>> restFactors = timesDiv.combine(factor).many();
 
   Parser<ExprPtr> term = factor.combine(restFactors).andThenMap(foldExprs);

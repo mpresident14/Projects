@@ -166,12 +166,12 @@ namespace parsers {
   // TODO: WHY A NULLPTR
   Parser<nullptr_t> success() {
     return [](input_t&, size_t*) { return createReturnObject(nullptr); };
-  };
+  }
 
   template <typename U>
   Parser<U> fail() {
     return [](input_t&, size_t*) -> result_t<U> { return {}; };
-  };
+  }
 
   const Parser<char> anyChar{[](input_t& input, size_t* errPos) -> result_t<char> {
     if (input.peek() == EOF) {
