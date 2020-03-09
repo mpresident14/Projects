@@ -49,15 +49,14 @@ using ptype_t = typename parser_info<U>::type;
 template <typename T>
 class Parser {
 private:
-  struct FnAbstract {
-    virtual ~FnAbstract() {}
+  struct FnContainerAbstract {
+    virtual ~FnContainerAbstract() {}
     virtual result_t<T> operator()(input_t&, size_t*) = 0;
-    virtual void setPtr(FnAbstract&) = 0;
   };
 
   template <typename Fn>
-  struct FnNormal : FnAbstract {
-    FnNormal(Fn&& f) : f_{std::forward<Fn>(f)} {}
+  struct FnContainer : FnContainerAbstract {
+    FnContainer(Fn&& f) : f_{std::forward<Fn>(f)} {}
     // Since we have a mutable lambdas (e.g. in createBasic() and combine()),
     // the () operator can change the variables in the closure (i.e. change f_),
     // so the () operator cannot be const.
@@ -65,32 +64,7 @@ private:
       return f_(input, errPos);
     }
 
-    void setPtr(FnAbstract&) override {
-      throw "The set() method must only be called by lazy parsers.";
-    }
-
     Fn f_;
-  };
-
-  struct FnLazy : FnAbstract {
-    FnLazy() : fPtr_(nullptr) {}
-    // Since we have a mutable lambdas (e.g. in createBasic() and combine()),
-    // the () operator can change the variables in the closure (i.e. change f_),
-    // so the () operator cannot be const.
-    result_t<T> operator()(input_t& input, size_t* errPos) override {
-      return (*fPtr_)(input, errPos);
-    }
-
-    void setPtr(FnAbstract& normal) override {
-      setPtrImpl(normal);
-    }
-
-    template <typename Fn>
-    void setPtrImpl(FnNormal<Fn>&) {
-
-    }
-
-    std::shared_ptr<std::nullptr_t> fPtr_;
   };
 
   // The extra parentheses cause "(this)" to be an expression more complicated
@@ -100,7 +74,8 @@ private:
   }
 
 public:
-  Parser();
+  // Unneccesary, but being explicit never hurts
+  Parser() = delete;
   // The "invoke_result" part ensures that the parameter is a function
   // (implements operator()). This ensures that this constructor doesn't
   // interfere with the move and copy constructors.
@@ -166,7 +141,7 @@ public:
   // Second shared_ptr is specifically to make it possible to
   // assign the parser lazily, which makes recursive grammars
   // easier to implement.
-  std::shared_ptr<FnAbstract> parseFn_;
+  std::shared_ptr<std::shared_ptr<FnContainerAbstract>> parseFn_;
 };
 
 namespace parsers {
