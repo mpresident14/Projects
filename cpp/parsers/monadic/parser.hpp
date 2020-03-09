@@ -136,12 +136,13 @@ public:
 
   // Lazily assign parser for recursive grammars
   template <typename R>
-  void set(const Parser<R>& other);
+  void set(Parser<R>&& other);
 
   // Second shared_ptr is specifically to make it possible to
   // assign the parser lazily, which makes recursive grammars
   // easier to implement.
-  std::shared_ptr<std::shared_ptr<FnContainerAbstract>> parseFn_;
+  std::shared_ptr<std::unique_ptr<FnContainerAbstract>> parseFn_;
+  bool lazy = false;
 };
 
 namespace parsers {

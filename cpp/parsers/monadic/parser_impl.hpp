@@ -2,8 +2,8 @@
 template <typename T>
 template <typename Fn, typename Void>
 Parser<T>::Parser(Fn&& f)
-    : parseFn_(std::make_shared<std::shared_ptr<FnContainerAbstract>>(
-          std::make_shared<FnContainer<Fn>>(std::forward<Fn>(f)))) {}
+    : parseFn_(std::make_shared<std::unique_ptr<FnContainerAbstract>>(
+          std::make_unique<FnContainer<Fn>>(std::forward<Fn>(f)))) {}
 
 // : parseFn_(std::make_shared<std::function<result_t<T>(input_t&, size_t*)>>(
 //       std::forward<Fn>(f))) {}
@@ -234,6 +234,6 @@ Parser<T> Parser<T>::thenIgnore(Parser<R> nextParser) const {
 
 template <typename T>
 template <typename R>
-void Parser<T>::set(const Parser<R>& other) {
-  *parseFn_ = *other.parseFn_;
+void Parser<T>::set(Parser<R>&& other) {
+  *parseFn_ = std::move(*other.parseFn_);
 }
