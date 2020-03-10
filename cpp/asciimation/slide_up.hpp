@@ -3,6 +3,7 @@
 
 #include "asciimation.hpp"
 
+#include <iostream>
 #include <string>
 
 class SlideUp : public Asciimation {

@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <prez/print_stuff.hpp>
+
 using namespace std;
 using namespace parsers;
 using namespace std::chrono;
@@ -68,8 +70,12 @@ int main(int argc, char** argv) {
 
   try {
     auto widgets = linkedWidgetParser.parse(argv[1]);
+    prez::printContainer(widgets);
     printElements(widgets);
   } catch (invalid_argument& e) {
     cerr << e.what() << endl;
   }
+
+  vector<int> v = {1,3,4,5,6,6};
+  prez::printContainer(v);
 }
