@@ -70,12 +70,12 @@ int main(int argc, char** argv) {
 
   try {
     auto widgets = linkedWidgetParser.parse(argv[1]);
-    prez::printContainer(widgets);
+    cout << prez::containerToString(widgets) << endl;
     printElements(widgets);
   } catch (invalid_argument& e) {
     cerr << e.what() << endl;
   }
 
   vector<int> v = {1,3,4,5,6,6};
-  prez::printContainer(v);
+  cout << prez::containerToString(v) << endl;;
 }

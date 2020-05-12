@@ -39,7 +39,7 @@ namespace prez {
    ***********************/
   class UnitTest {
   private:
-    UnitTest(const char* fileName) : in_{fileName}, fileName_{fileName} {}
+    UnitTest(const char* fileName) : in_{ fileName }, fileName_{ fileName } {}
 
     void initTest(const char* testName) {
       // Print results of previous test.
@@ -117,8 +117,10 @@ namespace prez {
     }
 
     template <typename F>
-    void assertThrowsWithMsg(
-        const F& fn, const std::string& errMsg, size_t line, const char* testName) {
+    void assertThrowsWithMsg(const F& fn,
+        const std::string& errMsg,
+        size_t line,
+        const char* testName) {
       try {
         fn();
         assertTrue(false, line, testName);
