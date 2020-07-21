@@ -51,9 +51,9 @@ private:
 
     std::string stars(strlen(testName) + 4, '*');
 
-    std::cerr << stars << std::endl;
-    std::cerr << "* " << testName << " *" << std::endl;
-    std::cerr << stars << std::endl;
+    std::cout << stars << std::endl;
+    std::cout << "* " << testName << " *" << std::endl;
+    std::cout << stars << std::endl;
 
     affirmsInTest_ = 0;
     failuresInTest_ = 0;
@@ -64,7 +64,7 @@ private:
 
   // Individual test statistics
   void printResults() {
-    std::cerr << "Passed " << affirmsInTest_ - failuresInTest_ << " / " << affirmsInTest_
+    std::cout << "Passed " << affirmsInTest_ - failuresInTest_ << " / " << affirmsInTest_
               << " affirmations."
               << "\n\n"
               << std::endl;
@@ -72,14 +72,14 @@ private:
 
   // Entire file statistics
   void summarize() {
-    std::cerr << "------------------------------------------------" << std::endl;
-    std::cerr << "SUMMARY: Passed " << totalTests_ - testsFailed_ << " / " << totalTests_
+    std::cout << "------------------------------------------------" << std::endl;
+    std::cout << "SUMMARY: Passed " << totalTests_ - testsFailed_ << " / " << totalTests_
               << " tests." << std::endl;
 
     if (testsFailed_ == 0) {
-      std::cerr << "Congratulations! All tests passed!" << std::endl;
+      std::cout << "Congratulations! All tests passed!" << std::endl;
     }
-    std::cerr << "------------------------------------------------" << std::endl;
+    std::cout << "------------------------------------------------" << std::endl;
   }
 
   // Per test
@@ -110,15 +110,17 @@ public:
   UnitTest& operator=(const UnitTest&) = delete;
 
   template <typename F>
-  void assertThrows(
+  std::string assertThrows(
       const F& fn,
       const std::experimental::source_location& location =
           std::experimental::source_location::current()) {
     try {
       fn();
       assertTrue(false, location);
+      return "";
     } catch (std::exception& e) {
       assertTrue(true, location);
+      return e.what();
     }
   }
 
@@ -215,9 +217,9 @@ public:
 
     if (!statement) {
       ++failuresInTest_;
-      std::cerr << "FAILURE: " << fileName_ << ", line " << line << ": " << s << std::endl;
+      std::cout << "FAILURE: " << fileName_ << ", line " << line << ": " << s << std::endl;
       if (!errMsg.empty()) {
-        std::cerr << errMsg << std::endl;
+        std::cout << errMsg << std::endl;
       }
 
       // Update the total number of failed tests
